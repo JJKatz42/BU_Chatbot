@@ -1,0 +1,38 @@
+import os
+import requests
+from web_scraping_test_using_questrom_course_site import get_course_urls
+
+def download_html_content(website_dict: dict) -> None:
+    """Download the HTML content of the websites in the dictionary
+
+    Args:
+        website_dict: A dictionary of website titles and urls
+    """
+    # Create the directory path to store the downloaded HTML files
+    directory = "/workspaces/BU_Chatbot/Questrom_Course_Info"
+    os.makedirs(directory, exist_ok=True)
+
+    for title, url in website_dict.items():
+        try:
+            # Send a GET request to the URL
+            response = requests.get("https://" + url)
+
+            # Get the filename from the title
+
+            url_safe = url.replace("/", "-")
+            filename = f"{url_safe}.html"
+
+            # Save the HTML content to a file
+            filepath = os.path.join(directory, filename)
+            with open(filepath, "w", encoding="utf-8") as file:
+                file.write(response.text)
+
+            print(f"Downloaded: {url}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading {title}: {str(e)}")
+
+# Example usage
+URL = "https://www.bu.edu/academics/questrom/courses/"  # Questrom course site
+websites = get_course_urls(URL)
+
+download_html_content(websites)
