@@ -19,6 +19,7 @@ def init_config(local_env_file: str | None):
             config.ConfigVarMetadata(var_name="WEAVIATE_URL"),
             config.ConfigVarMetadata(var_name="WEAVIATE_API_KEY"),
             config.ConfigVarMetadata(var_name="OPENAI_API_KEY"),
+            config.ConfigVarMetadata(var_name="COHERE_API_KEY"),
         ],
         local_env_file=local_env_file
     )
@@ -116,6 +117,7 @@ async def main():
         api_key=config.get("WEAVIATE_API_KEY"),
         openai_api_key=config.get("OPENAI_API_KEY"),
         namespace=config.get("DATA_NAMESPACE"),
+        cohere_api_key=config.get("COHERE_API_KEY")
     )
 
 
