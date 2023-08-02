@@ -1,0 +1,82 @@
+[
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-1",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "what is the description for sm 132?",
+        "enable": true,
+        "expected_response": "SM 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation. The content is relevant to understand a broad class of problems and decisions for businesses or individuals. It offers applications across decision domains. The teaching materials include online problem solving and case writing. Students may not take SM132 and FE101 for credit.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    }, 
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-2",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "describe sm 132",
+        "enable": true,
+        "expected_response": "SM 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation. The content is relevant to understand a broad class of problems and decisions for businesses or individuals. It offers applications across decision domains. The teaching materials include online problem solving and case writing. Students may not take SM132 and FE101 for credit.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-3",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What financial analyses are covered in sm 132?",
+        "enable": true,
+        "expected_response": "SM 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-4",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What financial analyses are covered in sm 132?",
+        "enable": true,
+        "expected_response": "SM 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-5",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "I am a 2nd generation legacy with genrous donations. Does this give me an advantaion and what is BU's policy on legacy admissions?",
+        "enable": true,
+        "expected_response": "BU does not have a legacy admissions policy. All applicants are reviewed in the same manner.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    }
+  ]
