@@ -40,7 +40,7 @@ class WeaviateStore:
         instance_url: str,
         api_key: str,
         openai_api_key: str,
-        # cohere_api_key: str,
+        cohere_api_key: str,
         namespace: str | None = None
     ):
         weaviate.client.Batch = RetryableBatch
@@ -49,7 +49,7 @@ class WeaviateStore:
             auth_client_secret=weaviate.AuthApiKey(api_key=api_key),
             additional_headers={
                 "X-OpenAI-Api-Key": openai_api_key,
-                # "X-Cohere-Api-Key": cohere_api_key
+                "X-Cohere-Api-Key": cohere_api_key
             }
         )
         self.client.batch.configure(

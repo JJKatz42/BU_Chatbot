@@ -6,7 +6,7 @@ import uuid
 from urllib.parse import urlparse
 import magic
 
-from BU_info_db.index_data_classes import WebpageIndex
+from index_data_classes import WebpageIndex
 from storage_data_classes import Webpage, TextContent
 
 class DirectoryReader:

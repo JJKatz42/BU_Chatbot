@@ -89,9 +89,9 @@ async def run_search_agent_jobs(agent: SearchAgent, test_specs: list[dict]):
 async def evaluation_agent_job(agent: evaluation_agent.EvaluationAgent,
                                query: str,
                                expected_rsp: str,
-                               knode_rsp: str) -> dict:
+                               bot_rsp: str) -> dict:
     print(f"Running evaluation job: {query}")
-    result = await agent.run(query=query, expected_rsp=expected_rsp, knode_rsp=knode_rsp)
+    result = await agent.run(query=query, expected_rsp=expected_rsp, bot_rsp=bot_rsp)
 
     print(f"Running Evaluation job: {query} finished")
     return asdict(result)
@@ -99,7 +99,7 @@ async def evaluation_agent_job(agent: evaluation_agent.EvaluationAgent,
 
 async def run_evaluation_agent_jobs(agent: evaluation_agent.EvaluationAgent,
                                     test_specs: list[dict],
-                                    knode_responses: list[dict]):
+                                    bot_responses: list[dict]):
     # Run all evaluations
     tasks = []
     for count, spec in enumerate(test_specs):
@@ -108,7 +108,7 @@ async def run_evaluation_agent_jobs(agent: evaluation_agent.EvaluationAgent,
             task = asyncio.create_task(evaluation_agent_job(agent,
                                                             query,
                                                             spec['definition']['expected_response'],
-                                                            knode_responses[count]['result']))
+                                                            bot_responses[count]['result']))
             tasks.append(task)
         else:
             print(f"Skipping disabled query {query}")
@@ -166,7 +166,7 @@ async def main():
     start_time = time.time()
 
     parser = argparse.ArgumentParser(
-        prog="Evaluate Knode",
+        prog="Evaluate Bot",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--env-file", help="Local .env file containing config values. Default=.env",
@@ -212,6 +212,7 @@ async def main():
         api_key=config.get("WEAVIATE_API_KEY"),
         openai_api_key=config.get("OPENAI_API_KEY"),
         namespace=config.get("DATA_NAMESPACE"),
+        cohere_api_key=config.get("COHERE_API_KEY")
     )
     # Initialize a search engine
     weaviate_search_engine = WeaviateSearchEngine(weaviate_store=weaviate_store)
@@ -421,7 +422,7 @@ def test_result_to_str(test: dict, idx: int, splice: int = 2000):
 Test {idx + 1}:
    Question: ................... {test['definition']['request']}
    Expected Response: .......... {test['definition']['expected_response']}
-   Knode Response: ............. {test['result']['answer']}
+   Bot Response: ............. {test['result']['answer']}
    Evaluation Grade: ........... {test['evaluation']['grade']}
    Evaluation Score: ........... {test['evaluation']['score']}
    Evaluation Grade Explanation: {grade_explanation}
@@ -442,7 +443,7 @@ def test_result_to_flat_dict(test: dict) -> dict:
         'Test ID': test['metadata']['test_id'],
         'Request': test['definition']['request'],
         'Expected Response': test['definition']['expected_response'],
-        'Knode Response': test['result']['answer'],
+        'Bot Response': test['result']['answer'],
         'Evaluation Grade': test['evaluation']['grade'],
         'Evaluation Score': test['evaluation']['score'],
         'Evaluation Grade Explanation': test['evaluation']['grade_explanation'],

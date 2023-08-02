@@ -8,7 +8,7 @@ import evaluation_llm_schema as evaluation_llm_schema
 
 
 class EvaluationAgent:
-    """Agent that evaluates and grades Knodes answers.
+    """Agent that evaluates and grades Bots answers.
 
     This agent evaluates answers to queries
 
@@ -24,14 +24,14 @@ class EvaluationAgent:
     async def run(self,
                   query: str,
                   expected_rsp: str,
-                  knode_rsp: str,
+                  bot_rsp: str,
                   ) -> "EvaluationAgentResult":
         """Evaluate answer to a query.
 
         Args:
             query: The query posed as a question
             expected_rsp: Expected response
-            knode_rsp: Knode response
+            bot_rsp: bot response
 
         Returns:
             An EvaluationAgentResult object which contains the grade, score, grade explantion, score explanation, various debug details
@@ -41,9 +41,9 @@ class EvaluationAgent:
             llm_prompt_messages = [
                 langchain.schema.SystemMessage(
                     content="""
-You are a teacher grading a quiz by a student named Knode.
-You are given a question, Knode's answer, and the true answer,
-and are asked to grade Knode's answer as either CORRECT or INCORRECT.
+You are a teacher grading a quiz by a student named Bot.
+You are given a question, Bot's answer, and the true answer,
+and are asked to grade Bot's answer as either CORRECT or INCORRECT.
 Also you need to score each question 0 to 100 to represent correctness.
 The grade may be only one of "CORRECT" or "INCORRECT" and nothing else.
 Any score you arrive at as 60 or higher should yield a CORRECT grade, and INCORRECT otherwise. 
@@ -51,17 +51,17 @@ Please provide explanation of your logic for grade and score.
 
 Example Input Format:
 QUESTION: question here
-KNODE ANSWER: Knode's answer here
+Bot ANSWER: Bot's answer here
 TRUE ANSWER: true answer here
 
-Grade Knode's answers based ONLY on their factual accuracy.
-Ignore differences in punctuation and phrasing between Knode's answer and true answer.
-It is OK if Knode's answer contains more information than the true answer,
+Grade Bot's answers based ONLY on their factual accuracy.
+Ignore differences in punctuation and phrasing between Bot's answer and true answer.
+It is OK if Bot's answer contains more information than the true answer,
 as long as it does not contain any conflicting statements. Begin! 
                     """
                 ),
                 langchain.schema.HumanMessage(
-                    content=f"QUESTION: {query}\nKNODE ANSWER: {knode_rsp}\nTRUE ANSWER: {expected_rsp}"),
+                    content=f"QUESTION: {query}\nBOT ANSWER: {bot_rsp}\nTRUE ANSWER: {expected_rsp}"),
             ]
 
             llm_response_message = await self._evaluation_llm.apredict_messages(
@@ -80,7 +80,7 @@ as long as it does not contain any conflicting statements. Begin!
         return EvaluationAgentResult(
             query=query,
             expected_rsp=expected_rsp,
-            knode_rsp=knode_rsp,
+            bot_rsp=bot_rsp,
             grade=evaluation.grade,
             score=evaluation.score,
             grade_explanation=evaluation.grade_explanation,
@@ -97,7 +97,7 @@ class EvaluationAgentResult:
     """Container for result of running an Agent on a query."""
     query: str            # input
     expected_rsp: str     # input
-    knode_rsp: str        # input
+    bot_rsp: str        # input
     grade: evaluation_llm_schema.EvaluationGrade
     score: int
     score_explanation: str

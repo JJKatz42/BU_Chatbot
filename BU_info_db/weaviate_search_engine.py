@@ -48,7 +48,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
         top_k: int = 3,
         alpha: float = 0.75,
-        re_rank: bool = False,
+        re_rank: bool = True,
         filters: dict = None
     ) -> list[SearchResult]:
         """Search for most relevant information to the query
@@ -145,10 +145,10 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         # Augment the search query to generate the answer by grouping all the text properties
         # of search results into a single prompt.
         query = query.with_generate(
-            grouped_task="You are a helpful, knowledgeable and confident company chatbot. "
-                         "Your task is to respond to the employee's question with a helpful "
+            grouped_task="You are a helpful, knowledgeable and confident university chatbot. "
+                         "Your task is to respond to the student's question with a helpful "
                          "and accurate answer based only on the information contained in context. "
-                         "The context is only visible to you, all the employee will see is your answer.\n"
+                         "The context is only visible to you, all the student will see is your answer.\n"
                          f"Question: {ask_str}\n"
                          "Context: ",
             grouped_properties=["text"]
@@ -285,31 +285,10 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         Returns:
             Weaviate QueryBuilder object
         """
-        # TODO: Add back this cross reference fragment back to the referencedBy once Weaviate fixes self-references
-        #   ... on {Webpage.weaviate_class_name(namespace=self.namespace)} {{
-        #       _additional {{
-        #           id
-        #       }}
-        #   }}
-        # query = self._weaviate_store.client.query.get(
-        #     class_name=TextContent.weaviate_class_name(namespace=self.namespace),
-        #     properties=[
-        #         "index",
-        #         "text",
-        #         f"""contentOf {{
-        #             ... on {Webpage.weaviate_class_name(namespace=self.namespace)} {{
-        #                 title
-        #                 type: __typename
-        #                 Webpage_id
-        #                 mimeType
-        #             }}
-        #         }}""",
-        #     ]
-        # )
 
         query = (
             self._weaviate_store.client.query
-                .get("Jonahs_weaviate_TextContent", ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { url, webpage_id, mimeType } }"])
+                .get(TextContent.weaviate_class_name(namespace=self.namespace), ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { url, webpage_id, mimeType } }"])
         )
 
 
