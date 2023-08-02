@@ -100,8 +100,9 @@ class TextContent(WeaviateObject):
 @dataclasses.dataclass
 class Webpage(WeaviateObject):
     id: str
-    title: str
+    url: str
     mime_type: MimeType
+    html_content: str
     text_contents: list[TextContent]
 
     @classmethod
@@ -141,6 +142,10 @@ class Webpage(WeaviateObject):
                 #     "dataType": ["date"],
                 # },
                 {
+                    "name": "html_content",
+                    "dataType": ["text"],
+                },
+                {
                     "name": "textContents",
                     "dataType": [TextContent.weaviate_class_name(namespace=namespace)],
                 }
@@ -158,8 +163,9 @@ class Webpage(WeaviateObject):
 
         return {
             "webpage_id": self.id,
-            "title": self.title,
-            "mimeType": self.mime_type.value,
+            "url": self.url,
+            "mimeType": self.mime_type,
+            "html_content": self.html_content,
             # "createdTime": datetime_values["created_time"],
             # "updatedTime": datetime_values["updated_time"],
         }
