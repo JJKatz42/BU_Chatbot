@@ -1,2 +1,2 @@
 # BU_Chatbot
-TBD
+What up Gorge
