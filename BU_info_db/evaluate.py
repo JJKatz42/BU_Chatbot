@@ -20,6 +20,7 @@ import evaluation_agent as evaluation_agent
 # import libs.config as config
 # import libs.search as search
 import search_agent as SearchAgent
+from search_agent import SearchAgentFeatures
 from weaviate_search_engine import WeaviateSearchEngine
 from search_agent import SearchAgent
 # import libs.storage as storage
@@ -179,11 +180,11 @@ async def main():
                         default="gpt-3.5-turbo-0613")
     parser.add_argument("--evaluation-llm", help="Evaluation LLM model name. Default=gpt-4-0613",
                         default="gpt-3.5-turbo-0613")
-    # parser.add_argument("--search-agent-features", type=SearchAgentFeatures, nargs="+",
-    #                     default=[SearchAgentFeatures.CROSS_ENCODER_RE_RANKING,
-    #                              agents.SearchAgentFeatures.QUERY_PLANNING],
-    #                     help="List of Search Agent features, space-separated, "
-    #                          "Default=CROSS_ENCODER_RE_RANKING QUERY_PLANNING")
+    parser.add_argument("--search-agent-features", type=SearchAgentFeatures, nargs="+",
+                        default=[SearchAgentFeatures.CROSS_ENCODER_RE_RANKING,
+                                 SearchAgentFeatures.QUERY_PLANNING],
+                        help="List of Search Agent features, space-separated, "
+                             "Default=CROSS_ENCODER_RE_RANKING QUERY_PLANNING")
     parser.add_argument("--test-ids", nargs="+",
                         default=[],
                         help="Subset of test ids to run (from the --test-file), space-separated. Default: run all")
@@ -433,11 +434,6 @@ Test {idx + 1}:
 
 
 def test_result_to_flat_dict(test: dict) -> dict:
-    # sources = ', '.join([
-    #     f"{source['source_info'].get('title') or source['source_info'].get('conversation_name')} "
-    #     f"({source['source_info']['source']})"
-    #     for source in test['result']['sources']
-    # ])
 
     return {
         'Test ID': test['metadata']['test_id'],

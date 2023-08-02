@@ -48,7 +48,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
         top_k: int = 3,
         alpha: float = 0.75,
-        re_rank: bool = True,
+        re_rank: bool = False,
         filters: dict = None
     ) -> list[SearchResult]:
         """Search for most relevant information to the query
