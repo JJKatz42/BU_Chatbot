@@ -83,17 +83,17 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         response = query.do()
 
         # Parse into search results
-        print("________________________________________")
-        print(query_str+"\n")
-        print(response["data"]["Get"]["Jonahs_weaviate_TextContent"])
-        print("________________________________________")
-
-        raw_results = response["data"]["Get"][
+        # print("________________________________________")
+        # print(query_str+"\n")
+        # print(response["data"]["Get"]["Jonahs_weaviate_TextContent"]["query_str"])
+        # print("________________________________________")
+        try:
+            raw_results = response["data"]["Get"][
                 TextContent.weaviate_class_name(namespace=self.namespace)
             ]
-        # except KeyError:
-        #     print(response)
-        #     # raise
+        except KeyError:
+            print(response["data"]["Get"])
+            raise
         search_results = []
         for raw_result in raw_results:
             if re_rank:
@@ -309,7 +309,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
 
         query = (
             self._weaviate_store.client.query
-                .get("Jonahs_weaviate_TextContent", ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { title, webpage_id, mimeType } }"])
+                .get("Jonahs_weaviate_TextContent", ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { url, webpage_id, mimeType } }"])
         )
 
 

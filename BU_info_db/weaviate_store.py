@@ -76,7 +76,7 @@ class WeaviateStore:
             if self.client.schema.exists(weaviate_class_name):
                 if delete_if_exists:
                     self.client.schema.delete_class(weaviate_class_name)
-                else:
+                elif not delete_if_exists:
                     raise Exception(f"Can't create schema because {weaviate_class_name} already exists. "
                                     f"Set delete_if_exists=True to re-create the schema.")
 
@@ -87,8 +87,7 @@ class WeaviateStore:
             ]
         })
 
-
-    def insert_webpage(self, webpages: list[Webpage]):
+    def insert_webpages(self, webpages: list[Webpage]):
         # We build a list of the webpages we've inserted to refresh at the end to create the centroid vectors
         webpages_to_refresh_centroid_vector = []
 
@@ -97,6 +96,8 @@ class WeaviateStore:
         with self.client.batch as batch:
             # Compute the embeddings for all TextContents on each Webpage
             self._embeddings_client.create_weaviate_object_embeddings(webpages)
+
+            count = 0
 
             for webpage in tqdm.tqdm(webpages, total=len(webpages), desc="Webpages"):
                 # Add the webpage object
@@ -130,7 +131,9 @@ class WeaviateStore:
                         to_object_uuid=text_content_uuid
                     )
 
-        print("Created webpage objects and references in Weaviate")
+                count += 1
+
+        print(f"Created {count} webpage objects and references in Weaviate")
 
         # Add the references from Webpage -> TextContent. These need to be added outside the batch because
         # ref2vec-centroid does not support batch updates
@@ -160,3 +163,67 @@ class WeaviateStore:
                 )
 
         print("Created references in Weaviate")
+
+    def delete_webpage(self, url: str):
+        """Delete a Webpage object from Weaviate given its URL
+
+        Args:
+            url: The URL of the Webpage object to delete
+        """
+        # We first get the Webpage object to find its uuid
+        # The where filter is used to match the webpage url
+        webpage_result = (
+            self.client.query
+                .get(Webpage.weaviate_class_name(namespace=self.namespace), ["webpage_id"])
+                .with_where({"path": ["url"], "operator": "Equal", "valueText": url})
+                .do()
+        )
+
+        # Check if webpage exists
+        if webpage_result in webpage_result['data']['Get']:
+            webpage_uuid = webpage_result['data']['webpage_id']
+
+            # Before deleting the webpage object, we delete all the TextContent objects related to it
+
+            text_content_results = (
+                self.client.query
+                    .get(TextContent.weaviate_class_name(namespace=self.namespace), ["_additional { id }"])
+                    .with_where({
+                        "path": ["contentOf", "Webpage", "url"],
+                        "operator": "Like",
+                        "valueText": url
+                    })
+                    .do()
+            )
+            
+            for text_content in text_content_results:
+                self.client.data_object.delete(
+                    class_name=TextContent.weaviate_class_name(namespace=self.namespace),
+                    uuid=text_content["_additional"]["id"]
+                )
+
+            # Finally, delete the webpage object
+            self.client.data_object.delete(
+                class_name=Webpage.weaviate_class_name(namespace=self.namespace),
+                uuid=webpage_uuid
+            )
+        else:
+            print(f"Webpage with url {url} does not exist in Weaviate database")
+
+    def get_all_webpages(self) -> dict[str, str]:
+        """Get all Webpage objects from Weaviate
+
+        Returns:
+            A dictionary of Webpage objects where the key is the URL and the value is the HTML content
+        """
+        webpage_results = (
+            self.client.query
+                .get(Webpage.weaviate_class_name(namespace=self.namespace), ["url", "html_content"])
+                .do()
+        )
+
+        webpages = {}
+        for webpage in webpage_results["data"]["Get"][Webpage.weaviate_class_name(namespace=self.namespace)]:
+            webpages[webpage["url"]] = webpage["html_content"]
+
+        return webpages
