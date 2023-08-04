@@ -1,0 +1,114 @@
+[
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-1",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Could you please describe the course sm 132?",
+        "enable": true,
+        "expected_response": "The course sm 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation. The content is relevant to understand a broad class of problems and decisions for businesses or individuals. It offers applications across decision domains. The teaching materials include online problem solving and case writing. Students may not take SM132 and FE101 for credit.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-2",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Describe sm 132",
+        "enable": true,
+        "expected_response": "The course sm 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation. The content is relevant to understand a broad class of problems and decisions for businesses or individuals. It offers applications across decision domains. The teaching materials include online problem solving and case writing. Students may not take SM132 and FE101 for credit.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+        "metadata": {
+          "related_kips": [],
+          "related_tests": [],
+          "date_added": "2023/07/5",
+          "test_id": "tid-3",
+          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+        },
+        "definition": {
+          "request": "Describe the course Measuring Financial Value",
+          "enable": true,
+          "expected_response": "The course sm 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation. The content is relevant to understand a broad class of problems and decisions for businesses or individuals. It offers applications across decision domains. The teaching materials include online problem solving and case writing. Students may not take SM132 and FE101 for credit.",
+          "inverse_test": false,
+          "expected_sources": []
+        }
+      },
+      {
+        "metadata": {
+          "related_kips": [],
+          "related_tests": [],
+          "date_added": "2023/07/5",
+          "test_id": "tid-4",
+          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+        },
+        "definition": {
+          "request": "What kind of financial analysis is taught in the course Measuring Financial Value?",
+          "enable": true,
+          "expected_response": "fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation.",
+          "inverse_test": false,
+          "expected_sources": []
+        }
+      },
+      {
+        "metadata": {
+          "related_kips": [],
+          "related_tests": [],
+          "date_added": "2023/07/5",
+          "test_id": "tid-5",
+          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+        },
+        "definition": {
+          "request": "What is BU's ranking?",
+          "enable": true,
+          "expected_response": "BU is ranked #41 among national universities by U.S. News & World Report.",
+          "inverse_test": false,
+          "expected_sources": []
+        }
+      },
+      {
+        "metadata": {
+          "related_kips": [],
+          "related_tests": [],
+          "date_added": "2023/07/5",
+          "test_id": "tid-6",
+          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+        },
+        "definition": {
+          "request": "I am a 2nd generation legacy with generous donations does this give me an advantage and what is BUs policy on legacy admissions?",
+          "enable": true,
+          "expected_response": "No, BU does not consider legacy status in admissions decisions.",
+          "inverse_test": false,
+          "expected_sources": []
+        }
+      },
+      {
+        "metadata": {
+          "related_kips": [],
+          "related_tests": [],
+          "date_added": "2023/07/5",
+          "test_id": "tid-7",
+          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+        },
+        "definition": {
+          "request": "Will there be more asian people getting accepted into BU given the new court ruling?",
+          "enable": true,
+          "expected_response": "I do have access to that information",
+          "inverse_test": false,
+          "expected_sources": []
+        }
+      }
+]

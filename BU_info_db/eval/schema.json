@@ -1,0 +1,119 @@
+{
+    "title": "EvaluationTestList",
+    "type": "array",
+    "items": {
+        "$ref": "#/definitions/EvaluationTest"
+    },
+    "definitions": {
+        "EvaluationTag": {
+            "title": "EvaluationTag",
+            "description": "An enumeration.",
+            "enum": [
+                "REQ_CLARITY_AMBIGUOUS",
+                "REQ_LANGUAGE_MISSPELLING",
+                "REQ_LANGUAGE_BAD_GRAMMAR",
+                "REQ_REQUIRES_CONTEXT",
+                "RSP_NEEDS_METADATA",
+                "RES_EXPECT_SIMPLE_FACT",
+                "RES_EXPECT_COMPLEX_FACT",
+                "RES_EXPECT_LIST_OF_SIMPLE_FACTS",
+                "RES_EXPECT_LIST_OF_COMPLEX_FACTS",
+                "RES_EXPECT_FACT_BASED",
+                "RES_EXPECT_FACT_SYNTHESIS_BASED",
+                "RSP_EXPECT_NUMBER",
+                "RSP_EXPECT_PARAGRAPH",
+                "RSP_EXPECT_ESSAY",
+                "RSP_EXPECT_INSTRUCTIONS",
+                "RSP_EXPECT_LINK",
+                "RSP_USES_UNCONTESTED_FACTS",
+                "RSP_USES_CONFLICTING_FACTS_SINGLE_SOURCE",
+                "RSP_USES_CONFLICTING_FACTS_MULTIPLE_SOURCES"
+            ]
+        },
+        "EvaluationTestMetadata": {
+            "title": "EvaluationTestMetadata",
+            "type": "object",
+            "properties": {
+                "related_kips": {
+                    "title": "Related Kips",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "related_tests": {
+                    "title": "Related Tests",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "date_added": {
+                    "title": "Date Added",
+                    "type": "string"
+                },
+                "test_id": {
+                    "title": "Test Id",
+                    "type": "string"
+                },
+                "classification_tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EvaluationTag"
+                    }
+                }
+            },
+            "required": [
+                "related_kips",
+                "related_tests",
+                "date_added",
+                "test_id",
+                "classification_tags"
+            ]
+        },
+        "EvaluationTestDefinition": {
+            "title": "EvaluationTestDefinition",
+            "type": "object",
+            "properties": {
+                "request": {
+                    "title": "Request",
+                    "type": "string"
+                },
+                "enable": {
+                    "title": "Enable",
+                    "type": "boolean"
+                },
+                "expected_response": {
+                    "title": "Expected Response",
+                    "type": "string"
+                },
+                "inverse_test": {
+                    "title": "Inverse Test",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "request",
+                "enable",
+                "expected_response",
+                "inverse_test"
+            ]
+        },
+        "EvaluationTest": {
+            "title": "EvaluationTest",
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "$ref": "#/definitions/EvaluationTestMetadata"
+                },
+                "definition": {
+                    "$ref": "#/definitions/EvaluationTestDefinition"
+                }
+            },
+            "required": [
+                "metadata",
+                "definition"
+            ]
+        }
+    }
+}
