@@ -3,12 +3,6 @@ import asyncio
 import os
 import pprint
 
-print(os.environ.get('PYTHONPATH'))
-print('PYTHONPATH' in os.environ)
-root_folder = '/Users/jonahkatz/Desktop/BU_Chatbot'
-print(root_folder in os.environ.get('PYTHONPATH', '').split(os.pathsep))
-
-
 import BU_info_db.storage.weaviate_store as store
 import BU_info_db.search.weaviate_search_engine as search_engine
 import BU_info_db.storage.data_connnector.webpage_splitter as webpage_splitter
@@ -42,8 +36,8 @@ async def main():
     build_indexes_parser = subparsers.add_parser("build-indexes", help="Build indexes used for search", argument_default=argparse.SUPPRESS)
     build_indexes_parser.add_argument(
         "--directory",
-        help="By default directory is the questrom courses. ",
-        default="/workspaces/BU_Chatbot/weavdb_direct",
+        help="By default directory is the questrom courses.",
+        default="/Users/jonahkatz/Desktop/BU_Chatbot/new_webpages4",
         action="store_true"
     )
     build_indexes_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
@@ -127,7 +121,6 @@ async def main():
         cohere_api_key=config.get("COHERE_API_KEY")
     )
 
-
     # Route to sub command specific logic either build indexes for search or run a search
     if script_args.command == "build-indexes":
         # Create weaviate schema
@@ -135,7 +128,7 @@ async def main():
             weaviate_store.create_schema(delete_if_exists=True)
 
 
-        # Load documents from Google Drive
+        # Load documents from directory
         loader = directory_reader.DirectoryReader(script_args.directory)
         webpages = await loader.load_data()
         webpage_splitter_transformer = webpage_splitter.WebpageSplitterTransformer()

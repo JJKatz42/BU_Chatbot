@@ -68,7 +68,8 @@ class DirectoryReader:
                 with open(fullpath, 'r') as file:
                     html_contents = file.read()
                 # mime_type = magic.from_file(fullpath, mime=True)
-                mime_type = "text/markdown"
+                mime_type = "text/html"
+
                 if mime_type in self.SUPPORTED_MIME_TYPES:
                     files.append({
                         'id': fullpath,
@@ -91,11 +92,13 @@ class DirectoryReader:
 
             id = str(uuid.uuid4())
 
+            file_name = file["name"].replace("_", "/")
+
             # Create webpage object
             webpage = Webpage(
                 id=id,
                 html_content=file["html_content"],
-                url=file["name"],
+                url=file_name,
                 mime_type=file_content["mime_type"],
                 text_contents=file_content["text_contents"]
             )

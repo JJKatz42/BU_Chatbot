@@ -179,10 +179,9 @@ async def main():
     parser.add_argument("--evaluation-llm", help="Evaluation LLM model name. Default=gpt-4-0613",
                         default="gpt-3.5-turbo-0613")
     parser.add_argument("--search-agent-features", type=SearchAgentFeatures, nargs="+",
-                        default=[SearchAgentFeatures.CROSS_ENCODER_RE_RANKING,
-                                 SearchAgentFeatures.QUERY_PLANNING],
+                        default=[SearchAgentFeatures.CROSS_ENCODER_RE_RANKING],
                         help="List of Search Agent features, space-separated, "
-                             "Default=CROSS_ENCODER_RE_RANKING QUERY_PLANNING")
+                             "Default=CROSS_ENCODER_RE_RANKING")
     parser.add_argument("--test-ids", nargs="+",
                         default=[],
                         help="Subset of test ids to run (from the --test-file), space-separated. Default: run all")
@@ -228,7 +227,7 @@ async def main():
     search_agent_args = {
         "weaviate_search_engine": weaviate_search_engine,
         "reasoning_llm": reasoning_llm,
-        # "features": script_args.search_agent_features
+        "features": script_args.search_agent_features
     }
     search_agent = SearchAgent(**search_agent_args)
 
