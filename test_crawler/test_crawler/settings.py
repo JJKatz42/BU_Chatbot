@@ -1,4 +1,4 @@
-# Scrapy settings for pop_weav_crawler project
+# Scrapy settings for test_crawler project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,14 +7,14 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = "pop_weav_crawler"
+BOT_NAME = "test_crawler"
 
-SPIDER_MODULES = ["pop_weav_crawler.spiders"]
-NEWSPIDER_MODULE = "pop_weav_crawler.spiders"
+SPIDER_MODULES = ["test_crawler.spiders"]
+NEWSPIDER_MODULE = "test_crawler.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = "pop_weav_crawler (+http://www.yourdomain.com)"
+#USER_AGENT = "test_crawler (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -45,13 +45,13 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    "pop_weav_crawler.middlewares.PopWeavCrawlerSpiderMiddleware": 543,
+#    "test_crawler.middlewares.TestCrawlerSpiderMiddleware": 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    "pop_weav_crawler.middlewares.PopWeavCrawlerDownloaderMiddleware": 543,
+#    "test_crawler.middlewares.TestCrawlerDownloaderMiddleware": 543,
 #}
 
 # Enable or disable extensions
@@ -63,7 +63,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    "pop_weav_crawler.pipelines.PopWeavCrawlerPipeline": 300,
+#    "test_crawler.pipelines.TestCrawlerPipeline": 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)

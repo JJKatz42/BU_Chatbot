@@ -8,6 +8,6 @@
 from itemadapter import ItemAdapter
 
 
-class PopWeavCrawlerPipeline:
+class TestCrawlerPipeline:
     def process_item(self, item, spider):
         return item
