@@ -88,14 +88,8 @@ if __name__ == '__main__':
     output_directory = "/Users/jonahkatz/Desktop/BU_Chatbot/new_webpages3"
     name = "mycrawler"
     allowed_domains = ["bu.edu"]
-    start_urls = ["https://www.bu.edu/admissions/", "https://www.bu.edu/dining/"]
-    allow_rules = ["/admissions/", "/dining/"]
-    deny_rules = ["/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/"]
-
-    # Add bu.edu/reg/ to start_urls and allow_rules to get registration info
-
-    # start_urls = ["https://www.bu.edu/academics/"]
-    # allow_rules = ["/academics/"]
-    # deny_rules = ["events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "calendar/", "events/"]
+    start_urls = ["https://www.bu.edu/admissions/", "https://www.bu.edu/dining/", "https://www.bu.edu/academics/"]
+    allow_rules = ["/admissions/", "/dining/", "/academics/"]
+    deny_rules = ["/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/", "events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "calendar/", "events/"]
 
     run_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, output_directory)
