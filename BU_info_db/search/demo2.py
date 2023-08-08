@@ -43,7 +43,7 @@ async def main():
     build_indexes_parser.add_argument(
         "--directory",
         help="By default directory is the questrom courses. ",
-        default="/workspaces/BU_Chatbot/weavdb_direct",
+        default="/Users/jonahkatz/Desktop/BU_Chatbot/new_webpages4",
         action="store_true"
     )
     build_indexes_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
@@ -135,15 +135,15 @@ async def main():
             weaviate_store.create_schema(delete_if_exists=True)
 
 
-        # Load documents from Google Drive
+        # Load Webpages from directory
         loader = directory_reader.DirectoryReader(script_args.directory)
         webpages = await loader.load_data()
         webpage_splitter_transformer = webpage_splitter.WebpageSplitterTransformer()
         for webpage in webpages.webpages:
-            # Run documents through the DocumentSplitterTransformer to optimize for search and storage
+            # Run webpages through the WebpageSplitterTransformer to optimize for search and storage
             webpage_splitter_transformer.transform(webpage)
 
-        # Insert documents to weaviate
+        # Insert webpages to weaviate
         weaviate_store.insert_webpages(webpages.webpages)
 
         print("Finished building search indexes")
