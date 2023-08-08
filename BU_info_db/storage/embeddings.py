@@ -1,11 +1,12 @@
 import concurrent.futures
+import re
 
 import openai
 import tenacity
 import tqdm
 import tqdm.asyncio
 
-import BU_info_db.storage.storage_data_classes as storage_data_classes
+import BU_info_db.storage.storage_data_classes as data_classes
 
 
 class wait_openai_ratelimit(tenacity.wait_exponential):
@@ -45,10 +46,11 @@ class wait_openai_ratelimit(tenacity.wait_exponential):
         elif unit == "s":
             duration = duration
         else:
-            # print(f"Unknown ratelimit reset duration unit: {unit}, defaulting to exponential backoff logic.")
+            print(
+                f"Unknown ratelimit reset duration unit: {unit}, defaulting to exponential backoff logic.")
             return super().__call__(retry_state=retry_state)
 
-        # print(f"{reached_ratelimit_limit_message}. Sleeping for {duration} seconds until ratelimit is reset..")
+        print(f"{reached_ratelimit_limit_message}. Sleeping for {duration} seconds until ratelimit is reset..")
 
         return duration
 
@@ -87,15 +89,26 @@ class EmbeddingsClient:
         embeddings = [data["embedding"] for data in resp["data"]]
         return embeddings
 
+    @openai_retry_config
+    async def _acreate_embeddings(self, texts: list[str]) -> list[list[float]]:
+        """Create embedding using OpenAI Embedding API"""
+        resp = await openai.Embedding.acreate(
+            input=texts,
+            model=self._model_name,
+            api_key=self._openai_api_key
+        )
+        embeddings = [data["embedding"] for data in resp["data"]]
+        return embeddings
 
     @classmethod
-    def _get_texts_to_embed(cls, weaviate_object: storage_data_classes.Webpage) -> list[str]:
+    def _get_texts_to_embed(cls, weaviate_object: data_classes.Webpage) -> list[str]:
         """Returns the texts to use for generating the embedding based on the content type"""
+        # If it's a CSV, create the embedding from the document metadata, otherwise use the content itself
         texts_to_embed = [text_content.text for text_content in weaviate_object.text_contents]
 
         return texts_to_embed
 
-    def _create_embeddings_batched(self, weaviate_object: storage_data_classes.Webpage) -> list[list[float]]:
+    def _create_embeddings_batched(self, weaviate_object: data_classes.Webpage) -> list[list[float]]:
         """Batch up and create embedding using OpenAI Embedding API"""
         embeddings = []
         texts_to_embed = self._get_texts_to_embed(weaviate_object)
@@ -106,8 +119,18 @@ class EmbeddingsClient:
 
         return embeddings
 
+    async def _acreate_embeddings_batched(self, weaviate_object: data_classes.Webpage) -> list[list[float]]:
+        """Batch up and create embedding using OpenAI Embedding API"""
+        embeddings = []
+        texts_to_embed = self._get_texts_to_embed(weaviate_object)
+        for i in range(0, len(texts_to_embed), self._batch_size):
+            texts_batch = texts_to_embed[i: i + self._batch_size]
+            embeddings_batch = await self._acreate_embeddings(texts=texts_batch)
+            embeddings.extend(embeddings_batch)
 
-    def create_weaviate_object_embeddings(self, weaviate_objects: list[storage_data_classes.Webpage]):
+        return embeddings
+
+    def create_weaviate_object_embeddings(self, weaviate_objects: list[data_classes.Webpage]):
         """Populate embeddings for text contents of weaviate objects using OpenAI Embedding API.
 
         Args:
@@ -125,3 +148,24 @@ class EmbeddingsClient:
             ):
                 for text_content, embedding in zip(weaviate_object.text_contents, embeddings):
                     text_content.vector = embedding
+
+    async def acreate_weaviate_object_embeddings(self, weaviate_objects: list[data_classes.Webpage]):
+        """Populate embeddings for text contents of weaviate objects using OpenAI Embedding API.
+
+        Args:
+            weaviate_objects: List of Thread of Document objects each containing the list of text contents to compute embeddings for.
+
+        Returns:
+            None, this function will fill in the _vector property of all TextContent objects contained in each Thread/Document.
+        """
+        results = await tqdm.asyncio.tqdm.gather(
+            *[
+                self._acreate_embeddings_batched(weaviate_object)
+                for weaviate_object in weaviate_objects
+            ],
+            total=len(weaviate_objects),
+            desc="Object embeddings"
+        )
+        for weaviate_object, embeddings in zip(weaviate_objects, results):
+            for text_content, embedding in zip(weaviate_object.text_contents, embeddings):
+                text_content.vector = embedding
