@@ -79,17 +79,19 @@ def run_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, outp
     p.start()
     p.join()
 
-    # Iterate over URLs and their corresponding content in the dictionary
-    print("HELEKN SLDNS")
-
 
 if __name__ == '__main__':
     # Example usage
     output_directory = "/Users/jonahkatz/Desktop/BU_Chatbot/new_webpages3"
     name = "mycrawler"
     allowed_domains = ["bu.edu"]
-    start_urls = ["https://www.bu.edu/admissions/", "https://www.bu.edu/dining/", "https://www.bu.edu/academics/"]
-    allow_rules = ["/admissions/", "/dining/", "/academics/"]
-    deny_rules = ["/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/", "events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "calendar/", "events/"]
+    # start_urls = ["https://www.bu.edu/admissions/", "https://www.bu.edu/dining/", "https://www.bu.edu/academics/", "https://www.bu.edu/studentactivities/", "https://www.bu.edu/international/", "https://www.bu.edu/finaid/", "https://www.bu.edu/summer/", "https://www.bu.edu/abroad/", "https://www.bu.edu/housing/", "https://www.bu.edu/library/"]
+    # allow_rules = ["/admissions/", "/dining/", "/academics/", "/studentactivities/", "/international/", "/finaid/", "/summer/", "/abroad/", "/housing/", "/library/"]
+    # deny_rules = ["/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/", "events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "calendar/", "events/", "/news/", "close-ups/"]
+
+
+    start_urls = ["https://www.bu.edu/library/"]
+    allow_rules = ["/library/"]
+    deny_rules = ["/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/", "events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "calendar/", "events/", "close-ups/", "/news/"]
 
     run_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, output_directory)

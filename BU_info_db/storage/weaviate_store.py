@@ -1,17 +1,21 @@
 import json
+import uuid
 
+import dateutil.parser
 import requests
 import tenacity
 import tqdm
 import weaviate
 
-from BU_info_db.storage import embeddings as embeddings, storage_data_classes as storage_data_classes
+import BU_info_db.storage.storage_data_classes as data_classes
+import  BU_info_db.storage.embeddings as embeddings
+
 
 # Aliases
-WeaviateObject = storage_data_classes.WeaviateObject
-TextContent = storage_data_classes.TextContent
-Webpage = storage_data_classes.Webpage
-CrossReference = storage_data_classes.CrossReference
+WeaviateObject = data_classes.WeaviateObject
+TextContent = data_classes.TextContent
+Webpage = data_classes.Webpage
+CrossReference = data_classes.CrossReference
 
 
 class RetryableBatch(weaviate.batch.Batch):
@@ -70,7 +74,7 @@ class WeaviateStore:
             if self.client.schema.exists(weaviate_class_name):
                 if delete_if_exists:
                     self.client.schema.delete_class(weaviate_class_name)
-                elif not delete_if_exists:
+                else:
                     raise Exception(f"Can't create schema because {weaviate_class_name} already exists. "
                                     f"Set delete_if_exists=True to re-create the schema.")
 
@@ -80,6 +84,7 @@ class WeaviateStore:
                 for weaviate_class in weaviate_classes
             ]
         })
+
 
     def insert_webpages(self, webpages: list[Webpage]):
         # We build a list of the webpages we've inserted to refresh at the end to create the centroid vectors
@@ -91,9 +96,7 @@ class WeaviateStore:
             # Compute the embeddings for all TextContents on each Webpage
             self._embeddings_client.create_weaviate_object_embeddings(webpages)
 
-            count = 0
-
-            for webpage in tqdm.tqdm(webpages, total=len(webpages), desc="Webpages"):
+            for webpage in tqdm.tqdm(webpages, total=len(webpages), desc="webpages"):
                 # Add the webpage object
                 webpage_uuid = batch.add_data_object(
                     class_name=Webpage.weaviate_class_name(namespace=self.namespace),
@@ -101,7 +104,6 @@ class WeaviateStore:
                     data_object=webpage.to_weaviate_object(),
                 )
                 webpages_to_refresh_centroid_vector.append(webpage_uuid)
-
 
                 # Add the TextContent objects for each chunk of the webpage and the reference/from the Webpage
                 for text_content in webpage.text_contents:
@@ -125,9 +127,7 @@ class WeaviateStore:
                         to_object_uuid=text_content_uuid
                     )
 
-                count += 1
-
-        print(f"Created {count} webpage objects and references in Weaviate")
+        print("Created webpage objects and references in Weaviate")
 
         # Add the references from Webpage -> TextContent. These need to be added outside the batch because
         # ref2vec-centroid does not support batch updates
@@ -168,9 +168,9 @@ class WeaviateStore:
         # The where filter is used to match the webpage url
         webpage_result = (
             self.client.query
-                .get(Webpage.weaviate_class_name(namespace=self.namespace), ["webpage_id"])
-                .with_where({"path": ["url"], "operator": "Equal", "valueText": url})
-                .do()
+            .get(Webpage.weaviate_class_name(namespace=self.namespace), ["webpage_id"])
+            .with_where({"path": ["url"], "operator": "Equal", "valueText": url})
+            .do()
         )
 
         # Check if webpage exists
@@ -181,15 +181,15 @@ class WeaviateStore:
 
             text_content_results = (
                 self.client.query
-                    .get(TextContent.weaviate_class_name(namespace=self.namespace), ["_additional { id }"])
-                    .with_where({
-                        "path": ["contentOf", "Webpage", "url"],
-                        "operator": "Like",
-                        "valueText": url
-                    })
-                    .do()
+                .get(TextContent.weaviate_class_name(namespace=self.namespace), ["_additional { id }"])
+                .with_where({
+                    "path": ["contentOf", "Webpage", "url"],
+                    "operator": "Like",
+                    "valueText": url
+                })
+                .do()
             )
-            
+
             for text_content in text_content_results:
                 self.client.data_object.delete(
                     class_name=TextContent.weaviate_class_name(namespace=self.namespace),
@@ -203,24 +203,6 @@ class WeaviateStore:
             )
         else:
             print(f"Webpage with url {url} does not exist in Weaviate database")
-
-    def get_all_webpages(self) -> dict[str, str]:
-        """Get all Webpage objects from Weaviate
-
-        Returns:
-            A dictionary of Webpage objects where the key is the URL and the value is the HTML content
-        """
-        webpage_results = (
-            self.client.query
-                .get(Webpage.weaviate_class_name(namespace=self.namespace), ["url", "html_content"])
-                .do()
-        )
-
-        webpages = {}
-        for webpage in webpage_results["data"]["Get"][Webpage.weaviate_class_name(namespace=self.namespace)]:
-            webpages[webpage["url"]] = webpage["html_content"]
-
-        return webpages
 
     def get_duplicate_webpage(self, url: str) -> list:
         """Check if a Webpage object exists in Weaviate
