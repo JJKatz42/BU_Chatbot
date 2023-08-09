@@ -3,13 +3,20 @@ import html2text
 import uuid
 import aiofiles
 import asyncio
+from bs4 import BeautifulSoup
 
-from BU_info_db.storage.data_connnector.index_data_classes import WebpageIndex
-from BU_info_db.storage.storage_data_classes import Webpage, TextContent
+import BU_info_db.storage.data_connnector.index_data_classes as index_data_classes
+import BU_info_db.storage.storage_data_classes as storage_data_classes
+
+# Aliases
+WebpageIndex = index_data_classes.WebpageIndex
+Webpage = storage_data_classes.Webpage
+TextContent = storage_data_classes.TextContent
+MimeType = storage_data_classes.MimeType
 
 
 class DirectoryReader:
-    SUPPORTED_MIME_TYPES = ["text/html"]
+    SUPPORTED_MIME_TYPES = [MimeType.HTML]
 
     def __init__(self, directory: str):
         self.directory = directory
@@ -23,6 +30,23 @@ class DirectoryReader:
             "mime_type": "text/markdown"
         }
 
+    @staticmethod
+    def is_html_content(content):
+        try:
+            # Using the html.parser to parse the content
+            soup = BeautifulSoup(content, 'html.parser')
+
+            # Check for presence of common HTML tags.
+            html_tags = ['html', 'head', 'body', 'p', 'a', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+
+            for tag in html_tags:
+                if soup.find(tag):
+                    return True
+
+            return False
+        except:
+            return False
+
     async def load_data(self) -> WebpageIndex:
         files = []
 
@@ -32,9 +56,11 @@ class DirectoryReader:
             async with aiofiles.open(fullpath, 'r') as file:
                 html_contents = await file.read()
 
-            mime_type = "text/html"
-            if mime_type in self.SUPPORTED_MIME_TYPES:
+            if self.is_html_content(html_contents):
+                mime_type = "text/html"
                 files.append({'id': fullpath, 'name': filename, 'html_content': html_contents, 'mimeType': mime_type})
+            else:
+                print(f"Skipping '{filename}' as it is not HTML.")
 
         print(f"{len(files)} webpages available")
 
@@ -51,7 +77,7 @@ class DirectoryReader:
             webpage = Webpage(
                 id=str(uuid.uuid4()),
                 html_content=file["html_content"],
-                url=file["name"],
+                url=file["name"].replace("_", "/"),
                 mime_type=file_content["mime_type"],
                 text_contents=file_content["text_contents"]
             )
