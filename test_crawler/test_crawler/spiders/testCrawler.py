@@ -33,11 +33,23 @@ class CourseSpider(CrawlSpider):
 
         Args:
             response: The response from the course page
+
+        Returns:
+            None
         """
-        if self.scraped_data.get(response.url) is None:
-            self.scraped_data[response.url] = response.text
+        if len(response.url) < 250:
+            if self.scraped_data.get(response.url) is None:
+                self.scraped_data[response.url] = response.text
 
     def closed(self, reason):
+        """Called when the spider is closed
+
+        Args:
+            reason: The reason the spider was closed
+
+        Returns:
+            None
+        """
         # Check if the directory exists. If it does, remove it
         if os.path.exists(self.output_directory):
             shutil.rmtree(self.output_directory)
@@ -61,6 +73,14 @@ def start_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, ou
     """Start the crawler process
 
     Args:
+        name: The name of the crawler
+        allowed_domains: The allowed domains for the crawler
+        start_urls: The start urls for the crawler
+        allow_rules: The allow rules for the crawler
+        deny_rules: The deny rules for the crawler
+        output_directory: The output directory for the crawler
+
+    Returns:
         None
     """
     process = CrawlerProcess(get_project_settings())
@@ -70,9 +90,17 @@ def start_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, ou
 
 
 def run_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, output_directory):
-    """Run the crawler and return the course urls
+    """Run the crawler and place the output in the output directory
 
     Args:
+        name: The name of the crawler
+        allowed_domains: The allowed domains for the crawler
+        start_urls: The start urls for the crawler
+        allow_rules: The allow rules for the crawler
+        deny_rules: The deny rules for the crawler
+        output_directory: The output directory for the crawler
+
+    Returns:
         None
     """
     p = multiprocessing.Process(target=start_crawler, args=(name, allowed_domains, start_urls, allow_rules, deny_rules, output_directory))
@@ -82,16 +110,12 @@ def run_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, outp
 
 if __name__ == '__main__':
     # Example usage
-    output_directory = "/Users/jonahkatz/Desktop/BU_Chatbot/new_webpages3"
+    output_directory = "/Users/jonahkatz/Desktop/BU_Chatbot/beta_info"
     name = "mycrawler"
     allowed_domains = ["bu.edu"]
-    # start_urls = ["https://www.bu.edu/admissions/", "https://www.bu.edu/dining/", "https://www.bu.edu/academics/", "https://www.bu.edu/studentactivities/", "https://www.bu.edu/international/", "https://www.bu.edu/finaid/", "https://www.bu.edu/summer/", "https://www.bu.edu/abroad/", "https://www.bu.edu/housing/", "https://www.bu.edu/library/"]
-    # allow_rules = ["/admissions/", "/dining/", "/academics/", "/studentactivities/", "/international/", "/finaid/", "/summer/", "/abroad/", "/housing/", "/library/"]
-    # deny_rules = ["/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/", "events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "calendar/", "events/", "/news/", "close-ups/"]
+    start_urls = ["https://www.bu.edu/admissions/", "https://www.bu.edu/dining/", "https://www.bu.edu/academics/", "https://www.bu.edu/studentactivities/", "https://www.bu.edu/international/", "https://www.bu.edu/finaid/", "https://www.bu.edu/summer/", "https://www.bu.edu/abroad/", "https://www.bu.edu/housing/", "https://www.bu.edu/library/", "https://www.bu.edu/questrom/", "https://www.bu.edu/cas/", "https://www.bu.edu/cds/", "https://www.bu.edu/com/", "https://www.bu.edu/cgs/", "https://www.bu.edu/hub/"]
+    allow_rules = ["/admissions/", "/dining/", "/academics/", "/studentactivities/", "/international/", "/finaid/", "/summer/", "/abroad/", "/housing/", "/library/", "/cas/", "/questrom/", "/cds/", "/com/", "/cgs/", "/hub/", "/parentsprogram/events/calendar/"]
 
-
-    start_urls = ["https://www.bu.edu/library/"]
-    allow_rules = ["/library/"]
-    deny_rules = ["/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/", "events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "calendar/", "events/", "close-ups/", "/news/"]
+    deny_rules = ["2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "articles", "archive", "magazine", "/news/", "//www.facebook.com/", "//www.linkedin.com/", "/cws/", "/twitter.com/", "/intent/", "/admissions/visit-us/events/events-calendar/", "/admissions/visit-us/events/virtual-events-calendar/", "/dining/calendar/",  "/dining/dining_experiences/calendar/", "events-calendar/", "events/virtual-events-calendar/", "/bme-events/", "close-ups/", "/news/", "/?share"]
 
     run_crawler(name, allowed_domains, start_urls, allow_rules, deny_rules, output_directory)
