@@ -23,7 +23,7 @@
                         var response = JSON.parse(xhr.responseText);
                         document.getElementById("chat").innerHTML += '<p>You: ' + document.getElementById('userInput').value + '</p>';
                         console.log(response);
-                        document.getElementById("chat").innerHTML += '<p>Bot: ' + response.response["answer"] + '</p>';
+                        document.getElementById("chat").innerHTML += '<p>Bot: ' + response["response"] + '</p>';
                     }
                 };
 
