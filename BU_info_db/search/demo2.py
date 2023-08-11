@@ -3,11 +3,6 @@ import asyncio
 import os
 import pprint
 
-print(os.environ.get('PYTHONPATH'))
-print('PYTHONPATH' in os.environ)
-root_folder = '/Users/jonahkatz/Desktop/BU_Chatbot'
-print(root_folder in os.environ.get('PYTHONPATH', '').split(os.pathsep))
-
 
 import BU_info_db.storage.weaviate_store as store
 import BU_info_db.search.weaviate_search_engine as search_engine
@@ -43,7 +38,7 @@ async def main():
     build_indexes_parser.add_argument(
         "--directory",
         help="By default directory is the questrom courses. ",
-        default="/Users/jonahkatz/Desktop/BU_Chatbot/new_webpages4",
+        default="/Users/jonahkatz/Desktop/BU_Chatbot/beta_info",
         action="store_true"
     )
     build_indexes_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
@@ -136,13 +131,17 @@ async def main():
 
 
         # Load Webpages from directory
+        print("Loading webpages from directory")
         loader = directory_reader.DirectoryReader(script_args.directory)
         webpages = await loader.load_data()
+        print(f"Loaded {len(webpages.webpages)} webpages")
+        print("Transforming webpages")
         webpage_splitter_transformer = webpage_splitter.WebpageSplitterTransformer()
         for webpage in webpages.webpages:
             # Run webpages through the WebpageSplitterTransformer to optimize for search and storage
             webpage_splitter_transformer.transform(webpage)
 
+        print("Inserting webpages to weaviate")
         # Insert webpages to weaviate
         weaviate_store.insert_webpages(webpages.webpages)
 

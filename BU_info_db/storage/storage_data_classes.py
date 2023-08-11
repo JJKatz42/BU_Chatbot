@@ -7,6 +7,7 @@ import uuid
 class MimeType(str, enum.Enum):
     TEXT = "text/plain"
     MARKDOWN = "text/markdown"
+    HTML = "text/html"
 
 
 class WeaviateObject:

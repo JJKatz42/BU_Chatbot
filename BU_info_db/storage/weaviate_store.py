@@ -1,4 +1,5 @@
 import json
+import time
 import uuid
 
 import dateutil.parser
@@ -89,6 +90,7 @@ class WeaviateStore:
     def insert_webpages(self, webpages: list[Webpage]):
         # We build a list of the webpages we've inserted to refresh at the end to create the centroid vectors
         webpages_to_refresh_centroid_vector = []
+        webpages_that_failed = []
 
         # Insert all data objects and references that support batching with batch
         print("Creating webpage objects in Weaviate")
@@ -97,6 +99,7 @@ class WeaviateStore:
             self._embeddings_client.create_weaviate_object_embeddings(webpages)
 
             for webpage in tqdm.tqdm(webpages, total=len(webpages), desc="webpages"):
+                time.sleep(0.2)
                 # Add the webpage object
                 webpage_uuid = batch.add_data_object(
                     class_name=Webpage.weaviate_class_name(namespace=self.namespace),
@@ -104,28 +107,35 @@ class WeaviateStore:
                     data_object=webpage.to_weaviate_object(),
                 )
                 webpages_to_refresh_centroid_vector.append(webpage_uuid)
+                webpages_that_failed.append(webpage_uuid)
 
-                # Add the TextContent objects for each chunk of the webpage and the reference/from the Webpage
-                for text_content in webpage.text_contents:
-                    text_content_uuid = batch.add_data_object(
-                        class_name=TextContent.weaviate_class_name(namespace=self.namespace),
-                        data_object=text_content.to_weaviate_object(),
-                        vector=text_content.vector
-                    )
-                    batch.add_reference(
-                        from_object_class_name=TextContent.weaviate_class_name(namespace=self.namespace),
-                        from_object_uuid=text_content_uuid,
-                        from_property_name="contentOf",
-                        to_object_class_name=Webpage.weaviate_class_name(namespace=self.namespace),
-                        to_object_uuid=webpage_uuid
-                    )
-                    batch.add_reference(
-                        from_object_class_name=Webpage.weaviate_class_name(namespace=self.namespace),
-                        from_object_uuid=webpage_uuid,
-                        from_property_name="textContents",
-                        to_object_class_name=TextContent.weaviate_class_name(namespace=self.namespace),
-                        to_object_uuid=text_content_uuid
-                    )
+
+                try:
+                    # Add the TextContent objects for each chunk of the webpage and the reference/from the Webpage
+                    for text_content in webpage.text_contents:
+                        text_content_uuid = batch.add_data_object(
+                            class_name=TextContent.weaviate_class_name(namespace=self.namespace),
+                            data_object=text_content.to_weaviate_object(),
+                            vector=text_content.vector
+                        )
+                        batch.add_reference(
+                            from_object_class_name=TextContent.weaviate_class_name(namespace=self.namespace),
+                            from_object_uuid=text_content_uuid,
+                            from_property_name="contentOf",
+                            to_object_class_name=Webpage.weaviate_class_name(namespace=self.namespace),
+                            to_object_uuid=webpage_uuid
+                        )
+                        batch.add_reference(
+                            from_object_class_name=Webpage.weaviate_class_name(namespace=self.namespace),
+                            from_object_uuid=webpage_uuid,
+                            from_property_name="textContents",
+                            to_object_class_name=TextContent.weaviate_class_name(namespace=self.namespace),
+                            to_object_uuid=text_content_uuid
+                        )
+                    webpages_that_failed.remove(webpage_uuid)
+                except:
+                    print(f"This webpage failed {webpages_that_failed}")
+                    print("This batch failed")
 
         print("Created webpage objects and references in Weaviate")
 

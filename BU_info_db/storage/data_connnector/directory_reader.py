@@ -27,7 +27,7 @@ class DirectoryReader:
         markdown_contents = self._html2text.handle(html_content)
         return {
             "text_contents": [TextContent(text=markdown_contents, index=0, metadata={"webpage_name": filepath})],
-            "mime_type": "text/markdown"
+            "mime_type": "text/html"
         }
 
     @staticmethod
