@@ -86,6 +86,12 @@ class EmbeddingsClient:
             model=self._model_name,
             api_key=self._openai_api_key
         )
+        # print(resp)
+        for data in resp["data"]:
+            if data["embedding"] == "" or data["embedding"] is None or data["embedding"] == []:
+                print(f"Error creating embedding: {texts}")
+                return []
+
         embeddings = [data["embedding"] for data in resp["data"]]
         return embeddings
 
@@ -97,6 +103,9 @@ class EmbeddingsClient:
             model=self._model_name,
             api_key=self._openai_api_key
         )
+        if resp["data"][0]["embedding"] == "" or resp["data"]["embedding"] is None or resp["data"]["embedding"] == []:
+            print(f"Error creating embedding: {texts}")
+            return []
         embeddings = [data["embedding"] for data in resp["data"]]
         return embeddings
 
