@@ -34,8 +34,6 @@ class WeaviateObject:
 
 @dataclasses.dataclass
 class UserMessage(WeaviateObject):
-    id: str
-    user_id: str
     query_str: str
     is_bad_query: bool
     created_time: int | float | str
@@ -52,10 +50,6 @@ class UserMessage(WeaviateObject):
                 "indexNullState": True,
             },
             "properties": [
-                {
-                    "name": "message_id",
-                    "dataType": ["text"],
-                },
                 {
                     "name": "is_good_query",
                     "dataType": ["bool"],
@@ -86,7 +80,6 @@ class UserMessage(WeaviateObject):
 
     def to_weaviate_object(self) -> dict:
         return {
-            "message_id": self.id,
             "query_str": self.query_str,
             "bad_query_tag": self.is_bad_query,
             "created_time": self.created_time,
@@ -95,8 +88,6 @@ class UserMessage(WeaviateObject):
 
 @dataclasses.dataclass
 class BotMessage(WeaviateObject):
-    id: str
-    user_id: str
     response_str: str
     is_liked: bool
     created_time: int | float | str
@@ -113,10 +104,6 @@ class BotMessage(WeaviateObject):
                 "indexNullState": True,
             },
             "properties": [
-                {
-                    "name": "message_id",
-                    "dataType": ["text"],
-                },
                 {
                     "name": "response_str",
                     "dataType": ["text"],
@@ -147,7 +134,6 @@ class BotMessage(WeaviateObject):
 
     def to_weaviate_object(self) -> dict:
         return {
-            "message_id": self.id,
             "is_liked": self.is_liked,
             "response_str": self.response_str,
             "created_time": self.created_time,
@@ -156,9 +142,8 @@ class BotMessage(WeaviateObject):
 
 @dataclasses.dataclass
 class Conversation(WeaviateObject):
-    id: str
-    user_id: str
-    messages: List[UserMessage, BotMessage]
+    messages: List[UserMessage | BotMessage]
+    created_time: int | float | str
 
     @classmethod
     def weaviate_class_schema(cls, namespace: str):
@@ -173,12 +158,11 @@ class Conversation(WeaviateObject):
             },
             "properties": [
                 {
-                    "name": "conversation_id",
-                    "dataType": ["text"],
-                },
-                {
                     "name": "messages",
-                    "dataType": [f"List[{UserMessage.weaviate_class_name(namespace=namespace)}, {BotMessage.weaviate_class_name(namespace=namespace)}]"]
+                    "dataType": [
+                        UserMessage.weaviate_class_name(namespace=namespace),
+                        BotMessage.weaviate_class_name(namespace=namespace)
+                    ]
                 },
                 {
                     "name": "hasUser",
@@ -189,18 +173,16 @@ class Conversation(WeaviateObject):
 
     @property
     def weaviate_id(self):
-        hex_string = hashlib.md5((self.id + str(self.messages)).encode()).hexdigest()
-        return uuid.UUID(hex=hex_string)
+        return uuid.uuid4()
 
     def to_weaviate_object(self) -> dict:
         return {
-            "conversation_id": self.id,
+            "messages": self.messages,
+            "created_time": self.created_time,
         }
 
 
 class ProfileInformation(WeaviateObject):
-    id: str
-    user_id: str
     key: str
     value: str
 
@@ -216,10 +198,6 @@ class ProfileInformation(WeaviateObject):
                 "indexNullState": True,
             },
             "properties": [
-                {
-                    "name": "_id",
-                    "dataType": ["text"],
-                },
                 {
                     "name": "key",
                     "dataType": ["text"],
@@ -237,22 +215,19 @@ class ProfileInformation(WeaviateObject):
 
     @property
     def weaviate_id(self):
-        hex_string = hashlib.md5((self.id + str(self.value) + str(self.value)).encode()).hexdigest()
+        hex_string = hashlib.md5((str(self.key) + str(self.value)).encode()).hexdigest()
         return uuid.UUID(hex=hex_string)
 
     def to_weaviate_object(self) -> dict:
         return {
-            "_id": self.id,
             "key": self.key,
-            "information": self.value
+            "value": self.value
         }
 
 
 @dataclasses.dataclass
 class User(WeaviateObject):
-    id: str
     gmail: str
-    password_hash: str
     created_time: int | float | str
     profile_information: list[ProfileInformation]
     conversations: list[Conversation]
@@ -270,15 +245,7 @@ class User(WeaviateObject):
             },
             "properties": [
                 {
-                    "name": "user_id",
-                    "dataType": ["text"],
-                },
-                {
                     "name": "gmail",
-                    "dataType": ["text"],
-                },
-                {
-                    "name": "password_hash",
                     "dataType": ["text"],
                 },
                 {
@@ -298,14 +265,12 @@ class User(WeaviateObject):
 
     @property
     def weaviate_id(self):
-        hex_string = hashlib.md5(self.id.encode()).hexdigest()
+        hex_string = hashlib.md5(self.gmail.encode()).hexdigest()
         return uuid.UUID(hex=hex_string)
 
     def to_weaviate_object(self) -> dict:
         return {
-            "user_id": self.id,
             "gmail": self.gmail,
-            "password_hash": self.password_hash,
             "created_time": self.created_time,
         }
 

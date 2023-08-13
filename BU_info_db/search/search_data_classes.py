@@ -20,6 +20,7 @@ SourceInfo = WebpageSourceInfo
 class SearchResult:
     """Container for Search Engine search results"""
     text: str
+    url: str
     score: float | None = None
     source_info: SourceInfo | None = None
 
