@@ -35,7 +35,7 @@ class WeaviateObject:
 @dataclasses.dataclass
 class UserMessage(WeaviateObject):
     query_str: str
-    is_bad_query: bool
+    is_bad_query: bool | None
     created_time: int | float | str
 
     @classmethod
@@ -67,7 +67,7 @@ class UserMessage(WeaviateObject):
                     "dataType": [Conversation.weaviate_class_name(namespace=namespace)],
                 },
                 {
-                    "name": "hasResponse",
+                    "name": "hasBotMessage",
                     "dataType": [BotMessage.weaviate_class_name(namespace=namespace)],
                 }
             ]
@@ -75,8 +75,7 @@ class UserMessage(WeaviateObject):
 
     @property
     def weaviate_id(self):
-        hex_string = hashlib.md5(self.query_str.encode()).hexdigest()
-        return uuid.UUID(hex=hex_string)
+        return uuid.uuid4()
 
     def to_weaviate_object(self) -> dict:
         return {
@@ -89,7 +88,7 @@ class UserMessage(WeaviateObject):
 @dataclasses.dataclass
 class BotMessage(WeaviateObject):
     response_str: str
-    is_liked: bool
+    is_liked: bool | None
     created_time: int | float | str
 
     @classmethod
@@ -121,7 +120,7 @@ class BotMessage(WeaviateObject):
                     "dataType": [Conversation.weaviate_class_name(namespace=namespace)],
                 },
                 {
-                    "name": "hasQuery",
+                    "name": "hasUserMessage",
                     "dataType": [UserMessage.weaviate_class_name(namespace=namespace)],
                 }
             ]
@@ -129,8 +128,7 @@ class BotMessage(WeaviateObject):
 
     @property
     def weaviate_id(self):
-        hex_string = hashlib.md5(self.response_str.encode()).hexdigest()
-        return uuid.UUID(hex=hex_string)
+        return uuid.uuid4()
 
     def to_weaviate_object(self) -> dict:
         return {
@@ -166,7 +164,7 @@ class Conversation(WeaviateObject):
                 },
                 {
                     "name": "hasUser",
-                    "dataType": [User.weaviate_class_name(namespace=namespace)],
+                    "dataType": [User.weaviate_class_name(namespace=namespace)]
                 }
             ]
         }
@@ -215,8 +213,7 @@ class ProfileInformation(WeaviateObject):
 
     @property
     def weaviate_id(self):
-        hex_string = hashlib.md5((str(self.key) + str(self.value)).encode()).hexdigest()
-        return uuid.UUID(hex=hex_string)
+        return uuid.uuid4()
 
     def to_weaviate_object(self) -> dict:
         return {
