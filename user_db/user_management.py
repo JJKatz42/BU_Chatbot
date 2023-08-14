@@ -53,6 +53,7 @@ class UserDatabaseManager:
                     for user_class in user_related_classes
                 ]
             })
+
         except Exception as e:
             print(f"Error creating schema: {e}")
             # Add further error handling or logging here as needed.
@@ -116,25 +117,28 @@ class UserDatabaseManager:
         bot_message_uuid = ""
         conversation_uuid = ""
 
-        # self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
-        #     "name": "hasConversation",
-        #     "dataType": [Conversation.weaviate_class_name(self.namespace)]
-        # })
-        #
-        # self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
-        #     "name": "hasConversation",
-        #     "dataType": [Conversation.weaviate_class_name(self.namespace)]
-        # })
-        #
-        # self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
-        #     "name": "hasBotMessage",
-        #     "dataType": [BotMessage.weaviate_class_name(self.namespace)]
-        # })
-        #
-        # self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
-        #     "name": "hasUserMessage",
-        #     "dataType": [UserMessage.weaviate_class_name(self.namespace)]
-        # })
+        try:
+            self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
+                "name": "hasConversation",
+                "dataType": [Conversation.weaviate_class_name(self.namespace)]
+            })
+
+            self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
+                "name": "hasConversation",
+                "dataType": [Conversation.weaviate_class_name(self.namespace)]
+            })
+
+            self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
+                "name": "hasBotMessage",
+                "dataType": [BotMessage.weaviate_class_name(self.namespace)]
+            })
+
+            self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
+                "name": "hasUserMessage",
+                "dataType": [UserMessage.weaviate_class_name(self.namespace)]
+            })
+        except Exception as e:
+            print(f"Error creating properties (doesn't matter tho): {e}")
 
         try:
             results = (
@@ -190,31 +194,6 @@ class UserDatabaseManager:
 
             print("Conversation class name: ", Conversation.weaviate_class_name(namespace=self.namespace))
             print("Conversation UUID: ", conversation_uuid)
-
-            # conversation_object = self.client.data_object.get(conversation_uuid)
-            #
-            # self.client.data_object.reference.add(
-            #     from_class_name=user_message.weaviate_class_name(self.namespace),
-            #     from_uuid=user_message_uuid,
-            #     from_property_name="hasConversation",
-            #     to_class_name=Conversation.weaviate_class_name(namespace=self.namespace),  # check dis
-            #     to_uuid=conversation_uuid
-            # )
-            #
-            # user_message_object = self.client.data_object.get(user_message_uuid)
-            #
-            # conversation_object['messages'].append(user_message_object)
-            #
-            # # add reverse reference
-            # self.client.data_object.reference.add(
-            #     from_class_name=bot_message.weaviate_class_name(self.namespace),
-            #     from_uuid=bot_message_uuid,
-            #     from_property_name="hasConversation",
-            #     to_class_name=Conversation.weaviate_class_name(namespace=self.namespace),  # check dis
-            #     to_uuid=conversation_uuid
-            # )
-            #
-            # conversation_object['messages'].append(self.client.data_object.get(bot_message_uuid))
 
             self.client.data_object.reference.add(
                 from_class_name=user_message.weaviate_class_name(self.namespace),

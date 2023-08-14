@@ -163,27 +163,27 @@ async def main():
 
         # Run the SearchAgent
         print("Running search agent")
-        agent_result = await search_agent_job(search_agent, ask_str)
+        # agent_result = await search_agent_job(search_agent, ask_str)
+        #
+        # sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
+        #
+        # # Extract the first 5 URLs
+        #
+        # top_5_urls = [item['url'] for item in sorted_lst[:10]]
+        #
+        # url_str = ""
+        # num = 0
+        # for url in top_5_urls:
+        #     if url in url_str:
+        #         continue
+        #
+        #     num += 1
+        #     url_str += "\n"  # Use HTML break line tag here
+        #     url_str += f"{num}. {url} "
+        #
+        # response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
 
-        sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
-
-        # Extract the first 5 URLs
-
-        top_5_urls = [item['url'] for item in sorted_lst[:10]]
-
-        url_str = ""
-        num = 0
-        for url in top_5_urls:
-            if url in url_str:
-                continue
-
-            num += 1
-            url_str += "\n"  # Use HTML break line tag here
-            url_str += f"{num}. {url} "
-
-        response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
-
-        # response = "This is a test response"
+        response = "This is a test response 2"
         # Create messages
         print("Creating user message")
         user_message = data_classes.UserMessage(
