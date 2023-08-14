@@ -1,14 +1,10 @@
-import asyncio
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import os
-from typing import Union
 import time
-import openai
+from typing import Union
 from dataclasses import asdict
-from asyncio import get_event_loop
 
 import BU_info_db.config as config
 import BU_info_db.storage.weaviate_store as store
@@ -96,7 +92,6 @@ async def chat():
                 sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
 
                 # Extract the first 5 URLs
-
 
                 top_5_urls = [item['url'] for item in sorted_lst[:10]]
 

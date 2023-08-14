@@ -2,16 +2,12 @@ import argparse
 import asyncio
 import datetime
 import os
-import pprint
 import time
-import uuid
 from dataclasses import asdict
 
 
 import BU_info_db.storage.weaviate_store as store
 import BU_info_db.search.weaviate_search_engine as search_engine
-import BU_info_db.storage.data_connnector.webpage_splitter as webpage_splitter
-import BU_info_db.storage.data_connnector.directory_reader as directory_reader
 import user_db.user_management as user_management
 import user_db.user_data_classes as data_classes
 from BU_info_db.search.search_agent import SearchAgent, SearchAgentFeatures
@@ -34,6 +30,7 @@ def init_config(local_env_file: str | None):
         local_env_file=local_env_file
     )
 
+
 async def search_agent_job(agent: SearchAgent, query: str) -> dict:
     print(f"Running job: {query}")
     search_job_start_time = time.time()
@@ -52,7 +49,10 @@ async def main():
 
     subparsers = parser.add_subparsers(dest="command")
 
-    insert_user_parser = subparsers.add_parser("insert-user", help="Insert user into database", argument_default=argparse.SUPPRESS)
+    insert_user_parser = subparsers.add_parser(
+        "insert-user",
+        help="Insert user into database",
+        argument_default=argparse.SUPPRESS)
     insert_user_parser.add_argument(
         "--gmail",
         help="By default gmail is jjkatz@bu.edu",
@@ -67,7 +67,9 @@ async def main():
         default=False,
         action="store_true"
     )
-    insert_message_parser = subparsers.add_parser("insert-message", help="Run a search query and get back search result")
+    insert_message_parser = subparsers.add_parser(
+        "insert-message",
+        help="Run a search query and get back search result")
     insert_message_parser.add_argument("ask", nargs="?", default="describe sm 132")
     insert_message_parser.add_argument(
         "--gmail",
@@ -76,7 +78,6 @@ async def main():
         action="store_true"
     )
     insert_message_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
-
 
     script_args = parser.parse_args()
 
@@ -87,8 +88,7 @@ async def main():
         env_file = os.path.join(current_directory, env_file)
     init_config(local_env_file=env_file)
 
-    # Initialize weaviate store
-
+    # Initialize weaviate user management
     weaviate_user_management = user_management.UserDatabaseManager(
         instance_url=config.get("WEAVIATE_URL"),
         api_key=config.get("WEAVIATE_API_KEY"),
@@ -97,6 +97,7 @@ async def main():
         cohere_api_key=config.get("COHERE_API_KEY")
     )
 
+    # Initialize weaviate store
     weaviate_store_info = store.WeaviateStore(
         instance_url=config.get("WEAVIATE_URL"),
         api_key=config.get("WEAVIATE_API_KEY"),
@@ -104,7 +105,6 @@ async def main():
         namespace=config.get("INFO_DATA_NAMESPACE"),
         cohere_api_key=config.get("COHERE_API_KEY")
     )
-
 
     # Route to sub command specific logic either build indexes for search or run a search
     if script_args.command == "insert-user":
@@ -131,9 +131,8 @@ async def main():
                 )
             ]
 
-
-            print("Inserting user into weaviate")
             # Insert webpages to weaviate
+            print("Inserting user into weaviate")
             weaviate_user_management.create_user(user=user)
 
             print("Finished inserting user")
@@ -163,27 +162,25 @@ async def main():
 
         # Run the SearchAgent
         print("Running search agent")
-        # agent_result = await search_agent_job(search_agent, ask_str)
-        #
-        # sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
-        #
-        # # Extract the first 5 URLs
-        #
-        # top_5_urls = [item['url'] for item in sorted_lst[:10]]
-        #
-        # url_str = ""
-        # num = 0
-        # for url in top_5_urls:
-        #     if url in url_str:
-        #         continue
-        #
-        #     num += 1
-        #     url_str += "\n"  # Use HTML break line tag here
-        #     url_str += f"{num}. {url} "
-        #
-        # response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
+        agent_result = await search_agent_job(search_agent, ask_str)
+        # sort the sources by score
+        sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
+        # Extract the first 5 URLs
+        top_5_urls = [item['url'] for item in sorted_lst[:10]]
+        # Create a string of the URLs
+        url_str = ""
+        num = 0
+        for url in top_5_urls:
+            if url in url_str:
+                continue
 
-        response = "This is a test response 2"
+            num += 1
+            url_str += "\n"  # Use HTML break line tag here
+            url_str += f"{num}. {url} "
+
+        response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
+
+        # response = "This is a test response 2"
         # Create messages
         print("Creating user message")
         user_message = data_classes.UserMessage(

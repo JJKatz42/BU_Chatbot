@@ -12,8 +12,6 @@ import BU_info_db.storage.data_connnector.directory_reader as directory_reader
 from BU_info_db.config import config
 
 
-
-
 def init_config(local_env_file: str | None):
     config.init(
         metadata=[
@@ -26,6 +24,7 @@ def init_config(local_env_file: str | None):
         local_env_file=local_env_file
     )
 
+
 async def main():
     parser = argparse.ArgumentParser(
         prog="Interact with the search engine",
@@ -34,10 +33,14 @@ async def main():
 
     subparsers = parser.add_subparsers(dest="command")
 
-    build_indexes_parser = subparsers.add_parser("build-indexes", help="Build indexes used for search", argument_default=argparse.SUPPRESS)
+    build_indexes_parser = subparsers.add_parser(
+        "build-indexes",
+        help="Build indexes used for search",
+        argument_default=argparse.SUPPRESS
+    )
     build_indexes_parser.add_argument(
         "--directory",
-        help="By default directory is the questrom courses. ",
+        help="By default directory is the beta_info directory",
         default="/Users/jonahkatz/Desktop/BU_Chatbot/beta_info",
         action="store_true"
     )
@@ -122,13 +125,11 @@ async def main():
         cohere_api_key=config.get("COHERE_API_KEY")
     )
 
-
     # Route to sub command specific logic either build indexes for search or run a search
     if script_args.command == "build-indexes":
         # Create weaviate schema
         if script_args.full_refresh:
             weaviate_store.create_schema(delete_if_exists=True)
-
 
         # Load Webpages from directory
         print("Loading webpages from directory")
