@@ -1,15 +1,12 @@
 import json
 import time
-import uuid
-
-import dateutil.parser
 import requests
 import tenacity
 import tqdm
 import weaviate
 
 import BU_info_db.storage.storage_data_classes as data_classes
-import  BU_info_db.storage.embeddings as embeddings
+import BU_info_db.storage.embeddings as embeddings
 
 
 # Aliases
@@ -86,7 +83,6 @@ class WeaviateStore:
             ]
         })
 
-
     def insert_webpages(self, webpages: list[Webpage]):
         # We build a list of the webpages we've inserted to refresh at the end to create the centroid vectors
         webpages_to_refresh_centroid_vector = []
@@ -108,7 +104,6 @@ class WeaviateStore:
                 )
                 webpages_to_refresh_centroid_vector.append(webpage_uuid)
                 webpages_that_failed.append(webpage_uuid)
-
 
                 try:
                     # Add the TextContent objects for each chunk of the webpage and the reference/from the Webpage
@@ -227,7 +222,7 @@ class WeaviateStore:
             .do()
         )
 
-        if results["data"]["Get"][Webpage.weaviate_class_name(namespace=self.namespace)] != []:
+        if results["data"]["Get"][Webpage.weaviate_class_name(namespace=self.namespace)]:
             html_content = results["data"]["Get"][Webpage.weaviate_class_name(namespace=self.namespace)][0][
                 "html_content"]
             return [url, html_content]

@@ -2,9 +2,8 @@ import dataclasses
 import hashlib
 import uuid
 import datetime
-import dateutil
-from dateutil import parser
-from typing import List, Tuple
+from typing import List
+
 
 class WeaviateObject:
     @classmethod
@@ -31,6 +30,7 @@ class WeaviateObject:
             datetime_vars[var_name] = value
 
         return datetime_vars
+
 
 @dataclasses.dataclass
 class UserMessage(WeaviateObject):

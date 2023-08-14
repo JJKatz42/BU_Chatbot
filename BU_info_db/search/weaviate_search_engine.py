@@ -24,6 +24,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
     This class implements the Llama Index retriever interface, so it can be plugged into
     the framework and work with other modules like QueryEngine's.
     """
+
     def __init__(self, weaviate_store: weaviate_store.WeaviateStore):
         self._weaviate_store = weaviate_store
 
@@ -41,13 +42,13 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         return llama_index_search_results
 
     def search(
-        self,
-        query_str: str,
-        mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
-        top_k: int = 3,
-        alpha: float = 0.75,
-        re_rank: bool = False,
-        filters: dict = None
+            self,
+            query_str: str,
+            mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
+            top_k: int = 3,
+            alpha: float = 0.75,
+            re_rank: bool = False,
+            filters: dict = None
     ) -> list[SearchResult]:
         """Search for most relevant information to the query
 
@@ -60,8 +61,6 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
             alpha: Only relevant for hybrid mode searches: https://weaviate.io/developers/weaviate/search/hybrid#weight-keyword-vs-vector-results
             re_rank: Re-rank results using Cohere API
             filters: Additional filters in the Weaviate format: https://weaviate.io/developers/weaviate/search/filters
-            as_accessor: Impersonate an accessors permissions when finding information.
-                Only information accessible by accessor will be searched.
 
         Returns:
             List of SearchResult objects representing the top_k results returned by the search
@@ -107,11 +106,11 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         return search_results
 
     def ask(
-        self,
-        ask_str: str,
-        mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
-        top_k: int = 3,
-        filters: dict = None
+            self,
+            ask_str: str,
+            mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
+            top_k: int = 3,
+            filters: dict = None
     ) -> Answer:
         """Answer a question by passing search results + question to LLM.
 
@@ -124,8 +123,6 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 If "hybrid", both vector and keyword search will be used together.
             top_k: Number of most relevant results to return
             filters: Additional filters in the Weaviate format: https://weaviate.io/developers/weaviate/search/filters
-            as_accessor: Impersonate an accessors permissions when finding information.
-                Only information accessible by accessor will be searched.
 
         Returns:
             Answer object which contains the answer and list of SearchResult objects representing the top_k results returned by the search
@@ -167,6 +164,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                     print(f"Error generating an answer: {error}")
             search_result = SearchResult(
                 text=raw_result["text"],
+                url=raw_result["contentOf"][0]["url"],
                 score=(
                     raw_result["_additional"]["distance"]
                     if mode == "semantic"
@@ -180,11 +178,11 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         return answer
 
     def summarize(
-        self,
-        query_str: str,
-        mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
-        top_k: int = 5,
-        filters: dict = None
+            self,
+            query_str: str,
+            mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
+            top_k: int = 5,
+            filters: dict = None
     ) -> Summarization:
         """Summarize search results by passing search results + question to LLM.
 
@@ -197,8 +195,6 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 If "hybrid", both vector and keyword search will be used together.
             top_k: Number of most relevant results to return
             filters: Additional filters in the Weaviate format: https://weaviate.io/developers/weaviate/search/filters
-            as_accessor: Impersonate an accessors permissions when finding information.
-                Only information accessible by accessor will be searched.
 
         Returns:
             Summarization object which contains the summary and list of SearchResult objects representing the top_k results returned by the search
@@ -239,6 +235,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
 
             search_result = SearchResult(
                 text=raw_result["text"],
+                url=raw_result["contentOf"][0]["url"],
                 score=(
                     raw_result["_additional"]["distance"]
                     if mode == "semantic"
@@ -250,19 +247,19 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         summarization = Summarization(summary=summary_str, search_results=search_results)
 
         return summarization
-    
+
     @property
     def namespace(self):
         return self._weaviate_store.namespace
 
     def _build_search_query(
-        self,
-        query_str: str,
-        mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
-        top_k: int = 3,
-        alpha: float = 0.75,
-        re_rank: bool = False,
-        filters: dict = None
+            self,
+            query_str: str,
+            mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
+            top_k: int = 3,
+            alpha: float = 0.75,
+            re_rank: bool = False,
+            filters: dict = None
     ) -> weaviate.gql.get.GetBuilder:
         """Build a search query for most relevant information to the query
 
@@ -275,8 +272,6 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
             alpha: Only relevant for hybrid mode searches: https://weaviate.io/developers/weaviate/search/hybrid#weight-keyword-vs-vector-results
             re_rank: Re-rank results using Cohere API
             filters: Additional filters in the Weaviate format: https://weaviate.io/developers/weaviate/search/filters
-            as_accessor: Impersonate an accessors permissions when finding information.
-                Only information accessible by accessor will be searched.
 
         Returns:
             Weaviate QueryBuilder object
@@ -284,9 +279,9 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
 
         query = (
             self._weaviate_store.client.query
-                .get(TextContent.weaviate_class_name(namespace=self.namespace), ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { url, webpage_id, mimeType } }"])
+            .get(TextContent.weaviate_class_name(namespace=self.namespace),
+                 ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { url, webpage_id, mimeType } }"])
         )
-
 
         query = query.with_additional(properties=["id"])
 
@@ -311,7 +306,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
 
         # Build where filters
         where_filter = None
-        
+
         if filters:
             where_filter = filters
 

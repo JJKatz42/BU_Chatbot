@@ -27,7 +27,6 @@ class WebpageSplitterTransformer:
         h_2 = h_1.handle(Webpage.html_content)
         clean_text = h_2
 
-
         chunks = splitter.split_text(clean_text)
         Webpage.text_contents = [
             storage_data_classes.TextContent(text=chunk, index=chunk_index)
