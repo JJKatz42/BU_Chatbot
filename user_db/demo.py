@@ -68,7 +68,13 @@ async def main():
         action="store_true"
     )
     insert_message_parser = subparsers.add_parser("insert-message", help="Run a search query and get back search result")
-    insert_message_parser.add_argument("--query", nargs="?", default="describe sm 132")
+    insert_message_parser.add_argument("ask", nargs="?", default="describe sm 132")
+    insert_message_parser.add_argument(
+        "--gmail",
+        help="By default gmail is jjkatz@bu.edu",
+        default="jjkatz@bu.edu",
+        action="store_true"
+    )
     insert_message_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
 
 
@@ -83,7 +89,6 @@ async def main():
 
     # Initialize weaviate store
 
-    print(config.get("USER_DATA_NAMESPACE"))
     weaviate_user_management = user_management.UserDatabaseManager(
         instance_url=config.get("WEAVIATE_URL"),
         api_key=config.get("WEAVIATE_API_KEY"),
@@ -152,10 +157,55 @@ async def main():
             features=features
         )
 
+        weaviate_user_management.get_messages()
+
         ask_str = script_args.ask
 
         # Run the SearchAgent
+        print("Running search agent")
         agent_result = await search_agent_job(search_agent, ask_str)
+
+        sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
+
+        # Extract the first 5 URLs
+
+        top_5_urls = [item['url'] for item in sorted_lst[:10]]
+
+        url_str = ""
+        num = 0
+        for url in top_5_urls:
+            if url in url_str:
+                continue
+
+            num += 1
+            url_str += "\n"  # Use HTML break line tag here
+            url_str += f"{num}. {url} "
+
+        response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
+
+        # response = "This is a test response"
+        # Create messages
+        print("Creating user message")
+        user_message = data_classes.UserMessage(
+            query_str=ask_str,
+            is_bad_query=None,
+            created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+        print("Creating bot message")
+        bot_message = data_classes.BotMessage(
+            response_str=response,
+            is_liked=None,
+            created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+
+        # Insert message into user
+        print("Inserting message into user")
+        weaviate_user_management.insert_message(
+            user_message=user_message,
+            bot_message=bot_message,
+            gmail=script_args.gmail
+        )
+        print("Finished inserting message")
 
 
 if __name__ == '__main__':
