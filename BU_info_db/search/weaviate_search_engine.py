@@ -80,11 +80,6 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         # Execute the query
         response = query.do()
 
-        # Parse into search results
-        # print("________________________________________")
-        # print(query_str+"\n")
-        # print(response["data"]["Get"]["Jonahs_weaviate_TextContent"]["query_str"])
-        # print("________________________________________")
         try:
             raw_results = response["data"]["Get"][
                 TextContent.weaviate_class_name(namespace=self.namespace)
@@ -100,8 +95,11 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 score = raw_result["_additional"]["certainty"]
             else:
                 score = float(raw_result["_additional"]["score"])
+
+            url = raw_result["contentOf"][0]["url"]
             search_result = SearchResult(
                 text=raw_result["text"],
+                url=url,
                 score=score
             )
             search_results.append(search_result)

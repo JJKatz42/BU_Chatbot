@@ -23,7 +23,7 @@ def init_config(local_env_file: Union[str, None]):
             config.ConfigVarMetadata(var_name="DATA_NAMESPACE"),
             config.ConfigVarMetadata(var_name="WEAVIATE_URL"),
             config.ConfigVarMetadata(var_name="WEAVIATE_API_KEY"),
-            config.ConfigVarMetadata(var_name="EVALUATE_OPENAI_API_KEY"),
+            config.ConfigVarMetadata(var_name="OPENAI_API_KEY"),
             config.ConfigVarMetadata(var_name="COHERE_API_KEY"),
         ],
         local_env_file=local_env_file
@@ -40,7 +40,7 @@ init_config(local_env_file=env_file)
 weaviate_store = store.WeaviateStore(
     instance_url=config.get("WEAVIATE_URL"),
     api_key=config.get("WEAVIATE_API_KEY"),
-    openai_api_key=config.get("EVALUATE_OPENAI_API_KEY"),
+    openai_api_key=config.get("OPENAI_API_KEY"),
     namespace=config.get("DATA_NAMESPACE"),
     cohere_api_key=config.get("COHERE_API_KEY")
 )
@@ -49,9 +49,9 @@ weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_sto
 
 # Initialize a reasoning LLM
 reasoning_llm = langchain.chat_models.ChatOpenAI(
-    model_name="gpt-4-0613",
+    model_name="gpt-3.5-turbo-0613",
     temperature=0.0,
-    openai_api_key=config.get("EVALUATE_OPENAI_API_KEY")
+    openai_api_key=config.get("OPENAI_API_KEY")
 )
 
 features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QUERY_PLANNING]
@@ -93,9 +93,28 @@ async def chat():
                 # Run the SearchAgent
                 agent_result = await search_agent_job(search_agent, input_text)
 
-                print(f"SearchAgent sources: {agent_result['sources']}.")
+                sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
 
-                result = jsonify({'response': agent_result['answer']})
+                # Extract the first 5 URLs
+
+
+                top_5_urls = [item['url'] for item in sorted_lst[:10]]
+
+                url_str = ""
+                num = 0
+                for url in top_5_urls:
+                    if url in url_str:
+                        continue
+
+                    num += 1
+                    url_str += "<br>"  # Use HTML break line tag here
+                    url_str += f"{num}. {url} "
+
+                response = f"{agent_result['answer']} <br><br> Sources: {url_str}"  # Use HTML break line tag here
+
+                print(f"SearchAgent answer: {response}.")
+
+                result = jsonify({'response': response})
 
                 return result
             else:
