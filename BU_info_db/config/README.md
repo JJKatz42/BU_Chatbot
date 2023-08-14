@@ -2,7 +2,7 @@
 
 **Usage:**
 ```python
-import libs.config as config
+import BU_info_db.config as config
 
 # You MUST init the config module before you can call the `get` method
 config.init(
