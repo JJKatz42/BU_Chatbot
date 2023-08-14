@@ -1,5 +1,5 @@
 import weaviate
-import user_db.user_data_classes as data_classes
+import user_info_db.user_data_classes as data_classes
 
 # Aliases for clarity
 User = data_classes.User
