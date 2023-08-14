@@ -106,7 +106,7 @@ async def main():
     )
 
 
-    # Route to sub command specific logic either build indexes for search or run a search
+    # Route to sub command specific logic either insert user or insert message
     if script_args.command == "insert-user":
         # Create weaviate schema
         if script_args.full_refresh:
@@ -157,33 +157,31 @@ async def main():
             features=features
         )
 
-        weaviate_user_management.get_messages()
+        weaviate_user_management.get_messages_from_user_gmail(gmail=script_args.gmail)
 
         ask_str = script_args.ask
 
         # Run the SearchAgent
         print("Running search agent")
-        # agent_result = await search_agent_job(search_agent, ask_str)
-        #
-        # sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
-        #
-        # # Extract the first 5 URLs
-        #
-        # top_5_urls = [item['url'] for item in sorted_lst[:10]]
-        #
-        # url_str = ""
-        # num = 0
-        # for url in top_5_urls:
-        #     if url in url_str:
-        #         continue
-        #
-        #     num += 1
-        #     url_str += "\n"  # Use HTML break line tag here
-        #     url_str += f"{num}. {url} "
-        #
-        # response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
+        agent_result = await search_agent_job(search_agent, ask_str)
+        # sort the sources by score
+        sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
+        # Extract the first 5 URLs
+        top_5_urls = [item['url'] for item in sorted_lst[:10]]
+        # Add sources
+        url_str = ""
+        num = 0
+        for url in top_5_urls:
+            if url in url_str:
+                continue
 
-        response = "This is a test response 2"
+            num += 1
+            url_str += "\n"  # Use HTML break line tag here
+            url_str += f"{num}. {url} "
+
+        response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
+
+        # response = "This is a test response 2"
         # Create messages
         print("Creating user message")
         user_message = data_classes.UserMessage(

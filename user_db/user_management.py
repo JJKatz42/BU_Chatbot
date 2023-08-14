@@ -58,7 +58,7 @@ class UserDatabaseManager:
             print(f"Error creating schema: {e}")
             # Add further error handling or logging here as needed.
 
-    def create_user(self, user: User) -> str:
+    def create_user(self, user: User):
         """
         Create a User in Weaviate and initialize a Conversation and ProfileInformation object for them
         Args:
@@ -76,7 +76,6 @@ class UserDatabaseManager:
             )
         except Exception as e:
             print(f"Error creating user: {e}")
-            return user_uuid
 
         # Initialize an empty Conversation object and cross-reference it with the User
         for conversation in user.conversations:
@@ -107,12 +106,15 @@ class UserDatabaseManager:
             except Exception as e:
                 print(f"Error creating conversation: {e}")
 
-        # Placeholder for ProfileInformation linking, can be expanded as required
-        # Currently, it initializes an empty list and does nothing further.
-
-        return user_uuid
-
     def insert_message(self, user_message: UserMessage, bot_message: BotMessage, gmail: str):
+        """
+        Insert a UserMessage and BotMessage into Weaviate and cross-reference them with a Conversation
+
+        Args:
+            user_message: The UserMessage object to insert
+            bot_message: The BotMessage object to insert
+            gmail: The Gmail of the user to insert the messages for
+        """
         user_message_uuid = ""
         bot_message_uuid = ""
         conversation_uuid = ""
@@ -154,6 +156,7 @@ class UserDatabaseManager:
             print(f"Error getting conversation ID: {e}")
 
         try:
+            # Create a user message
             user_message_uuid = self.client.data_object.create(
                 class_name=UserMessage.weaviate_class_name(self.namespace),
                 uuid=user_message.weaviate_id,
@@ -190,10 +193,7 @@ class UserDatabaseManager:
             print(f"Error adding bot messages and creating references: {e}")
 
         try:
-            # Create a bi-directional cross-reference between UserMessage and BotMessage with Conversation
-
-            print("Conversation class name: ", Conversation.weaviate_class_name(namespace=self.namespace))
-            print("Conversation UUID: ", conversation_uuid)
+            # Create a bi-directional cross-reference between messages and Conversation
 
             self.client.data_object.reference.add(
                 from_class_name=user_message.weaviate_class_name(self.namespace),
@@ -230,57 +230,40 @@ class UserDatabaseManager:
         except Exception as e:
             print(f"Error creating references between messages and conversation: {e}")
 
-
-# def add_profile_information(self, user_id: str, profile_information: ProfileInformation):
-#         for profile_info in profile_information_list:
-#             try:
-#                 profile_info_obj = profile_info.to_weaviate_object()
-#                 self.client.data_object.create(profile_info_obj, profile_info.weaviate_class_name(self.namespace))
-#                 try:
-#                     conversation_id = self.client.data_object.create(
-#                         conversation_obj,
-#                         conversation.weaviate_class_name(self.namespace),
-#                         conversation.weaviate_id
-#                     )
-#                 except Exception as e:
-#                     print(f"Error creating conversation: {e}")
-#                     return user_id
-#
-#                 # Create a bi-directional cross-reference between User and Conversation
-#                 user_conversation_cross_ref = CrossReference(
-#                     from_class=user.weaviate_class_name(self.namespace),
-#                     from_uuid=user_id,
-#                     from_property="hasConversation",
-#                     to_class=conversation.weaviate_class_name(self.namespace),
-#                     to_uuid=conversation_id
-#                 )
-#                 self._create_cross_reference(user_conversation_cross_ref)
-#                 user_conversation_reverse_cross_ref = CrossReference(
-#                     from_class=conversation.weaviate_class_name(self.namespace),
-#                     from_uuid=conversation_id,
-#                     from_property="hasUser",
-#                     to_class=user.weaviate_class_name(self.namespace),
-#                     to_uuid=user_id
-#                 )
-#                 self._create_cross_reference(user_conversation_reverse_cross_ref)
-#             except Exception as e:
-#                 print(f"Error creating profile information: {e}")
-
-    def _create_cross_reference(self, cross_ref: CrossReference):
-        """
-        Create a cross-reference between two Weaviate objects based on the CrossReference object provided.
-        """
-        try:
-            # Create the forward cross-reference
-            self.client.data_object.reference.add(
-                cross_ref.from_class,
-                cross_ref.from_uuid,
-                cross_ref.from_property,
-                cross_ref.to_class,
-                cross_ref.to_uuid
-            )
-        except Exception as e:
-            print(f"Error creating cross-reference: {e}")
+    # def add_profile_information(self, user_id: str, profile_information: ProfileInformation):
+    #         for profile_info in profile_information_list:
+    #             try:
+    #                 profile_info_obj = profile_info.to_weaviate_object()
+    #                 self.client.data_object.create(profile_info_obj, profile_info.weaviate_class_name(self.namespace))
+    #                 try:
+    #                     conversation_id = self.client.data_object.create(
+    #                         conversation_obj,
+    #                         conversation.weaviate_class_name(self.namespace),
+    #                         conversation.weaviate_id
+    #                     )
+    #                 except Exception as e:
+    #                     print(f"Error creating conversation: {e}")
+    #                     return user_id
+    #
+    #                 # Create a bi-directional cross-reference between User and Conversation
+    #                 user_conversation_cross_ref = CrossReference(
+    #                     from_class=user.weaviate_class_name(self.namespace),
+    #                     from_uuid=user_id,
+    #                     from_property="hasConversation",
+    #                     to_class=conversation.weaviate_class_name(self.namespace),
+    #                     to_uuid=conversation_id
+    #                 )
+    #                 self._create_cross_reference(user_conversation_cross_ref)
+    #                 user_conversation_reverse_cross_ref = CrossReference(
+    #                     from_class=conversation.weaviate_class_name(self.namespace),
+    #                     from_uuid=conversation_id,
+    #                     from_property="hasUser",
+    #                     to_class=user.weaviate_class_name(self.namespace),
+    #                     to_uuid=user_id
+    #                 )
+    #                 self._create_cross_reference(user_conversation_reverse_cross_ref)
+    #             except Exception as e:
+    #                 print(f"Error creating profile information: {e}")
 
     def _get_conversation_id(self, user_id: str) -> str:
         """Get the Conversation UUID associated with a User"""
@@ -312,11 +295,13 @@ class UserDatabaseManager:
 
         return False
 
-    def get_messages(self):
-        # Fetch the conversations associated with the user based on Gmail
+    def get_messages_from_user_gmail(self, gmail: str):
+        """Get all messages from Weaviate"""
+        # Fetch all the message strings from a user
         results = (
             self.client.query
             .get(User.weaviate_class_name(namespace=self.namespace), ["hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, created_time } ... on Jonahs_weaviate_userdb_BotMessage { response_str, created_time } } } }"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
             .do()
         )
 
