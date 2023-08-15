@@ -17,4 +17,4 @@ This project consists of 4 main subdirectories:
 4. Activate virtual environment `source ~/.pyenv/versions/3.10.11/envs/BUChatbot/bin/activate`
 5. (optional) Configure pyenv for terminal activation.  Add `eval "$(pyenv init --path)"` to `~/.zprofile`, as well as
 `eval "$(pyenv init -)"` and `eval "$(pyenv virtualenv-init -)"` to `~/.zshrc`.  Then you can run `pyenv activate BUChatbot`
-5. Configure IDE python interpreter to point to `/Users/<your user>/.pyenv/versions/3.10.11/envs/BUChatbot/bin/python`
+5. Configure IDE python interpreter to point to `/Users/<your user>/.pyenv/versions/3.10.11/envs/BUChatbot/bin/python` 
