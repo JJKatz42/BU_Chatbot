@@ -53,6 +53,24 @@ class UserDatabaseManager:
             print(f"Error creating schema: {e}")
             # Add further error handling or logging here as needed.
 
+    def user_exists(self, gmail: str) -> bool:
+        """Check if a Webpage object exists in Weaviate
+
+        Returns:
+            True if the Webpage object exists, False otherwise
+        """
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace), ["gmail"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+
+        if results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)]:
+            return True
+
+        return False
+
     def create_user(self, user: User) -> str:
         """
         Create a User in Weaviate and initialize a Conversation and ProfileInformation object for them
@@ -101,11 +119,6 @@ class UserDatabaseManager:
             except Exception as e:
                 print(f"Error creating conversation: {e}")
 
-        # Placeholder for ProfileInformation linking, can be expanded as required
-        # Currently, it initializes an empty list and does nothing further.
-
-        return user_uuid
-
     def insert_message(self, user_message: UserMessage, bot_message: BotMessage, gmail: str):
         user_message_uuid = ""
         bot_message_uuid = ""
@@ -135,17 +148,7 @@ class UserDatabaseManager:
             print(f"Error creating properties (doesn't matter tho): {e}")
 
         try:
-            results = (
-                self.client.query
-                .get(User.weaviate_class_name(namespace=self.namespace),
-                     ["gmail", "hasConversation {... on Jonahs_weaviate_userdb_Conversation { _additional { id } } }"])
-                .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
-                .do()
-            )
-
-            if results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)][0]["hasConversation"]:
-                conversation_uuid = results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)][0][
-                    'hasConversation'][0]["_additional"]["id"]
+            conversation_uuid = self._get_conversation_id(gmail=gmail)
         except Exception as e:
             print(f"Error getting conversation ID: {e}")
 
@@ -222,40 +225,198 @@ class UserDatabaseManager:
         except Exception as e:
             print(f"Error creating references between messages and conversation: {e}")
 
-    def add_profile_information(self, user_id: str, profile_information: ProfileInformation):
-        pass
-        # for profile_info in profile_information_list:
-        #     try:
-        #         profile_info_obj = profile_info.to_weaviate_object()
-        #         self.client.data_object.create(profile_info_obj, profile_info.weaviate_class_name(self.namespace))
-        #         try:
-        #             conversation_id = self.client.data_object.create(
-        #                 conversation_obj,
-        #                 conversation.weaviate_class_name(self.namespace),
-        #                 conversation.weaviate_id
-        #             )
-        #         except Exception as e:
-        #             print(f"Error creating conversation: {e}")
-        #
-        #         # Create a bi-directional cross-reference between User and Conversation
-        #         user_conversation_cross_ref = CrossReference(
-        #             from_class=user.weaviate_class_name(self.namespace),
-        #             from_uuid=user_id,
-        #             from_property="hasConversation",
-        #             to_class=conversation.weaviate_class_name(self.namespace),
-        #             to_uuid=conversation_id
-        #         )
-        #         self._create_cross_reference(user_conversation_cross_ref)
-        #         user_conversation_reverse_cross_ref = CrossReference(
-        #             from_class=conversation.weaviate_class_name(self.namespace),
-        #             from_uuid=conversation_id,
-        #             from_property="hasUser",
-        #             to_class=user.weaviate_class_name(self.namespace),
-        #             to_uuid=user_id
-        #         )
-        #         self._create_cross_reference(user_conversation_reverse_cross_ref)
-        #     except Exception as e:
-        #         print(f"Error creating profile information: {e}")
+    def insert_liked(self, liked: bool, bot_message_id: str):
+        try:
+            current_liked_state = self._get_current_liked_state(bot_message_id=bot_message_id)
+            if current_liked_state == liked:
+                self.client.data_object.update(
+                    uuid=bot_message_id,
+                    class_name=BotMessage.weaviate_class_name(self.namespace),
+                    data_object={
+                        'is_liked': None,
+                    },
+                )
+            else:
+                self.client.data_object.update(
+                    uuid=bot_message_id,
+                    class_name=BotMessage.weaviate_class_name(self.namespace),
+                    data_object={
+                        'is_liked': liked,
+                    },
+                )
+
+        except Exception as e:
+            print(f"Error inserting liked message: {e}")
+            return ""
+
+    def get_messages_for_user(self, gmail: str):
+        """
+        Get the messages for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose messages to get
+
+        Returns:
+            A list of messages for the user
+        """
+
+        message_list = []
+        # Fetch the conversations associated with the user based on Gmail
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace), ["hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, _additional { id }, hasBotMessage {... on Jonahs_weaviate_userdb_BotMessage { response_str, _additional { id } } } } } } }"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+
+        # Extract and print the messages
+        message_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages']
+        if not message_objects:
+            print(f"No User object found with the Gmail: {gmail}")
+            return message_list
+
+        else:
+            for message in message_objects:
+
+                tup = []
+                u_tup = []
+                b_tup = []
+
+                u_tup.append(message['query_str'])  # Print user message
+                u_tup.append(message['_additional']['id'])  # Print user message ID
+
+                b_tup.append(message['hasBotMessage'][0]['response_str'])  # Print bot message
+                b_tup.append(message['hasBotMessage'][0]['_additional']['id'])  # Print bot message ID
+
+                tup.append(u_tup)
+                tup.append(b_tup)
+
+                message_list.append(tup)
+
+            return message_list
+
+    def clear_conversation(self, gmail: str):
+        """
+        Clear the conversation for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose conversation to clear
+        """
+        try:
+            conversation_id = self._get_conversation_id(gmail=gmail)
+
+            self.client.data_object.update(
+                uuid=conversation_id,
+                class_name=Conversation.weaviate_class_name(self.namespace),
+                data_object={
+                    'messages': None,
+                },
+            )
+
+            self.client.data_object.update(
+                uuid=conversation_id,
+                class_name=Conversation.weaviate_class_name(self.namespace),
+                data_object={
+                    'messages': [],
+                },
+            )
+        except Exception as e:
+            print(f"Error clearing conversation: {e}")
+
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace), [
+                "hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, created_time } ... on Jonahs_weaviate_userdb_BotMessage { response_str, created_time } } } }"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+
+        print(results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages'])
+
+    def insert_profile_info(self, gmail: str, profile_info_lst: [ProfileInformation]):
+        """
+        Insert profile information for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose profile information to insert
+            profile_info_lst: The list of profile information to insert
+        """
+        user_uuid = ""
+
+        try:
+            self.client.schema.property.create(ProfileInformation.weaviate_class_name(self.namespace), {
+                "name": "hasUser",
+                "dataType": [User.weaviate_class_name(self.namespace)]
+            })
+        except Exception as e:
+            print(f"Error creating properties (doesn't matter tho): {e}")
+
+        try:
+            user_uuid = self._get_user_id(gmail=gmail)
+        except Exception as e:
+            print(f"Error getting conversation ID: {e}")
+
+        try:
+            for profile_information in profile_info_lst:
+
+
+                profile_information_uuid = self.client.data_object.create(
+                    class_name=ProfileInformation.weaviate_class_name(self.namespace),
+                    uuid=profile_information.weaviate_id,
+                    data_object=profile_information.to_weaviate_object()
+                )
+
+                # Create a bidirectional cross-reference between all profile information and the user
+                self.client.data_object.reference.add(
+                    from_class_name=profile_information.weaviate_class_name(self.namespace),
+                    from_uuid=profile_information_uuid,
+                    from_property_name="hasUser",
+                    to_class_name=User.weaviate_class_name(self.namespace),
+                    to_uuid=user_uuid
+                )
+
+                self.client.data_object.reference.add(
+                    from_class_name=User.weaviate_class_name(self.namespace),
+                    from_uuid=user_uuid,
+                    from_property_name="hasProfileInformation",
+                    to_class_name=profile_information.weaviate_class_name(self.namespace),
+                    to_uuid=profile_information_uuid
+                )
+
+        except Exception as e:
+            print(f"Error adding user_message: {e}")
+
+    def get_profile_info_for_user(self, gmail: str):
+        """
+        Get the profile information for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose profile information to get
+
+        Returns:
+            A dictionary of profile information for the user
+        """
+        profile_info_dict = {}
+        # Fetch the conversations associated with the user based on Gmail
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace), [
+                "hasProfileInformation {... on Jonahs_weaviate_userdb_ProfileInformation { key, value } }"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+
+        # Extract and return profile information
+        profile_info_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasProfileInformation']
+        if not profile_info_objects:
+            print(f"No User object found with the Gmail: {gmail}")
+            return profile_info_dict
+
+        else:
+            for profile_info in profile_info_objects:
+                profile_info_dict[profile_info['key']] = profile_info['value']
+
+            return profile_info_dict
 
     def _create_cross_reference(self, cross_ref: CrossReference):
         """
@@ -273,55 +434,70 @@ class UserDatabaseManager:
         except Exception as e:
             print(f"Error creating cross-reference: {e}")
 
-    def _get_conversation_id(self, user_id: str) -> str:
-        """Get the Conversation UUID associated with a User"""
-        try:
-            user_data = self.client.data_object.get_by_id(
-                user_id,
-                User.weaviate_class_name(self.namespace)
-            )
-            return user_data["hasConversation"][0]["beacon"].split("/")[-1]
-        except Exception as e:
-            print(f"Error getting conversation ID: {e}")
-            return ""
+    def _get_conversation_id(self, gmail: str):
+        """
+        Get the conversation ID for a user based on their Gmail
 
-    def is_duplicate_user(self, gmail: str) -> bool:
-        """Check if a Webpage object exists in Weaviate
+        Args:
+            gmail: The Gmail of the user whose conversation ID to get
 
         Returns:
-            True if the Webpage object exists, False otherwise
+            The conversation ID of the user
         """
+        conversation_uuid = ""
+
         results = (
             self.client.query
-            .get(User.weaviate_class_name(namespace=self.namespace), ["gmail"])
+            .get(User.weaviate_class_name(namespace=self.namespace),
+                 ["gmail", "hasConversation {... on Jonahs_weaviate_userdb_Conversation { _additional { id } } }"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+
+        if results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)][0]["hasConversation"]:
+            conversation_uuid = results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)][0][
+                'hasConversation'][0]["_additional"]["id"]
+
+        return conversation_uuid
+
+    def _get_user_id(self, gmail: str):
+        """
+        Get the user ID for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose user ID to get
+
+        Returns:
+            The user ID of the user
+        """
+        user_uuid = ""
+
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace),
+                 ["gmail", "_additional { id }"])
             .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
             .do()
         )
 
         if results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)]:
-            return True
+            user_uuid = results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)][0][
+                '_additional']['id']
 
-        return False
+        return user_uuid
 
-    def get_messages(self):
-        # Fetch the conversations associated with the user based on Gmail
-        results = (
-            self.client.query
-            .get(User.weaviate_class_name(namespace=self.namespace), ["hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, created_time } ... on Jonahs_weaviate_userdb_BotMessage { response_str, created_time } } } }"])
-            .do()
-        )
+    def _get_current_liked_state(self, bot_message_id: str):
+        try:
+            results = (
+                self.client.query
+                .get(BotMessage.weaviate_class_name(namespace=self.namespace), ["is_liked"])
+                .with_where({"path": ["id"], "operator": "Equal", "valueText": bot_message_id})
+                .do()
+            )
 
-        # Extract and print the messages
-        message_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages']
-        if not message_objects:
-            print(f"No User object found with Gmail: ")
-            return
+            result = results["data"]["Get"][BotMessage.weaviate_class_name(namespace=self.namespace)][0]["is_liked"]
 
-        for message in message_objects:
-            if 'query_str' in message:
-                print(f" query_str = {message['query_str']}")  # Print user message content
-            elif 'response_str' in message:
-                print(f" response_str = {message['response_str']}")  # Print bot message text
-
-# When you integrate this into your main code, consider adding unit tests to ensure
-# all methods work as expected.
+            return result
+        except Exception as e:
+            print(f"Error getting bot message with that ID: {e}")
+            return ""
