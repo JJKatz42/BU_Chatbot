@@ -57,7 +57,11 @@ async def main():
         default="jjkatz2@bu.edu",
         action="store_true"
     )
-    insert_user_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    insert_user_parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default=".env"
+    )
     insert_user_parser.add_argument(
         "--full-refresh",
         help="By default indexing is incremental. Set this flag to build indexes from scratch. "
@@ -67,7 +71,8 @@ async def main():
     )
     insert_message_parser = subparsers.add_parser(
         "insert-message",
-        help="Run a search query and get back search result")
+        help="Run a search query and get back search result"
+    )
     insert_message_parser.add_argument("ask", nargs="?", default="describe sm 132")
     insert_message_parser.add_argument(
         "--gmail",
@@ -75,10 +80,15 @@ async def main():
         default="jjkatz2@bu.edu",
         action="store_true"
     )
-    insert_message_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    insert_message_parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default=".env"
+    )
     insert_like_parser = subparsers.add_parser(
         "insert-like",
-        help="insert a like or dislike")
+        help="insert a like or dislike"
+    )
     insert_like_parser.add_argument("liked", nargs="?", default="True")
     insert_like_parser.add_argument(
         "--message_id",
@@ -96,19 +106,31 @@ async def main():
         default="jjkatz2@bu.edu",
         action="store_true"
     )
-    clear_conversation_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    clear_conversation_parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default=".env")
+
     insert_profile_info_pasrser = subparsers.add_parser(
         "insert-profile-info",
         help="inserts dict of profile info into user")
-    insert_profile_info_pasrser.add_argument("profile_info", nargs="?", default="{'name': 'John', 'age': '25'}")
+
+    insert_profile_info_pasrser.add_argument(
+        "profile_info",
+        nargs="?",
+        default="{'name': 'John', 'age': '25'}"
+    )
     insert_profile_info_pasrser.add_argument(
         "--gmail",
         help="By default gmail is jjkatz@bu.edu",
         default="jjkatz2@bu.edu",
         action="store_true"
     )
-    insert_profile_info_pasrser.add_argument("--env-file", help="Local .env file containing config values",
-                                           default=".env")
+    insert_profile_info_pasrser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default=".env"
+    )
 
     script_args = parser.parse_args()
 
