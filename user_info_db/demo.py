@@ -54,7 +54,7 @@ async def main():
     insert_user_parser.add_argument(
         "--gmail",
         help="By default gmail is jjkatz@bu.edu",
-        default="jjkatz@bu.edu",
+        default="jjkatz2@bu.edu",
         action="store_true"
     )
     insert_user_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
@@ -72,10 +72,43 @@ async def main():
     insert_message_parser.add_argument(
         "--gmail",
         help="By default gmail is jjkatz@bu.edu",
-        default="jjkatz@bu.edu",
+        default="jjkatz2@bu.edu",
         action="store_true"
     )
     insert_message_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    insert_like_parser = subparsers.add_parser(
+        "insert-like",
+        help="insert a like or dislike")
+    insert_like_parser.add_argument("liked", nargs="?", default="True")
+    insert_like_parser.add_argument(
+        "--message_id",
+        help="By default message_id is 1be74784-0173-4dfd-a655-ef9338ff1a93",
+        default="1c5e2e99-62a9-423c-96a1-b14c88ab2c70",
+        action="store_true"
+    )
+    insert_like_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    clear_conversation_parser = subparsers.add_parser(
+        "clear-conversation",
+        help="clear a conversation for a given user")
+    clear_conversation_parser.add_argument(
+        "--gmail",
+        help="By default gmail is jjkatz@bu.edu",
+        default="jjkatz2@bu.edu",
+        action="store_true"
+    )
+    clear_conversation_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    insert_profile_info_pasrser = subparsers.add_parser(
+        "insert-profile-info",
+        help="inserts dict of profile info into user")
+    insert_profile_info_pasrser.add_argument("profile_info", nargs="?", default="{'name': 'John', 'age': '25'}")
+    insert_profile_info_pasrser.add_argument(
+        "--gmail",
+        help="By default gmail is jjkatz@bu.edu",
+        default="jjkatz2@bu.edu",
+        action="store_true"
+    )
+    insert_profile_info_pasrser.add_argument("--env-file", help="Local .env file containing config values",
+                                           default=".env")
 
     script_args = parser.parse_args()
 
@@ -110,7 +143,7 @@ async def main():
         if script_args.full_refresh:
             weaviate_user_management.create_schema(delete_if_exists=True)
 
-        if weaviate_user_management.is_duplicate_user(script_args.gmail):
+        if weaviate_user_management.user_exists(script_args.gmail):
             print("User already exists")
 
         else:
@@ -154,7 +187,8 @@ async def main():
             features=features
         )
 
-        weaviate_user_management.get_messages()
+        message_list = weaviate_user_management.get_messages_for_user(gmail=script_args.gmail)
+        print(message_list)
 
         ask_str = script_args.ask
 
@@ -202,6 +236,48 @@ async def main():
         )
         print("Finished inserting message")
 
+    elif script_args.command == "insert-like":
+        # Insert like into user
+        print("Inserting like into user")
+        weaviate_user_management.insert_liked(
+            liked=script_args.liked,
+            bot_message_id=script_args.message_id
+        )
+        print("Finished inserting like")
+
+    elif script_args.command == "clear-conversation":
+        # Clear conversation for user
+        print("Clearing conversation for user")
+        weaviate_user_management.clear_conversation(
+            gmail=script_args.gmail
+        )
+        print("Finished clearing conversation")
+
+    elif script_args.command == "insert-profile-info":
+        # Get current profile info for user
+        current_profile_info_dict = weaviate_user_management.get_profile_info_for_user(gmail=script_args.gmail)
+        print(current_profile_info_dict)
+
+        # Insert profile info into user
+        print("Inserting profile info into user")
+
+        profile_info_dict = eval(script_args.profile_info)
+
+        profile_info_lst = []
+
+        for key, value in profile_info_dict.items():
+            profile_info = data_classes.ProfileInformation(
+                key=key,
+                value=value
+            )
+
+            profile_info_lst.append(profile_info)
+
+        weaviate_user_management.insert_profile_info(
+            gmail=script_args.gmail,
+            profile_info_lst=profile_info_lst,
+        )
+        print("Finished inserting profile info")
 
 if __name__ == '__main__':
     asyncio.run(main())

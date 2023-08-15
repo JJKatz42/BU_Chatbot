@@ -180,6 +180,7 @@ class Conversation(WeaviateObject):
         }
 
 
+@dataclasses.dataclass
 class ProfileInformation(WeaviateObject):
     key: str
     value: str
