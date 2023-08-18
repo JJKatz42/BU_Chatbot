@@ -1,2 +1,0 @@
-import BU_info_db.search.weaviate_search_engine
-from BU_info_db.search.weaviate_search_engine import WeaviateSearchEngine
