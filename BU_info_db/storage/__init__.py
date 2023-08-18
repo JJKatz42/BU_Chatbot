@@ -1,2 +1,0 @@
-import BU_info_db.storage.weaviate_store
-from BU_info_db.storage.weaviate_store import WeaviateStore
