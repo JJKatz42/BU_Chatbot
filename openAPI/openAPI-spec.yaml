@@ -133,6 +133,9 @@ components:
     ChatRequestWithSession:
       type: object
       properties:
+        gmail:
+          type: string
+          description: The user's Gmail address.
         sessionID:
           type: string
           description: Identifier for the user's current session.
