@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class ChatRequestWithSession(BaseModel):
     sessionID: str
+    gmail: str
     question: str
 
 class ChatResponse(BaseModel):

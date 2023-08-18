@@ -55,7 +55,8 @@ async def insert_message(search_agent: SearchAgent, user_management: user_manage
     if "False" in is_bad_query:
         response = "Sorry, this is a bad query. Please try again."
         return [response, "None"]
-    else:
+
+    if user_management.user_exists(gmail):
         response = await get_answer(search_agent, input_text)
 
         # response = "This is a test response 2"
@@ -84,8 +85,11 @@ async def insert_message(search_agent: SearchAgent, user_management: user_manage
 
         return [response, bot_message_uuid]
 
+    else:
+        return ["Sorry, you are not a registered user. Please register at https://busearch.com", "None"]
 
-def insert_user(user_management: user_management.UserDatabaseManager, gmail: str):
+
+def insert_user(user_management: user_management.UserDatabaseManager, gmail: str) -> bool:
     user = data_classes.User(
         gmail=gmail,
         created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
