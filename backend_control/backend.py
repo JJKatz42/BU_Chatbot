@@ -89,6 +89,10 @@ async def insert_message(search_agent: SearchAgent, user_management: user_manage
         return ["Sorry, you are not a registered user. Please register at https://busearch.com", "None"]
 
 
+def user_exists(user_management: user_management.UserDatabaseManager, gmail: str) -> bool:
+    return user_management.user_exists(gmail)
+
+
 def insert_user(user_management: user_management.UserDatabaseManager, gmail: str) -> bool:
     user = data_classes.User(
         gmail=gmail,
@@ -119,4 +123,4 @@ def insert_feedback(user_management: user_management.UserDatabaseManager, messag
         liked=is_liked,
         bot_message_id=message_id
     )
-    print("Finished inserting like")
+    return "Finished inserting like"
