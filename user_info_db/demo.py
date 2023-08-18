@@ -146,7 +146,7 @@ async def main():
         instance_url=config.get("WEAVIATE_URL"),
         api_key=config.get("WEAVIATE_API_KEY"),
         openai_api_key=config.get("OPENAI_API_KEY"),
-        namespace=config.get("USER_DATA_NAMESPACE"),
+        namespace=config.get("DATA_NAMESPACE"),
         cohere_api_key=config.get("COHERE_API_KEY")
     )
 
