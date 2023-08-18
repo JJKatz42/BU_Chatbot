@@ -9,7 +9,7 @@ from dataclasses import asdict
 import BU_info_db.config as config
 import BU_info_db.storage.weaviate_store as store
 import BU_info_db.search.weaviate_search_engine as search_engine
-from BU_info_db.search.search_agent import SearchAgent, SearchAgentFeatures
+from BU_info_db.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
 import langchain.chat_models
 
 

@@ -18,8 +18,8 @@ import BU_info_db.eval.evaluation_test_schema as evaluation_test_schema
 import BU_info_db.eval.evaluation_agent as evaluation_agent
 
 from BU_info_db.config import config
-from BU_info_db.search.search_agent import SearchAgent
-from BU_info_db.search.search_agent import SearchAgentFeatures
+from BU_info_db.search.search_agent.search_agent import SearchAgent
+from BU_info_db.search.search_agent.search_agent import SearchAgentFeatures
 from BU_info_db.search.weaviate_search_engine import WeaviateSearchEngine
 
 from BU_info_db.storage.weaviate_store import WeaviateStore
