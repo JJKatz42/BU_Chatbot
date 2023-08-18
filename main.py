@@ -28,6 +28,7 @@ def init_config(local_env_file: Union[str, None]):
             config.ConfigVarMetadata(var_name="WEAVIATE_API_KEY"),
             config.ConfigVarMetadata(var_name="OPENAI_API_KEY"),
             config.ConfigVarMetadata(var_name="COHERE_API_KEY"),
+            config.ConfigVarMetadata(var_name="CLIENT_ID"),
         ],
         local_env_file=local_env_file
     )
@@ -43,15 +44,15 @@ async def search_agent_job(agent: SearchAgent, query: str) -> dict:
     return result_dict
 
 
-env_file = "backend_control/.env"
+env_file = ".env"
 if not env_file.startswith("/"):
     current_directory = os.path.dirname(__file__)
     env_file = os.path.join(current_directory, env_file)
 init_config(local_env_file=env_file)
 
 
-CLIENT_ID = "google_client_id"  # Replace with your client_id ##### Ask me for it
-CLIENT_SECRET = "google_client_secret"  # Replace with your client_secret ##### Ask me for it
+CLIENT_ID = config.get("CLIENT_ID")  # Replace with your client_id ##### Ask me for it
+CLIENT_SECRET = "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" # Replace with your client_secret ##### Ask me for it
 REDIRECT_URI = "http://127.0.0.1:8000/auth/callback"  # Adjust if necessary
 
 
@@ -65,6 +66,7 @@ weaviate_store = store.WeaviateStore(
     cohere_api_key=config.get("COHERE_API_KEY")
 )
 
+print(config.get("USER_DATA_NAMESPACE"))
 weaviate_user_management = user_management.UserDatabaseManager(
         instance_url=config.get("WEAVIATE_URL"),
         api_key=config.get("WEAVIATE_API_KEY"),
@@ -101,13 +103,6 @@ def login():
     return RedirectResponse(url=google_auth_url)
 
 
-# @app.get("/auth/callback")
-# def auth_callback(code: str = Query(...), state: str = Query(...), scope: str = Query(...), authuser: int = Query(0), prompt: str = Query(None)):
-#     # Now you have the code
-#     print(code) # This is just for debugging. You should not print sensitive info in production.
-#     return {"code": code}
-#
-
 @app.get("/auth/callback")
 async def auth_callback(code: str = Query(...)):
     # Define the data for the token request
@@ -136,36 +131,19 @@ async def auth_callback(code: str = Query(...)):
 
     user_info = response.json()
 
-    # Return the user info for now (you should handle/store this information securely in production)
-    return user_info
+    # Return the user info for now (you should handle/store this information securely in production
 
-
-@app.get("/auth/callback")
-async def handle_callback(code: str):
-    # Take the code from the callback and exchange it for a token.
-    token_endpoint = "https://oauth2.googleapis.com/token"
-    client_id = "64549760389-cnm8nrvko2dea2r7mrusld5uimbkneqv.apps.googleusercontent.com"
-    client_secret = "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"
-    redirect_uri = "YOUR_REDIRECT_URI"
-
-    data = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "code": code,
-        "grant_type": "authorization_code",
-        "redirect_uri": redirect_uri
-    }
-
-    response = requests.post(token_endpoint, data=data)
-    token_data = response.json()
-
-    email = token_data["email"]
-    first_name = token_data["given_name"]
-    last_name = token_data["family_name"]
+    email = user_info["email"]
+    first_name = user_info["given_name"]
+    last_name = user_info["family_name"]
 
     if email.endswith("@bu.edu"):
         # Create a session for the user
-        return [email, first_name, last_name]
+        user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
+        if user_inserted_successfully:
+            return {"email": email, "first_name": first_name, "last_name": last_name}
+        else:
+            return "There was an error inserting the user into the database."
 
     return "You must use a BU email to log in."
 
@@ -175,7 +153,7 @@ async def send_question(data: ChatRequestWithSession):
     # Placeholder logic for the chatbot response
     response_and_id = ["Hello, this is your chatbot responding!", "randomID12345"]
     try:
-        response_and_id = await backend.insert_message(search_agent=search_agent, user_management=weaviate_user_management, gmail="jjkatz2@bu.edu", input_text=data.question)
+        response_and_id = await backend.insert_message(search_agent=search_agent, user_management=weaviate_user_management, gmail=data.gmail, input_text=data.question)
 
     except Exception as e:
         print(e)

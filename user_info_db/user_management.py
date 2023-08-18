@@ -69,6 +69,7 @@ class UserDatabaseManager:
         )
 
         if results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)]:
+            print(results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)])
             return True
 
         return False
@@ -100,6 +101,7 @@ class UserDatabaseManager:
             # Initialize an empty Conversation object and cross-reference it with the User
             for conversation in user.conversations:
                 try:
+                    print(conversation.to_weaviate_object())
                     conversation_uuid = self.client.data_object.create(
                         class_name=Conversation.weaviate_class_name(self.namespace),
                         uuid=conversation.weaviate_id,
@@ -127,6 +129,8 @@ class UserDatabaseManager:
                     self.client.data_object.delete(user_uuid)
                     return False
 
+        return True
+
     def insert_message(self, user_message: UserMessage, bot_message: BotMessage, gmail: str):
         user_message_uuid = ""
         bot_message_uuid = ""
@@ -152,8 +156,8 @@ class UserDatabaseManager:
                 "name": "hasUserMessage",
                 "dataType": [UserMessage.weaviate_class_name(self.namespace)]
             })
-        except Exception as e:
-            print(f"Error creating properties (doesn't matter tho): {e}")
+        except:
+            pass
 
         try:
             conversation_uuid = self._get_conversation_id(gmail=gmail)
@@ -234,6 +238,11 @@ class UserDatabaseManager:
             print(f"Error creating references between messages and conversation: {e}")
 
         return bot_message_uuid
+
+    def insert_bad_query(self, query_str: str, gmail: str):
+        pass
+        # TODO
+
 
     def insert_liked(self, liked: bool, bot_message_id: str):
         try:
