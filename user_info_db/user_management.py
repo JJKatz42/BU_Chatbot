@@ -1,3 +1,4 @@
+import openai
 import weaviate
 import user_info_db.user_data_classes as data_classes
 
@@ -27,6 +28,7 @@ class UserDatabaseManager:
             }
         )
         self.namespace = namespace
+        self.openai_api_key = openai_api_key
 
     def create_schema(self, delete_if_exists: bool = False):
         """Create schema for User, Message, and ProfileInformation in Weaviate"""
@@ -71,7 +73,7 @@ class UserDatabaseManager:
 
         return False
 
-    def create_user(self, user: User) -> str:
+    def create_user(self, user: User) -> bool:
         """
         Create a User in Weaviate and initialize a Conversation and ProfileInformation object for them
         Args:
@@ -80,44 +82,50 @@ class UserDatabaseManager:
         Returns:
             The UUID of the created User object
         """
-        user_uuid = ""
-        try:
-            user_uuid = self.client.data_object.create(
-                class_name=User.weaviate_class_name(self.namespace),
-                uuid=user.weaviate_id,
-                data_object=user.to_weaviate_object()
-            )
-        except Exception as e:
-            print(f"Error creating user: {e}")
-            return user_uuid
+        if self.user_exists(gmail=user.gmail):
+            print(f"User with Gmail {user.gmail} already exists")
+            return True
 
-        # Initialize an empty Conversation object and cross-reference it with the User
-        for conversation in user.conversations:
+        else:
             try:
-                conversation_uuid = self.client.data_object.create(
-                    class_name=Conversation.weaviate_class_name(self.namespace),
-                    uuid=conversation.weaviate_id,
-                    data_object=conversation.to_weaviate_object()
-                )
-
-                # Create a bidirectional cross-reference between User and Conversation
-                self.client.data_object.reference.add(
-                    from_class_name=user.weaviate_class_name(self.namespace),
-                    from_uuid=user_uuid,
-                    from_property_name="hasConversation",
-                    to_class_name=conversation.weaviate_class_name(self.namespace),
-                    to_uuid=conversation_uuid
-                )
-
-                self.client.data_object.reference.add(
-                    from_class_name=conversation.weaviate_class_name(self.namespace),
-                    from_uuid=conversation_uuid,
-                    from_property_name="hasUser",
-                    to_class_name=user.weaviate_class_name(self.namespace),
-                    to_uuid=user_uuid
+                user_uuid = self.client.data_object.create(
+                    class_name=User.weaviate_class_name(self.namespace),
+                    uuid=user.weaviate_id,
+                    data_object=user.to_weaviate_object()
                 )
             except Exception as e:
-                print(f"Error creating conversation: {e}")
+                print(f"Error creating user: {e}")
+                return False
+
+            # Initialize an empty Conversation object and cross-reference it with the User
+            for conversation in user.conversations:
+                try:
+                    conversation_uuid = self.client.data_object.create(
+                        class_name=Conversation.weaviate_class_name(self.namespace),
+                        uuid=conversation.weaviate_id,
+                        data_object=conversation.to_weaviate_object()
+                    )
+
+                    # Create a bidirectional cross-reference between User and Conversation
+                    self.client.data_object.reference.add(
+                        from_class_name=user.weaviate_class_name(self.namespace),
+                        from_uuid=user_uuid,
+                        from_property_name="hasConversation",
+                        to_class_name=conversation.weaviate_class_name(self.namespace),
+                        to_uuid=conversation_uuid
+                    )
+
+                    self.client.data_object.reference.add(
+                        from_class_name=conversation.weaviate_class_name(self.namespace),
+                        from_uuid=conversation_uuid,
+                        from_property_name="hasUser",
+                        to_class_name=user.weaviate_class_name(self.namespace),
+                        to_uuid=user_uuid
+                    )
+                except Exception as e:
+                    print(f"Error creating conversation: {e}")
+                    self.client.data_object.delete(user_uuid)
+                    return False
 
     def insert_message(self, user_message: UserMessage, bot_message: BotMessage, gmail: str):
         user_message_uuid = ""
@@ -225,10 +233,12 @@ class UserDatabaseManager:
         except Exception as e:
             print(f"Error creating references between messages and conversation: {e}")
 
+        return bot_message_uuid
+
     def insert_liked(self, liked: bool, bot_message_id: str):
         try:
             current_liked_state = self._get_current_liked_state(bot_message_id=bot_message_id)
-            if current_liked_state == liked:
+            if current_liked_state == str(liked):
                 self.client.data_object.update(
                     uuid=bot_message_id,
                     class_name=BotMessage.weaviate_class_name(self.namespace),
@@ -241,13 +251,32 @@ class UserDatabaseManager:
                     uuid=bot_message_id,
                     class_name=BotMessage.weaviate_class_name(self.namespace),
                     data_object={
-                        'is_liked': liked,
+                        'is_liked': str(liked),
                     },
                 )
 
         except Exception as e:
             print(f"Error inserting liked message: {e}")
             return ""
+
+    def is_bad_query(self, query_str: str):
+        # openai.api_key = self.openai_api_key
+        # try:
+        #     completion = openai.ChatCompletion.create(
+        #         model="gpt-3.5-turbo",
+        #         temperature=0,
+        #         messages=[
+        #             {"role": "system", "content": "You are a competant University chatbot. You can only respond with True or False. You're job is to determine whether a student's question is related to any topic corresponding to their university. You are given a question if it is not related to any aspect of a university then respond with 'False' if it is related to any aspect of a university response with 'True'."},
+        #             {"role": "user", "content": query_str}
+        #         ]
+        #     )
+        #
+        #     print(completion.choices[0].message)
+        #     return completion.choices[0].message["content"]
+        # except Exception as e:
+        #     print(e)
+        #     return "Couldn't do it"
+        return "True"
 
     def get_messages_for_user(self, gmail: str):
         """
