@@ -31,6 +31,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /auth/callback:
+    get:
+      summary: Callback endpoint for Google's OAuth 2.0 authentication
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+          required: true
+          description: Authorization code from Google.
+      responses:
+        '200':
+          description: Successful authentication and user information returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+        '401':
+          description: Unauthorized - Authentication failed or non-BU email used
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /chat:
     post:
       summary: Send a question to the chatbot
@@ -40,6 +65,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ChatRequestWithSession'
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
       responses:
         '202':
           description: Accepted but processing incomplete. More information needed.
@@ -73,12 +105,6 @@ paths:
             type: string
           required: true
           description: The unique ID of the chatbot's initial acknowledgment.
-        - in: header
-          name: sessionID
-          schema:
-            type: string
-          required: true
-          description: Identifier for the user's current session.
       responses:
         '200':
           description: Successful response
@@ -111,6 +137,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/FeedbackRequest'
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
       responses:
         '200':
           description: Feedback recorded successfully
@@ -133,9 +166,6 @@ components:
     ChatRequestWithSession:
       type: object
       properties:
-        gmail:
-          type: string
-          description: The user's Gmail address.
         sessionID:
           type: string
           description: Identifier for the user's current session.
@@ -175,6 +205,21 @@ components:
         message:
           type: string
           description: Information or clarification needed from the user.
+    UserInfoResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token for the user.
+        email:
+          type: string
+          description: User's email address.
+        first_name:
+          type: string
+          description: User's first name.
+        last_name:
+          type: string
+          description: User's last name.
   securitySchemes:
     GoogleOAuth:
       type: oauth2
@@ -184,5 +229,10 @@ components:
           scopes:
             openid: Google login
             profile: Google profile information
+    BearerToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 security:
   - GoogleOAuth: []
+  - BearerToken: []

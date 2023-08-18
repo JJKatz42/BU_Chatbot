@@ -1,7 +1,7 @@
-from fastapi import HTTPException, Query, Header
-from fastapi import FastAPI
+from fastapi import HTTPException, Query, FastAPI, Depends, Header
+# from fastapi import FastAPI, Depends
 import requests
-from backend_control.models import ChatResponse, ChatRequestWithSession
+from backend_control.models import ChatResponse, ChatRequestWithSession, JWTHeader, FeedbackRequest
 from fastapi.responses import RedirectResponse
 from backend_control.auth import generate_google_auth_url  # this is pseudocode; replace it with your actual function
 import httpx
@@ -9,6 +9,9 @@ import os
 from typing import Union
 import time
 from dataclasses import asdict
+import jwt
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 
 import BU_info_db.config as config
 import BU_info_db.storage.weaviate_store as store
@@ -29,6 +32,7 @@ def init_config(local_env_file: Union[str, None]):
             config.ConfigVarMetadata(var_name="OPENAI_API_KEY"),
             config.ConfigVarMetadata(var_name="COHERE_API_KEY"),
             config.ConfigVarMetadata(var_name="CLIENT_ID"),
+            config.ConfigVarMetadata(var_name="SECRET_KEY"),
         ],
         local_env_file=local_env_file
     )
@@ -51,10 +55,23 @@ if not env_file.startswith("/"):
 init_config(local_env_file=env_file)
 
 
+SECRET_KEY = config.get("SECRET_KEY")  # Change this to a secure, random string
+ALGORITHM = "HS256"
+security = HTTPBearer()
+
 CLIENT_ID = config.get("CLIENT_ID")  # Replace with your client_id ##### Ask me for it
 CLIENT_SECRET = "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" # Replace with your client_secret ##### Ask me for it
 REDIRECT_URI = "http://127.0.0.1:8000/auth/callback"  # Adjust if necessary
 
+
+def get_current_email(jwt_token: str) -> str:
+    try:
+        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload["email"]
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Signature has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 # Initialize WeaviateStore and WeaviateSearchEngine
@@ -141,7 +158,8 @@ async def auth_callback(code: str = Query(...)):
         # Create a session for the user
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
-            return {"email": email, "first_name": first_name, "last_name": last_name}
+            token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
+            return {"token": token, "email": email, "first_name": first_name, "last_name": last_name}
         else:
             return "There was an error inserting the user into the database."
 
@@ -149,23 +167,24 @@ async def auth_callback(code: str = Query(...)):
 
 
 @app.api_route("/chat", methods=["POST"], response_model=ChatResponse)
-async def send_question(data: ChatRequestWithSession):
-    # Placeholder logic for the chatbot response
-    response_and_id = ["Hello, this is your chatbot responding!", "randomID12345"]
-    try:
-        response_and_id = await backend.insert_message(search_agent=search_agent, user_management=weaviate_user_management, gmail=data.gmail, input_text=data.question)
+async def send_question(data: ChatRequestWithSession, jwt_header: JWTHeader = Depends()):
+    jwt_token = jwt_header.jwt_token
+    email = get_current_email(jwt_token=jwt_token)
+    if backend.user_exists(user_management=weaviate_user_management, gmail=email):
+        try:
+            response_and_id = await backend.insert_message(search_agent=search_agent, user_management=weaviate_user_management, gmail=email, input_text=data.question)
 
-    except Exception as e:
-        print(e)
-        response_and_id = ["Oh no my program sucks please go to the insert_message funtion in the backend file!", "randomID12345"]
+        except Exception as e:
+            print(e)
+            response_and_id = ["Oh no! my program sucks please go to the insert_message funtion in the backend file!", "randomID12345"]
 
-    response = response_and_id[0]
-    responseID = response_and_id[1]
-    return ChatResponse(response=response, responseID=responseID)
+        return ChatResponse(response=response_and_id[0], responseID= response_and_id[1])
+    else:
+        return ChatResponse(response="Sorry, you are not a registered user. Please register at https://busearch.com", responseID="randomID12345")
 
 
 @app.get("/chat/{responseID}/result", response_model=ChatResponse)
-async def get_response(responseID: str, sessionID: str = Header(...)):
+async def get_response(responseID: str):
     # Placeholder logic to return the chatbot's stored response
     # For the sake of this example, it's hardcoded.
     if responseID == "randomID12345":
@@ -174,8 +193,16 @@ async def get_response(responseID: str, sessionID: str = Header(...)):
         raise HTTPException(status_code=404, detail="ResponseID not found or expired")
 
 
-@app.post("/feedback", status_code=200)
-async def provide_feedback(liked: bool, messageID: str):
+@app.api_route("/feedback", methods=["POST"])
+async def provide_feedback(data: FeedbackRequest, jwt_header: JWTHeader = Depends()):
     # Store or handle feedback (placeholder logic here)
     # Returns a 200 status code with no body on success
-    backend.insert_feedback(user_management=weaviate_user_management, message_id=messageID, is_liked=liked)
+    jwt_token = jwt_header.jwt_token
+    email = get_current_email(jwt_token=jwt_token)
+    if backend.user_exists(user_management=weaviate_user_management, gmail=email):
+        try:
+            backend.insert_feedback(user_management=weaviate_user_management, message_id=data.responseID, is_liked=data.is_liked)
+        except:
+            return "I have no idea why this error is being returned. Please check the insert_feedback function in the backend file."
+    else:
+        return "Sorry, you are not a registered user. Please register at https://busearch.com"
