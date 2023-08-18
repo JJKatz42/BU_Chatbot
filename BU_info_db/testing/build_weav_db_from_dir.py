@@ -5,7 +5,7 @@ import html2text
 from typing import Dict
 
 from BU_info_db.storage.storage_data_classes import TextContent, Webpage, MimeType
-from BU_info_db.storage.weaviate_store import WeaviateStore
+from testing.BU_info_db.storage.weaviate_store import WeaviateStore
 from BU_info_db.config import config
 
 # Constants (modify as necessary)

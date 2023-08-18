@@ -5,7 +5,7 @@ import langchain.chat_models
 
 from BU_info_db.config import config
 from BU_info_db.storage.weaviate_store import WeaviateStore
-from BU_info_db.search.search_agent import SearchAgent
+from BU_info_db.search.search_agent.search_agent import SearchAgent
 from BU_info_db.search.weaviate_search_engine import WeaviateSearchEngine
 
 

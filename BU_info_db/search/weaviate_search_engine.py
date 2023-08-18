@@ -6,7 +6,8 @@ import llama_index.indices.base_retriever as base_retriever
 import weaviate.gql.get
 
 from BU_info_db.search import search_data_classes as search_data_classes
-from BU_info_db.storage import storage_data_classes as storage_data_classes, weaviate_store
+from BU_info_db.storage import storage_data_classes as storage_data_classes
+from BU_info_db.storage import weaviate_store
 
 # Aliases
 WeaviateObject = storage_data_classes.WeaviateObject
@@ -210,8 +211,8 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         # Augment the search query to generate the summary by grouping all the text properties
         # of search results into a single prompt.
         query = query.with_generate(
-            grouped_task="You are a helpful, knowledgeable and confident company chatbot. "
-                         "I am an employee at the company.\n"
+            grouped_task="You are a helpful, knowledgeable and confident university chatbot. "
+                         "I am an student at the university.\n"
                          "Please respond with a concise and accurate summary of the below information.\n"
                          "Information: ",
             grouped_properties=["text"]
