@@ -7,6 +7,10 @@ import weaviate
 
 import src.libs.storage.storage_data_classes as data_classes
 import src.libs.storage.embeddings as embeddings
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
 
 
 # Aliases
@@ -89,7 +93,7 @@ class WeaviateStore:
         webpages_that_failed = []
 
         # Insert all data objects and references that support batching with batch
-        print("Creating webpage objects in Weaviate")
+        logger.info("Creating webpage objects in Weaviate")
         with self.client.batch as batch:
             # Compute the embeddings for all TextContents on each Webpage
             self._embeddings_client.create_weaviate_object_embeddings(webpages)
@@ -129,14 +133,13 @@ class WeaviateStore:
                         )
                     webpages_that_failed.remove(webpage_uuid)
                 except:
-                    print(f"This webpage failed {webpages_that_failed}")
-                    print("This batch failed")
+                    logger.warning(f"This webpage failed {webpages_that_failed}")
 
-        print("Created webpage objects and references in Weaviate")
+        logger.info("Created webpage objects and references in Weaviate")
 
         # Add the references from Webpage -> TextContent. These need to be added outside the batch because
         # ref2vec-centroid does not support batch updates
-        print("Refreshing centroid vectors")
+        logger.info("Refreshing centroid vectors")
         for webpage_uuid in tqdm.tqdm(
             webpages_to_refresh_centroid_vector,
             total=len(webpages_to_refresh_centroid_vector),
@@ -147,10 +150,10 @@ class WeaviateStore:
                 uuid=webpage_uuid,
                 data_object={"textContents": []}
             )
-        print("Refreshed centroid vectors")
+        logger.info("Refreshed centroid vectors")
 
     def insert_references(self, references: list[CrossReference]):
-        print("Creating references in Weaviate")
+        logger.info("Creating references in Weaviate")
         with self.client.batch as batch:
             for reference in references:
                 batch.add_reference(
@@ -161,7 +164,7 @@ class WeaviateStore:
                     to_object_uuid=reference.to_uuid
                 )
 
-        print("Created references in Weaviate")
+        logger.info("Created references in Weaviate")
 
     def delete_webpage(self, url: str):
         """Delete a Webpage object from Weaviate given its URL
@@ -207,7 +210,7 @@ class WeaviateStore:
                 uuid=webpage_uuid
             )
         else:
-            print(f"Webpage with url {url} does not exist in Weaviate database")
+            logger.warning(f"Webpage with url {url} does not exist in Weaviate database")
 
     def get_duplicate_webpage(self, url: str) -> list:
         """Check if a Webpage object exists in Weaviate

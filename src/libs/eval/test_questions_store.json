@@ -46,69 +46,502 @@
           "inverse_test": false,
           "expected_sources": []
         }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-4",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
       },
-      {
-        "metadata": {
-          "related_kips": [],
-          "related_tests": [],
-          "date_added": "2023/07/5",
-          "test_id": "tid-4",
-          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
-        },
-        "definition": {
-          "request": "What kind of financial analysis is taught in the course Measuring Financial Value?",
-          "enable": true,
-          "expected_response": "fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation.",
-          "inverse_test": false,
-          "expected_sources": []
-        }
-      },
-      {
-        "metadata": {
-          "related_kips": [],
-          "related_tests": [],
-          "date_added": "2023/07/5",
-          "test_id": "tid-5",
-          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
-        },
-        "definition": {
-          "request": "What is BU's ranking?",
-          "enable": true,
-          "expected_response": "BU is ranked #41 among national universities by U.S. News & World Report.",
-          "inverse_test": false,
-          "expected_sources": []
-        }
-      },
-      {
-        "metadata": {
-          "related_kips": [],
-          "related_tests": [],
-          "date_added": "2023/07/5",
-          "test_id": "tid-6",
-          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
-        },
-        "definition": {
-          "request": "I am a 2nd generation legacy with generous donations does this give me an advantage and what is BUs policy on legacy admissions?",
-          "enable": true,
-          "expected_response": "No, BU does not consider legacy status in admissions decisions.",
-          "inverse_test": false,
-          "expected_sources": []
-        }
-      },
-      {
-        "metadata": {
-          "related_kips": [],
-          "related_tests": [],
-          "date_added": "2023/07/5",
-          "test_id": "tid-7",
-          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
-        },
-        "definition": {
-          "request": "Will there be more asian people getting accepted into BU given the new court ruling?",
-          "enable": true,
-          "expected_response": "I do have access to that information",
-          "inverse_test": false,
-          "expected_sources": []
-        }
+      "definition": {
+        "request": "What kind of financial analysis is taught in the course Measuring Financial Value?",
+        "enable": true,
+        "expected_response": "fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation.",
+        "inverse_test": false,
+        "expected_sources": []
       }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-4",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the primary focus of courses offered in the Accounting department at Questrom?",
+        "enable": true,
+        "expected_response": "The courses in the Accounting department at Questrom focus on financial accounting, managerial accounting, financial reporting, auditing, and various specialized areas of accounting such as sustainability reporting and financial analytics.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-5",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Are there any online MBA courses offered at Questrom?",
+        "enable": true,
+        "expected_response": "Yes, Questrom School of Business offers Online MBA Courses.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-6",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What are some of the departments under which courses are offered at Questrom?",
+        "enable": true,
+        "expected_response": "Some of the departments at Questrom include Accounting, Business Analytics, Finance, Management & Organizations, Marketing, and Strategy & Innovation, among others.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-7",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Is there a course that focuses on sustainability reporting at Questrom?",
+        "enable": true,
+        "expected_response": "Yes, Questrom offers a course titled 'QST AC 831: Sustainability Reporting' that addresses sustainability reporting.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-8",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How does Questrom ensure the quality and relevance of its courses?",
+        "enable": true,
+        "expected_response": "Questrom School of Business ensures the quality and relevance of its courses by regularly updating course content, seeking accreditation, and aligning courses with current industry trends and demands.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-9",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the significance of the New England Commission of Higher Education (NECHE) accreditation for Boston University?",
+        "enable": true,
+        "expected_response": "The New England Commission of Higher Education (NECHE) accreditation signifies that Boston University meets high standards of academic quality and institutional integrity. It is a mark of recognition and assurance for students, faculty, and stakeholders.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-10",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Are there any courses at Questrom that focus on data analytics in the field of accounting?",
+        "enable": true,
+        "expected_response": "Yes, Questrom offers a course titled 'QST AC 420: Introduction to Financial Analytics' that equips students with data analytics tools, skills, concepts, and techniques in accounting, finance, and economics.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-11",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What kind of resources are available for students to search for course descriptions at Questrom?",
+        "enable": true,
+        "expected_response": "Students can use the 'Course Description Search' feature and the 'MyBU Student Portal' to search for course descriptions and get detailed information about courses offered at Questrom.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-12",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How can students verify if a particular course is being offered in a specific semester at Questrom?",
+        "enable": true,
+        "expected_response": "Students can refer to the published schedule of classes on the MyBU Student Portal to confirm if a class is actually being taught and for specific course meeting dates and times.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-13",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the focus of the course 'QST AC 865: Auditing Issues & Problems'?",
+        "enable": true,
+        "expected_response": "The course 'QST AC 865: Auditing Issues & Problems' introduces the basic concepts underlying auditing and assurance services, including materiality, audit risk, and evidence. It demonstrates how to apply those concepts through financial statement audits.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-14",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is Boston University's rank among national universities according to U.S. News & World Report?",
+        "enable": true,
+        "expected_response": "Boston University is ranked #41 among national universities by U.S. News & World Report.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-15",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How many schools and colleges does Boston University have?",
+        "enable": true,
+        "expected_response": "Boston University has 10 Schools and Colleges.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-16",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the average class size at Boston University?",
+        "enable": true,
+        "expected_response": "The average class size at Boston University is 30 students.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-17",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How many countries do Boston University students come from?",
+        "enable": true,
+        "expected_response": "Students at Boston University come from over 118 countries.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-18",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What percentage of Boston University students are first generation?",
+        "enable": true,
+        "expected_response": "19% of students at Boston University are first generation.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-19",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Where does Forbes rank Boston University among top US colleges for international students?",
+        "enable": true,
+        "expected_response": "Forbes ranks Boston University at #7 among top US colleges for international students.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-20",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How many alumni are part of the Boston University network?",
+        "enable": true,
+        "expected_response": "The Boston University Alumni network spans the globe with more than 300,000 alumni.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-21",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the student-to-faculty ratio at Boston University?",
+        "enable": true,
+        "expected_response": "The student-to-faculty ratio at Boston University is 11:1.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-22",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How many study abroad opportunities does Boston University offer?",
+        "enable": true,
+        "expected_response": "Boston University offers over 70 study abroad opportunities.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-23",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What percentage of Boston University students find employment or placement within six months of graduation?",
+        "enable": true,
+        "expected_response": "Within six months of graduation, 94% of Boston University students found employment or placement in graduate programs, military service, and fellowships.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-24",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the primary objective of the 'Choose to Reuse' program at Boston University?",
+        "enable": true,
+        "expected_response": "The primary objective of the 'Choose to Reuse' program at Boston University is to reduce packaging waste in line with BU’s Zero Waste Plan.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-25",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Which dining locations at BU participate in the 'Choose to Reuse' program?",
+        "enable": true,
+        "expected_response": "The dining locations that participate in the 'Choose to Reuse' program are CRBC, Greens and Grains, Halal Guys, Open Kitchen, Panda Express, and Rhett’s.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-26",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How much is the disposable to-go fee at the participating locations of the 'Choose to Reuse' program?",
+        "enable": true,
+        "expected_response": "The disposable to-go fee at the participating locations of the 'Choose to Reuse' program is $2.50.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-27",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Who can participate in the 'Choose to Reuse' program?",
+        "enable": true,
+        "expected_response": "The 'Choose to Reuse' program is open to students, staff, and faculty of Boston University.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-28",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What award did the 'Choose to Reuse' program win?",
+        "enable": true,
+        "expected_response": "The 'Choose to Reuse' program won the Gold Sustainability Award from NACUFS.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-29",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Are the reusable to-go containers from the 'Choose to Reuse' program microwave safe?",
+        "enable": true,
+        "expected_response": "Yes, the reusable to-go containers from the 'Choose to Reuse' program are microwave safe.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-30",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How can one join the 'Choose to Reuse' program?",
+        "enable": true,
+        "expected_response": "To join the 'Choose to Reuse' program, one needs to follow the guidelines and procedures outlined on the Boston University Dining Services website.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-31",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the difference between 'Due soon' and 'Late' on the ReusePass account?",
+        "enable": true,
+        "expected_response": "The difference between 'Due soon' and 'Late' on the ReusePass account pertains to the status of the reusable container. 'Due soon' indicates that the container is nearing its return deadline, while 'Late' indicates that the container has surpassed its return deadline.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-32",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "How can feedback be provided on the 'Choose to Reuse' program?",
+        "enable": true,
+        "expected_response": "Feedback on the 'Choose to Reuse' program can be provided through the feedback section on the Boston University Dining Services website.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-33",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Where can the reusable containers from the 'Choose to Reuse' program be returned?",
+        "enable": true,
+        "expected_response": "The specific locations for returning the reusable containers from the 'Choose to Reuse' program are mentioned on the Boston University Dining Services website.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    }
+
 ]

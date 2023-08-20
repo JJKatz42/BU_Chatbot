@@ -1,9 +1,8 @@
 import argparse
 import asyncio
 import os
-import pprint
 
-
+import src.libs.logging as logging
 import src.libs.storage.weaviate_store as store
 import src.libs.search.weaviate_search_engine as search_engine
 import src.libs.storage.data_connnector.webpage_splitter as webpage_splitter
@@ -12,10 +11,13 @@ import src.libs.storage.data_connnector.directory_reader as directory_reader
 from src.libs.config import config
 
 
+logger = logging.getLogger(__name__)
+
+
 def init_config(local_env_file: str | None):
     config.init(
         metadata=[
-            config.ConfigVarMetadata(var_name="DATA_NAMESPACE"),
+            config.ConfigVarMetadata(var_name="INFO_DATA_NAMESPACE"),
             config.ConfigVarMetadata(var_name="WEAVIATE_URL"),
             config.ConfigVarMetadata(var_name="WEAVIATE_API_KEY"),
             config.ConfigVarMetadata(var_name="OPENAI_API_KEY"),
@@ -44,7 +46,11 @@ async def main():
         default="/Users/jonahkatz/Desktop/BU_Chatbot/beta_info",
         action="store_true"
     )
-    build_indexes_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    build_indexes_parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
+    )
     build_indexes_parser.add_argument(
         "--full-refresh",
         help="By default indexing is incremental. Set this flag to build indexes from scratch. "
@@ -68,9 +74,16 @@ async def main():
         help="Number of most relevant results to return",
         default=3
     )
-    run_search_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    run_search_parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
+    )
 
-    run_ask_parser = subparsers.add_parser("ask", help="Ask a question and get back answer based on search results")
+    run_ask_parser = subparsers.add_parser(
+        "ask",
+        help="Ask a question and get back answer based on search results"
+    )
 
     run_ask_parser.add_argument("ask", nargs="?")
     run_ask_parser.add_argument(
@@ -87,7 +100,10 @@ async def main():
         help="Number of most relevant results to return",
         default=3
     )
-    run_ask_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    run_ask_parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env")
 
     run_summarize_parser = subparsers.add_parser("summarize", help="Summarize query search results")
     run_summarize_parser.add_argument("query", nargs="?")
@@ -105,7 +121,10 @@ async def main():
         help="Number of most relevant results to return",
         default=3
     )
-    run_summarize_parser.add_argument("--env-file", help="Local .env file containing config values", default=".env")
+    run_summarize_parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values",
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env")
 
     script_args = parser.parse_args()
 
@@ -121,7 +140,7 @@ async def main():
         instance_url=config.get("WEAVIATE_URL"),
         api_key=config.get("WEAVIATE_API_KEY"),
         openai_api_key=config.get("OPENAI_API_KEY"),
-        namespace=config.get("DATA_NAMESPACE"),
+        namespace=config.get("INFO_DATA_NAMESPACE"),
         cohere_api_key=config.get("COHERE_API_KEY")
     )
 
@@ -132,21 +151,21 @@ async def main():
             weaviate_store.create_schema(delete_if_exists=True)
 
         # Load Webpages from directory
-        print("Loading webpages from directory")
+        logger.info("Loading webpages from directory")
         loader = directory_reader.DirectoryReader(script_args.directory)
         webpages = await loader.load_data()
-        print(f"Loaded {len(webpages.webpages)} webpages")
-        print("Transforming webpages")
+        logger.info(f"Loaded {len(webpages.webpages)} webpages")
+        logger.info("Transforming webpages")
         webpage_splitter_transformer = webpage_splitter.WebpageSplitterTransformer()
         for webpage in webpages.webpages:
             # Run webpages through the WebpageSplitterTransformer to optimize for search and storage
             webpage_splitter_transformer.transform(webpage)
 
-        print("Inserting webpages to weaviate")
+        logger.info("Inserting webpages to weaviate")
         # Insert webpages to weaviate
         weaviate_store.insert_webpages(webpages.webpages)
 
-        print("Finished building search indexes")
+        logger.info("Finished building search indexes")
 
     elif script_args.command == "search":
         query = script_args.query
@@ -157,7 +176,7 @@ async def main():
             weaviate_store=weaviate_store
         )
         search_results = weaviate_search_engine.search(query_str=query, mode=mode, top_k=top_k)
-        pprint.pprint(search_results)
+        logger.info(search_results)
     elif script_args.command == "ask":
         ask_str = script_args.ask
         mode = script_args.mode
@@ -167,7 +186,7 @@ async def main():
             weaviate_store=weaviate_store
         )
         answer = weaviate_search_engine.ask(ask_str=ask_str, mode=mode, top_k=top_k)
-        pprint.pprint(answer)
+        logger.info(answer)
     elif script_args.command == "summarize":
         query_str = script_args.query
         mode = script_args.mode
@@ -177,7 +196,7 @@ async def main():
             weaviate_store=weaviate_store
         )
         summarization = weaviate_search_engine.summarize(query_str=query_str, mode=mode, top_k=top_k)
-        pprint.pprint(summarization)
+        logger.info(summarization)
 
 
 if __name__ == '__main__':

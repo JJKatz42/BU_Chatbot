@@ -5,7 +5,7 @@ import html2text
 from typing import Dict
 
 from src.libs.storage.storage_data_classes import TextContent, Webpage, MimeType
-from testing.BU_info_db.storage.weaviate_store import WeaviateStore
+from src.libs.storage.weaviate_store import WeaviateStore
 from src.libs.config import config
 
 # Constants (modify as necessary)
@@ -23,7 +23,7 @@ def init_config(local_env_file: str | None):
     )
 
 
-def process_file(file_path: str, file_url: str) -> tuple[str, str]:
+def process_file(file_path: str, file_url: str) -> [str, str]:
 
     with open(file_path, "r") as f:
         html_content = f.read()

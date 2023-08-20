@@ -1,71 +1,55 @@
 import argparse
 import asyncio
 import csv
-import enum
 import getpass
 import json
 import os
 import shutil
 import time
-import openai
 from dataclasses import asdict
 from datetime import datetime
 
 import langchain.chat_models
-import pydantic
 
+import src.libs.eval.utils as utils
 import src.libs.eval.evaluation_test_schema as evaluation_test_schema
+from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
 import src.libs.eval.evaluation_agent as evaluation_agent
+import src.libs.config as config
+import src.libs.logging as logging
+import src.libs.search as search
+import src.libs.storage as storage
 
-from src.libs.config import config
-from src.libs.search.search_agent.search_agent import SearchAgent
-from src.libs.search.search_agent.search_agent import SearchAgentFeatures
-from src.libs.search.weaviate_search_engine import WeaviateSearchEngine
-
-from src.libs.storage.weaviate_store import WeaviateStore
-
-
-# Constants (modify as necessary)
+logger = logging.getLogger(__name__)
 
 # Files and directories
 ARCHIVE_DIRECTORY = "archive"
-SCORES_FILE = "../src/libs/eval/scores.json"
-SUMMARY_FILE = "../src/libs/eval/summary.txt"
-TEST_RESULTS_FILE = "../src/libs/eval/test_results.csv"
-
+SCORES_FILE = "scores.json"
+SUMMARY_FILE = "summary.txt"
+TEST_RESULTS_FILE = "test_results.csv"
 
 
 def init_config(local_env_file: str | None):
     config.init(
         metadata=[
-            config.ConfigVarMetadata(var_name="DATA_NAMESPACE"),
+            config.ConfigVarMetadata(var_name="INFO_DATA_NAMESPACE"),
             config.ConfigVarMetadata(var_name="WEAVIATE_URL"),
             config.ConfigVarMetadata(var_name="WEAVIATE_API_KEY"),
             config.ConfigVarMetadata(var_name="OPENAI_API_KEY"),
-            config.ConfigVarMetadata(var_name="EVALUATE_OPENAI_API_KEY"),
             config.ConfigVarMetadata(var_name="COHERE_API_KEY"),
         ],
         local_env_file=local_env_file
     )
 
 
-def custom_json_encoder(obj):
-    if isinstance(obj, pydantic.BaseModel):
-        return obj.dict()
-    elif isinstance(obj, enum.Enum):
-        return obj.value
-    else:
-        return str(obj)
-
-
 async def search_agent_job(agent: SearchAgent, query: str) -> dict:
-    print(f"Running job: {query}")
+    logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
     result = await agent.run(query=query)
 
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
-    print(f"Running job: {query} finished")
+    logger.info(f"Running job: {query} finished")
     return result_dict
 
 
@@ -78,10 +62,11 @@ async def run_search_agent_jobs(agent: SearchAgent, test_specs: list[dict]):
             task = asyncio.create_task(search_agent_job(agent, query))
             tasks.append(task)
         else:
-            print(f"Skipping disabled query {query}")
+            logger.info(f"Skipping disabled query {query}")
 
     # Wait for all tasks to complete
     results = await asyncio.gather(*tasks)
+
     return results
 
 
@@ -89,10 +74,10 @@ async def evaluation_agent_job(agent: evaluation_agent.EvaluationAgent,
                                query: str,
                                expected_rsp: str,
                                bot_rsp: str) -> dict:
-    print(f"Running evaluation job: {query}")
+    logger.info(f"Running evaluation job: {query}")
     result = await agent.run(query=query, expected_rsp=expected_rsp, bot_rsp=bot_rsp)
 
-    print(f"Running Evaluation job: {query} finished")
+    logger.info(f"Running Evaluation job: {query} finished")
     return asdict(result)
 
 
@@ -110,27 +95,11 @@ async def run_evaluation_agent_jobs(agent: evaluation_agent.EvaluationAgent,
                                                             bot_responses[count]['result']))
             tasks.append(task)
         else:
-            print(f"Skipping disabled query {query}")
+            logger.info(f"Skipping disabled query {query}")
 
     # Wait for all tasks to complete
     results = await asyncio.gather(*tasks)
     return results
-
-
-def save_object_to_json_file(dictionary, filename):
-    try:
-        with open(filename, 'w') as file:
-            json.dump(dictionary, file, default=custom_json_encoder)
-    except FileNotFoundError:
-        print("Error: File not found")
-    except PermissionError:
-        print("Error: Permission denied to open the file")
-    except IOError as e:
-        print(f"I/O error occurred: {e}")
-    except json.JSONDecodeError as e:
-        print(f"Error in encoding JSON: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
 
 
 def load_data_from_json_file(filename):
@@ -139,11 +108,11 @@ def load_data_from_json_file(filename):
         with open(filename, 'r') as file:
             data = json.load(file)
     except FileNotFoundError:
-        print("File not found.")
+        logger.error("File not found.")
     except json.JSONDecodeError:
-        print("Error decoding JSON data.")
+        logger.error("Error decoding JSON data.")
     except Exception as e:
-        print("An error occurred:", str(e))
+        logger.error("An error occurred:", str(e))
 
     return data
 
@@ -158,7 +127,7 @@ def select_tests_to_run_by_id(test_specs: list[dict], test_ids: list) -> list[di
 
 
 def select_tests_to_run_by_tag(test_specs: list[dict], tags: list) -> list[dict]:
-    return [x for x in test_specs if has_overlap(x['metadata']['classification_tags'], tags)]
+    return [x for x in test_specs if utils.has_overlap(x['metadata']['classification_tags'], tags)]
 
 
 async def main():
@@ -168,10 +137,10 @@ async def main():
         prog="Evaluate Bot",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--env-file", help="Local .env file containing config values. Default=.env",
-                        default=".env")
-    parser.add_argument("--test-file", help="File containing tests. Default=/workspaces/BU_Chatbot/BU_info_db/test_registry.json",
-                        default="/Users/jonahkatz/Desktop/BU_Chatbot/BU_info_db/eval/test_registry.json")
+    parser.add_argument("--env-file", help="Local .env file containing config values. Default=/Users/jonahkatz/Desktop/BU_Chatbot/src/services/chatbot/.env",
+                        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env")
+    parser.add_argument("--test-file", help="File containing tests. Default=/Users/jonahkatz/Desktop/BU_Chatbot/src/libs/eval/test_registry.json",
+                        default="/Users/jonahkatz/Dev/BU_Chatbot/src/libs/eval/test_registry.json")
     parser.add_argument("--score-thresh", help="Log test results to summary.txt if test score is equal to or less "
                                                "than this score. Default=100", type=int, default=100)
     parser.add_argument("--reasoning-llm", help="Reasoning LLM model name. Default=gpt-3.5-turbo-0613",
@@ -187,7 +156,7 @@ async def main():
                         default=[],
                         help="Subset of test ids to run (from the --test-file), space-separated. Default: run all")
     parser.add_argument("--verbose", help="Verbose output to stdout", action="store_true")
-    parser.add_argument("--csv", help="Write test results to CSV file: test_results.csv", action="store_true", default=True)
+    parser.add_argument("--csv", help="Write test results to CSV file: test_results.csv", action="store_true")
     parser.add_argument("--tags", nargs="+",
                         default=[],
                         help="Select tests that have at least one of specified tags.  Default: no filtering")
@@ -204,19 +173,16 @@ async def main():
         env_file = os.path.join(current_directory, env_file)
     init_config(local_env_file=env_file)
 
-    openai.api_key= config.get("OPENAI_API_KEY")
-    key = config.get("OPENAI_API_KEY")
-    print(key)
     # Initialize weaviate store
-    weaviate_store = WeaviateStore(
+    weaviate_store = storage.WeaviateStore(
+        namespace=config.get("INFO_DATA_NAMESPACE"),
         instance_url=config.get("WEAVIATE_URL"),
         api_key=config.get("WEAVIATE_API_KEY"),
         openai_api_key=config.get("OPENAI_API_KEY"),
-        namespace=config.get("DATA_NAMESPACE"),
-        cohere_api_key=config.get("COHERE_API_KEY")
+        cohere_api_key=config.get("COHERE_API_KEY"),
     )
     # Initialize a search engine
-    weaviate_search_engine = WeaviateSearchEngine(weaviate_store=weaviate_store)
+    weaviate_search_engine = search.WeaviateSearchEngine(weaviate_store=weaviate_store)
     # Initialize a reasoning LLM
     reasoning_llm = langchain.chat_models.ChatOpenAI(
         model_name=reasoning_llm_model_name,
@@ -224,17 +190,18 @@ async def main():
         openai_api_key=config.get("OPENAI_API_KEY")
     )
     # Initialize the search agent with the search engine and reasoning llm
-    # print(f"search_agent_features={script_args.search_agent_features}")
+    logger.info(f"search_agent_features={script_args.search_agent_features}")
     search_agent_args = {
         "weaviate_search_engine": weaviate_search_engine,
         "reasoning_llm": reasoning_llm,
-        # "features": script_args.search_agent_features
+        "features": script_args.search_agent_features
     }
+
     search_agent = SearchAgent(**search_agent_args)
 
     # Read and validate the JSON file
     if not evaluation_test_schema.EvaluationTestSchema.validate_test_file(script_args.test_file):
-        print("validate_test_file failure!")
+        logger.error("validate_test_file failure!")
         raise Exception("validate_test_file failure!")
     # Load the content of the test file
     test_specs = load_data_from_json_file(script_args.test_file)
@@ -246,9 +213,9 @@ async def main():
     if len(script_args.tags) > 0:
         test_specs = select_tests_to_run_by_tag(test_specs, script_args.tags)
 
-    print("Questions!")
+    logger.info("Questions!")
     for spec in test_specs:
-        print(f"\tquestion: {spec['definition']['request']}")
+        logger.info(f"\tquestion: {spec['definition']['request']}")
 
     # Run all tests
     results = await run_search_agent_jobs(search_agent, test_specs)
@@ -346,15 +313,15 @@ async def main():
 
     evaluation = {'test_results': test_results, 'test_summary': test_summary}
 
-    save_object_to_json_file(evaluation, SCORES_FILE)
+    utils.save_object_to_json_file(evaluation, SCORES_FILE)
 
     if script_args.verbose:
         for idx, test in enumerate(test_results):
             if not test['definition']['enable']:
                 continue
             print(test_result_to_str(test, idx))
-    print(f"Info: Saved evaluation results in {SCORES_FILE}")
-    print(test_summary_to_str(evaluation['test_summary']))
+    logger.info(f"Info: Saved evaluation results in {SCORES_FILE}")
+    logger.warning(test_summary_to_str(evaluation['test_summary']))
 
     log_test_summary_to_file(test_results=test_results,
                              summary=evaluation['test_summary'],
@@ -369,7 +336,7 @@ async def main():
         write_results_to_csv_file(test_results)
 
 
-def log_test_summary_to_file(test_results: dict,
+def log_test_summary_to_file(test_results: list[dict],
                              summary: dict,
                              script_args: argparse.Namespace,
                              score_threshold: int,
@@ -379,7 +346,7 @@ def log_test_summary_to_file(test_results: dict,
     the maximum score threshold.
 
     Parameters:
-    test_results (dict): A dictionary that contains the test results.
+    test_results (list[dict]): A dictionary that contains the test results.
     summary (dict): A dictionary that contains a summary of the tests.
     score_threshold (int): An integer representing the maximum score threshold.
                            Only test results where test score is equal to or less than this score will be logged.
@@ -413,11 +380,10 @@ def test_result_to_str(test: dict, idx: int, splice: int = 2000):
         grade_explanation = grade_explanation[:splice] + " ..."
     if len(score_explanation) > splice:
         score_explanation = score_explanation[:splice] + " ..."
-    # sources = ', '.join([
-    #     f"{source['source_info'].get('title') or source['source_info'].get('conversation_name')} "
-    #     f"({source['source_info']['source']})"
-    #     for source in test['result']['sources']
-    # ])
+    sources = ', '.join([
+        f"{source['url']}"
+        for source in test['result']['sources']
+    ])
 
     return f"""
 Test {idx + 1}:
@@ -428,12 +394,18 @@ Test {idx + 1}:
    Evaluation Score: ........... {test['evaluation']['score']}
    Evaluation Grade Explanation: {grade_explanation}
    Evaluation Score Explanation: {score_explanation}
+   Sources: .................... {sources}
    Search Time: ................ {test['result']['search_job_duration']}
    Test ID: .................... {test['metadata']['test_id']}
 """
 
 
 def test_result_to_flat_dict(test: dict) -> dict:
+    sources = ', '.join([
+        f"{source['source_info'].get('title') or source['source_info'].get('conversation_name')} "
+        f"({source['source_info']['source']})"
+        for source in test['result']['sources']
+    ])
 
     return {
         'Test ID': test['metadata']['test_id'],
@@ -449,6 +421,7 @@ def test_result_to_flat_dict(test: dict) -> dict:
         'Search Tokens Cost': round(test['result']['total_tokens_cost'], 3),
         'Eval Tokens Used': test['evaluation']['total_tokens_used'],
         'Eval Tokens Cost': round(test['evaluation']['total_tokens_cost'], 3),
+        'Bot Sources': sources,
         'Expected Sources': "TBD",
     }
 
@@ -503,13 +476,13 @@ def back_up_test_results(script_args: argparse.Namespace):
     for file_name in files:
         if os.path.isfile(file_name):
             try:
-                shutil.copy(file_name, os.path.join(subdirectory, file_name))
+                shutil.move(file_name, os.path.join(subdirectory, file_name))
             except OSError as e:
-                print(f"Error: {e.strerror}")
+                logger.warning(f"Error: {e.strerror}")
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                logger.warning(f"Unexpected error: {e}")
         else:
-            print(f'File {file_name} does not exist.')
+            logger.warning(f'File {file_name} does not exist.')
             continue
 
 
@@ -525,7 +498,7 @@ def write_results_to_csv_file(test_results: list[dict]):
      If a file with this name already exists, it is overwritten.
 
      Args:
-         test_results (list[dict]): A list of dictionaries where each dictionary represents the results of a single test.
+         test_results (list[dict]): A list of dictionaries where each dictionary represents the results of a single test
     """
     fieldnames = test_result_to_flat_dict(test_results[0]).keys()
 
@@ -538,27 +511,8 @@ def write_results_to_csv_file(test_results: list[dict]):
                     continue
                 writer.writerow(test_result_to_flat_dict(test))
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
         return
-
-
-def has_overlap(array1, array2):
-    """
-    This function checks if two Python arrays have any overlap.
-
-    Args:
-      array1: The first array.
-      array2: The second array.
-
-    Returns:
-      True if the arrays have any overlap, False otherwise.
-
-    Example:
-      >>> has_overlap([1, 2, 3, 4, 5], [3, 4, 5, 6, 7])
-      True
-    """
-
-    return any(element in array2 for element in array1)
 
 
 if __name__ == '__main__':

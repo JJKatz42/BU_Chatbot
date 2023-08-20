@@ -8,6 +8,11 @@ import weaviate.gql.get
 from src.libs.search import search_data_classes as search_data_classes
 from src.libs.storage import storage_data_classes as storage_data_classes
 from src.libs.storage import weaviate_store
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
+
 
 # Aliases
 WeaviateObject = storage_data_classes.WeaviateObject
@@ -85,7 +90,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 TextContent.weaviate_class_name(namespace=self.namespace)
             ]
         except KeyError:
-            print(response["data"]["Get"])
+            logger.error(response["data"]["Get"])
             raise
         search_results = []
         for raw_result in raw_results:
@@ -162,7 +167,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 answer_str = raw_result["_additional"]["generate"]["groupedResult"]
                 error = raw_result["_additional"]["generate"]["error"]
                 if error:
-                    print(f"Error generating an answer: {error}")
+                    logger.error(f"Error generating an answer: {error}")
             search_result = SearchResult(
                 text=raw_result["text"],
                 url=raw_result["contentOf"][0]["url"],
@@ -232,7 +237,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 summary_str = raw_result["_additional"]["generate"]["groupedResult"]
                 error = raw_result["_additional"]["generate"]["error"]
                 if error:
-                    print(f"Error generating a summary: {error}")
+                    logger.error(f"Error generating a summary: {error}")
 
             search_result = SearchResult(
                 text=raw_result["text"],

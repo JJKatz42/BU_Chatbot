@@ -1,5 +1,10 @@
 import weaviate
 import src.libs.storage.user_data_classes as data_classes
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
+
 
 # Aliases for clarity
 User = data_classes.User
@@ -51,7 +56,7 @@ class UserDatabaseManager:
             })
 
         except Exception as e:
-            print(f"Error creating schema: {e}")
+            logger.error(f"Error creating schema: {e}")
             # Add further error handling or logging here as needed.
 
     def user_exists(self, gmail: str) -> bool:
@@ -68,7 +73,6 @@ class UserDatabaseManager:
         )
 
         if results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)]:
-            print(results["data"]["Get"][User.weaviate_class_name(namespace=self.namespace)])
             return True
 
         return False
@@ -83,7 +87,7 @@ class UserDatabaseManager:
             The UUID of the created User object
         """
         if self.user_exists(gmail=user.gmail):
-            print(f"User with Gmail {user.gmail} already exists")
+            logger.warning(f"User with Gmail {user.gmail} already exists")
             return True
 
         else:
@@ -94,13 +98,12 @@ class UserDatabaseManager:
                     data_object=user.to_weaviate_object()
                 )
             except Exception as e:
-                print(f"Error creating user: {e}")
+                logger.error(f"Error creating user: {e}")
                 return False
 
             # Initialize an empty Conversation object and cross-reference it with the User
             for conversation in user.conversations:
                 try:
-                    print(conversation.to_weaviate_object())
                     conversation_uuid = self.client.data_object.create(
                         class_name=Conversation.weaviate_class_name(self.namespace),
                         uuid=conversation.weaviate_id,
@@ -124,7 +127,7 @@ class UserDatabaseManager:
                         to_uuid=user_uuid
                     )
                 except Exception as e:
-                    print(f"Error creating conversation: {e}")
+                    logger.error(f"Error creating conversation: {e}")
                     self.client.data_object.delete(user_uuid)
                     return False
 
@@ -161,7 +164,7 @@ class UserDatabaseManager:
         try:
             conversation_uuid = self._get_conversation_id(gmail=gmail)
         except Exception as e:
-            print(f"Error getting conversation ID: {e}")
+            logger.error(f"Error getting conversation ID: {e}")
 
         try:
             user_message_uuid = self.client.data_object.create(
@@ -170,7 +173,7 @@ class UserDatabaseManager:
                 data_object=user_message.to_weaviate_object()
             )
         except Exception as e:
-            print(f"Error adding user_message: {e}")
+            logger.error(f"Error adding user_message: {e}")
 
         try:
             # Create a bot message
@@ -197,7 +200,7 @@ class UserDatabaseManager:
                 to_uuid=user_message_uuid
             )
         except Exception as e:
-            print(f"Error adding bot messages and creating references: {e}")
+            logger.error(f"Error adding bot messages and creating references: {e}")
 
         try:
             # Create a bidirectional cross-reference between UserMessage and BotMessage with Conversation
@@ -234,7 +237,7 @@ class UserDatabaseManager:
             )
 
         except Exception as e:
-            print(f"Error creating references between messages and conversation: {e}")
+            logger.error(f"Error creating references between messages and conversation: {e}")
 
         return bot_message_uuid
 
@@ -264,7 +267,7 @@ class UserDatabaseManager:
                 )
 
         except Exception as e:
-            print(f"Error inserting liked message: {e}")
+            logger.error(f"Error inserting liked message: {e}")
             return ""
 
     def is_bad_query(self, query_str: str):
@@ -279,10 +282,10 @@ class UserDatabaseManager:
         #         ]
         #     )
         #
-        #     print(completion.choices[0].message)
+        #     logger.info(completion.choices[0].message)
         #     return completion.choices[0].message["content"]
         # except Exception as e:
-        #     print(e)
+        #     logger.error(e)
         #     return "Couldn't do it"
         return "True"
 
@@ -306,10 +309,10 @@ class UserDatabaseManager:
             .do()
         )
 
-        # Extract and print the messages
+        # Extract and log the messages
         message_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages']
         if not message_objects:
-            print(f"No User object found with the Gmail: {gmail}")
+            logger.warning(f"No User object found with the Gmail: {gmail}")
             return message_list
 
         else:
@@ -319,11 +322,11 @@ class UserDatabaseManager:
                 u_tup = []
                 b_tup = []
 
-                u_tup.append(message['query_str'])  # Print user message
-                u_tup.append(message['_additional']['id'])  # Print user message ID
+                u_tup.append(message['query_str'])
+                u_tup.append(message['_additional']['id'])
 
-                b_tup.append(message['hasBotMessage'][0]['response_str'])  # Print bot message
-                b_tup.append(message['hasBotMessage'][0]['_additional']['id'])  # Print bot message ID
+                b_tup.append(message['hasBotMessage'][0]['response_str'])
+                b_tup.append(message['hasBotMessage'][0]['_additional']['id'])
 
                 tup.append(u_tup)
                 tup.append(b_tup)
@@ -358,7 +361,7 @@ class UserDatabaseManager:
                 },
             )
         except Exception as e:
-            print(f"Error clearing conversation: {e}")
+            logger.error(f"Error clearing conversation: {e}")
 
         results = (
             self.client.query
@@ -368,7 +371,7 @@ class UserDatabaseManager:
             .do()
         )
 
-        print(results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages'])
+        logger.info(results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages'])
 
     def insert_profile_info(self, gmail: str, profile_info_lst: [ProfileInformation]):
         """
@@ -386,12 +389,12 @@ class UserDatabaseManager:
                 "dataType": [User.weaviate_class_name(self.namespace)]
             })
         except Exception as e:
-            print(f"Error creating properties (doesn't matter tho): {e}")
+            logger.error(f"Error creating properties (doesn't matter tho): {e}")
 
         try:
             user_uuid = self._get_user_id(gmail=gmail)
         except Exception as e:
-            print(f"Error getting conversation ID: {e}")
+            logger.error(f"Error getting conversation ID: {e}")
 
         try:
             for profile_information in profile_info_lst:
@@ -421,7 +424,7 @@ class UserDatabaseManager:
                 )
 
         except Exception as e:
-            print(f"Error adding user_message: {e}")
+            logger.error(f"Error adding user_message: {e}")
 
     def get_profile_info_for_user(self, gmail: str):
         """
@@ -446,7 +449,7 @@ class UserDatabaseManager:
         # Extract and return profile information
         profile_info_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasProfileInformation']
         if not profile_info_objects:
-            print(f"No User object found with the Gmail: {gmail}")
+            logger.warning(f"No User object found with the Gmail: {gmail}")
             return profile_info_dict
 
         else:
@@ -469,7 +472,7 @@ class UserDatabaseManager:
                 cross_ref.to_uuid
             )
         except Exception as e:
-            print(f"Error creating cross-reference: {e}")
+            logger.error(f"Error creating cross-reference: {e}")
 
     def _get_conversation_id(self, gmail: str):
         """
@@ -536,5 +539,5 @@ class UserDatabaseManager:
 
             return result
         except Exception as e:
-            print(f"Error getting bot message with that ID: {e}")
+            logger.error(f"Error getting bot message with that ID: {e}")
             return ""

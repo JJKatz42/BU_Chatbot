@@ -5,8 +5,7 @@ class JWTHeader(BaseModel):
     jwt_token: str = Field(..., alias="Authorization")
 
 
-class ChatRequestWithSession(BaseModel):
-    sessionID: str
+class ChatRequest(BaseModel):
     question: str
 
 

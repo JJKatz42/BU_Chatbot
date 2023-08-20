@@ -6,6 +6,10 @@ import tqdm
 import tqdm.asyncio
 
 import src.libs.storage.storage_data_classes as data_classes
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class wait_openai_ratelimit(tenacity.wait_exponential):
@@ -45,11 +49,11 @@ class wait_openai_ratelimit(tenacity.wait_exponential):
         elif unit == "s":
             duration = duration
         else:
-            print(
+            logger.warning(
                 f"Unknown ratelimit reset duration unit: {unit}, defaulting to exponential backoff logic.")
             return super().__call__(retry_state=retry_state)
 
-        print(f"{reached_ratelimit_limit_message}. Sleeping for {duration} seconds until ratelimit is reset..")
+        logger.warning(f"{reached_ratelimit_limit_message}. Sleeping for {duration} seconds until ratelimit is reset..")
 
         return duration
 
@@ -85,10 +89,10 @@ class EmbeddingsClient:
             model=self._model_name,
             api_key=self._openai_api_key
         )
-        # print(resp)
+
         for data in resp["data"]:
             if data["embedding"] == "" or data["embedding"] is None or data["embedding"] == []:
-                print(f"Error creating embedding: {texts}")
+                logger.warning(f"Error creating embedding: {texts}")
                 return []
 
         embeddings = [data["embedding"] for data in resp["data"]]
@@ -103,7 +107,7 @@ class EmbeddingsClient:
             api_key=self._openai_api_key
         )
         if resp["data"][0]["embedding"] == "" or resp["data"]["embedding"] is None or resp["data"]["embedding"] == []:
-            print(f"Error creating embedding: {texts}")
+            logger.warning(f"Error creating embedding: {texts}")
             return []
         embeddings = [data["embedding"] for data in resp["data"]]
         return embeddings

@@ -7,6 +7,11 @@ import typing
 import dotenv
 import requests
 
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
+
 
 @dataclasses.dataclass
 class ConfigVarMetadata:
@@ -45,7 +50,7 @@ def init(metadata: list[ConfigVarMetadata], local_env_file: str = None):
     if local_env_file:
         loaded = dotenv.load_dotenv(local_env_file)
         if not loaded:
-            print(f"No config vars set from {local_env_file}. Does the file exist and have values?")
+            logger.warning(f"No config vars set from {local_env_file}. Does the file exist and have values?")
 
 
 def is_local_env() -> bool:
@@ -86,7 +91,6 @@ def get(var_name: str, default: typing.Any = None) -> typing.Any:
 
     # Return the requested config var value
     return _config.get(var_name, default)
-
 
 
 def _get_environment_config() -> typing.Dict:
