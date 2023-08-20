@@ -7,7 +7,7 @@ externalDocs:
   description: Find more info here
   url: https://example.com
 servers:
-  - url: https://api.yourdomain.com/v1
+  - url: http://127.0.0.1:8000
 paths:
   /login:
     get:
@@ -64,7 +64,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChatRequestWithSession'
+              $ref: '#/components/schemas/ChatRequest'
       parameters:
         - in: header
           name: Authorization
@@ -89,39 +89,6 @@ paths:
           description: Unauthorized - Missing, invalid token, or session expired
         '429':
           description: Too many requests
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /chat/{responseID}/result:
-    get:
-      summary: Poll for the chatbot's response using the responseID
-      parameters:
-        - in: path
-          name: responseID
-          schema:
-            type: string
-          required: true
-          description: The unique ID of the chatbot's initial acknowledgment.
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatResponse'
-        '202':
-          description: Processing still ongoing
-        '401':
-          description: Unauthorized - Missing or invalid token/session
-        '404':
-          description: ResponseID not found or expired
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -163,12 +130,9 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ChatRequestWithSession:
+    ChatRequest:
       type: object
       properties:
-        sessionID:
-          type: string
-          description: Identifier for the user's current session.
         question:
           type: string
           description: The question posed by the user.

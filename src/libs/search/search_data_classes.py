@@ -1,5 +1,7 @@
 import dataclasses
 
+import pydantic
+
 from src.libs.storage import storage_data_classes as storage_data_classes
 
 # Redeclare Source and MimeType in local scope, so it can be imported from here directly in search modules
@@ -23,9 +25,6 @@ class SearchResult:
     url: str
     score: float | None = None
     source_info: SourceInfo | None = None
-
-    # def __eq__(self, other: "SearchResult"):
-    #     return dataclasses.asdict(self.source_info) == dataclasses.asdict(other.source_info)
 
 
 @dataclasses.dataclass

@@ -13,6 +13,10 @@ from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFe
 from src.libs.config import config
 import src.libs.storage.user_management as user_management
 import src.libs.storage.user_data_classes as data_classes
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def init_config(local_env_file: str | None):
@@ -30,12 +34,12 @@ def init_config(local_env_file: str | None):
 
 
 async def search_agent_job(agent: SearchAgent, query: str) -> dict:
-    print(f"Running job: {query}")
+    logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
     result = await agent.run(query)
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
-    print(f"Running job: {query} finished")
+    logger.info(f"Running job: {query} finished")
     return result_dict
 
 
@@ -163,8 +167,8 @@ async def main():
 
     is_bad_query = weaviate_user_management.is_bad_query(query_str=ask_str)
     if "False" in is_bad_query:
-        print(is_bad_query)
-        print("Bad Query")
+        logger.info(is_bad_query)
+        logger.info("Bad Query")
 
     # Route to sub command specific logic either build indexes for search or run a search
     if script_args.command == "insert-user":
@@ -173,7 +177,7 @@ async def main():
             weaviate_user_management.create_schema(delete_if_exists=True)
 
         if weaviate_user_management.user_exists(script_args.gmail):
-            print("User already exists")
+            logger.info("User already exists")
 
         else:
             # Create user
@@ -192,18 +196,18 @@ async def main():
             ]
 
             # Insert webpages to weaviate
-            print("Inserting user into weaviate")
+            logger.info("Inserting user into weaviate")
             weaviate_user_management.create_user(user=user)
 
-            print("Finished inserting user")
+            logger.info("Finished inserting user")
 
     elif script_args.command == "insert-message":
         ask_str = script_args.ask
 
         is_bad_query = weaviate_user_management.is_bad_query(query_str=ask_str)
         if "false" in is_bad_query:
-            print(is_bad_query)
-            print("Bad Query")
+            logger.info(is_bad_query)
+            logger.info("Bad Query")
 
         else:
             weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_store_info)
@@ -224,12 +228,11 @@ async def main():
             )
 
             message_list = weaviate_user_management.get_messages_for_user(gmail=script_args.gmail)
-            print(message_list)
-
+            logger.info(message_list)
 
 
             # Run the SearchAgent
-            print("Running search agent")
+            logger.info("Running search agent")
 
             agent_result = await search_agent_job(search_agent, ask_str)
             # sort the sources by score
@@ -251,13 +254,13 @@ async def main():
 
             # response = "This is a test response 2"
             # Create messages
-            print("Creating user message")
+            logger.info("Creating user message")
             user_message = data_classes.UserMessage(
                 query_str=ask_str,
                 is_bad_query=None,
                 created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
             )
-            print("Creating bot message")
+            logger.info("Creating bot message")
             bot_message = data_classes.BotMessage(
                 response_str=response,
                 is_liked=None,
@@ -265,38 +268,38 @@ async def main():
             )
 
             # Insert message into user
-            print("Inserting message into user")
+            logger.info("Inserting message into user")
             weaviate_user_management.insert_message(
                 user_message=user_message,
                 bot_message=bot_message,
                 gmail=script_args.gmail
             )
-            print("Finished inserting message")
+            logger.info("Finished inserting message")
 
     elif script_args.command == "insert-like":
         # Insert like into user
-        print("Inserting like into user")
+        logger.infot("Inserting like into user")
         weaviate_user_management.insert_liked(
             liked=script_args.liked,
             bot_message_id=script_args.message_id
         )
-        print("Finished inserting like")
+        logger.info("Finished inserting like")
 
     elif script_args.command == "clear-conversation":
         # Clear conversation for user
-        print("Clearing conversation for user")
+        logger.info("Clearing conversation for user")
         weaviate_user_management.clear_conversation(
             gmail=script_args.gmail
         )
-        print("Finished clearing conversation")
+        logger.info("Finished clearing conversation")
 
     elif script_args.command == "insert-profile-info":
         # Get current profile info for user
         current_profile_info_dict = weaviate_user_management.get_profile_info_for_user(gmail=script_args.gmail)
-        print(current_profile_info_dict)
+        logger.info(f"Inserting {current_profile_info_dict}")
 
         # Insert profile info into user
-        print("Inserting profile info into user")
+        logger.info("Inserting profile info into user")
 
         profile_info_dict = eval(script_args.profile_info)
 
@@ -314,7 +317,7 @@ async def main():
             gmail=script_args.gmail,
             profile_info_lst=profile_info_lst,
         )
-        print("Finished inserting profile info")
+        logger.info("Finished inserting profile info")
 
 if __name__ == '__main__':
     asyncio.run(main())

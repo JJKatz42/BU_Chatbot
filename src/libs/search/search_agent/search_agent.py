@@ -14,6 +14,11 @@ import src.libs.search.search_agent.query_planning as query_planning
 import src.libs.search.search_agent.search_parameter_gen as search_parameter_gen
 import src.libs.search.weaviate_search_engine as weaviate_search_engine
 import src.libs.storage.storage_data_classes as storage_data_classes
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
+
 
 SOURCE_TYPE = typing.Type[storage_data_classes.Webpage]
 SOURCE_TYPE_TO_NULL_CHECK_PROPERTY = {
@@ -152,7 +157,7 @@ class SearchAgent:
                     sub_query_id in query_results for sub_query_id in queries[task_id].sub_queries
                 )
             ]
-            print(f"Queries ready to execute: {ready_to_execute}")
+            logger.info(f"Queries ready to execute: {ready_to_execute}")
 
             computed_query_results: list[query_planning.QueryResult] = await asyncio.gather(
                 *[
@@ -250,7 +255,7 @@ class SearchAgent:
         # First system message explains to LLM its role and the job to be done.
         role_prompt_message = langchain.schema.SystemMessage(
             content="You are a helpful, knowledgeable and confident university chatbot. "
-                    "Your task is to respond to the students's question with a helpful, "
+                    "Your task is to respond to the student's question with a helpful, "
                     "accurate and concise answer based only on the information that can be "
                     "found in the university data. Before answering the student's question, "
                     "first search for supporting information from the university's data."
@@ -299,14 +304,14 @@ class SearchAgent:
         if num_tokens_in_prompt > (self._qa_llm_context_size - 500):
             if num_tokens_in_prompt > (self._fallback_qa_llm_context_size - 500):
                 # TODO: Auto retry with fewer search results instead of throwing exception?
-                print(
+                logger.warning(
                     f"Query {query.id} prompt has {num_tokens_in_prompt} tokens which is larger "
                     f"than maximum supported context size ({self._fallback_qa_llm_context_size})."
                 )
 
-            print(
+            logger.warning(
                 f"Query {query.id} prompt has {num_tokens_in_prompt} tokens which is larger than "
-                f"the QA llm's context size, switching to {self._fallback_qa_llm_model_name}."
+                f"the QA LLM's context size, switching to {self._fallback_qa_llm_model_name}."
             )
             llm_override_params = {"model": self._fallback_qa_llm_model_name}
 

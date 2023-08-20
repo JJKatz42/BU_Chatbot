@@ -5,15 +5,19 @@ import datetime
 from src.libs.search.search_agent.search_agent import SearchAgent
 import src.libs.storage.user_data_classes as data_classes
 import src.libs.storage.user_management as user_management
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def search_agent_job(agent: SearchAgent, query: str) -> dict:
-    print(f"Running job: {query}")
+    logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
     result = await agent.run(query)
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
-    print(f"Running job: {query} finished")
+    logger.info(f"Running job: {query} finished")
     return result_dict
 
 
@@ -40,7 +44,7 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
 
         response = f"{agent_result['answer']} <br><br> Sources: {url_str}"  # Use HTML break line tag here
 
-        print("response: ", response)
+        # logger.info("response: ", response)
 
         # response = "It worked"
 
@@ -61,13 +65,13 @@ async def insert_message(search_agent: SearchAgent, user_management: user_manage
 
         # response = "This is a test response 2"
         # Create messages
-        print("Creating user message")
+        logger.info("Creating user message")
         user_message = data_classes.UserMessage(
             query_str=input_text,
             is_bad_query=None,
             created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         )
-        print("Creating bot message")
+        logger.info("Creating bot message")
         bot_message = data_classes.BotMessage(
             response_str=response,
             is_liked=None,
@@ -75,13 +79,13 @@ async def insert_message(search_agent: SearchAgent, user_management: user_manage
         )
 
         # Insert message into user
-        print("Inserting message into user")
+        logger.info("Inserting message into user")
         bot_message_uuid = user_management.insert_message(
             user_message=user_message,
             bot_message=bot_message,
             gmail=gmail
         )
-        print("Finished inserting message")
+        logger.info("Finished inserting message")
 
         return [response, bot_message_uuid]
 
@@ -109,16 +113,16 @@ def insert_user(user_management: user_management.UserDatabaseManager, gmail: str
     ]
 
     # Insert webpages to weaviate
-    print("Inserting user into weaviate")
+    logger.info("Inserting user into weaviate")
     succeeded = user_management.create_user(user=user)
 
-    print("Finished inserting user")
+    logger.info("Finished inserting user")
 
     return succeeded
 
 
 def insert_feedback(user_management: user_management.UserDatabaseManager, message_id: str, is_liked: bool):
-    print("Inserting like into user")
+    logger.info("Inserting like into user")
     user_management.insert_liked(
         liked=is_liked,
         bot_message_id=message_id

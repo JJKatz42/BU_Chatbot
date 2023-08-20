@@ -6,6 +6,11 @@ from datetime import datetime
 
 from pydantic import BaseModel  # pylint: disable=no-member
 
+from src.libs.logging import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class EvaluationTag(enum.Enum):
     REQ_CLARITY_AMBIGUOUS = "REQ_CLARITY_AMBIGUOUS"
@@ -82,7 +87,7 @@ class EvaluationTestList(BaseModel):
         non_unique_test_ids = [item for item, count in counter.items() if count > 1]
 
         if len(non_unique_test_ids) > 0:
-            print(f"Non-unique test ids in the test file: {non_unique_test_ids}")
+            logger.warning(f"Non-unique test ids in the test file: {non_unique_test_ids}")
             raise ValueError('test IDs must be unique')
 
 class EvaluationTestSchema:
@@ -90,7 +95,7 @@ class EvaluationTestSchema:
 
     @staticmethod
     def validate_test_file(file_in: str) -> bool:
-        """Validate JSON test file. Print useful debug information if validation fails
+        """Validate JSON test file. log useful debug information if validation fails
 
         Args:
             file_in: Test file to validate
@@ -104,10 +109,10 @@ class EvaluationTestSchema:
         try:
             tests = EvaluationTestList.parse_obj(data)
         except pydantic.ValidationError as e:
-            print(e)
+            logger.error(e)
             return False
         except Exception as e:
-            print(f"Error occurred while reading test file: {str(e)}")
+            logger.error(f"Error occurred while reading test file: {str(e)}")
             return False
 
         return True
@@ -132,7 +137,7 @@ class EvaluationTestSchema:
                 f.write(schema)
 
         except Exception as e:
-            print(f"Error occurred while writing schema to file: {str(e)}")
+            logger.error(f"Error occurred while writing schema to file: {str(e)}")
 
 
 if __name__ == "__main__":
@@ -140,12 +145,12 @@ if __name__ == "__main__":
     try:
         EvaluationTestSchema.write_schema_to_file('schema.json')
     except Exception as e:
-        print(f"Error occurred while generating schema: {str(e)}")
+        logger.error(f"Error occurred while generating schema: {str(e)}")
 
-    print("wrote schema to file \"schema.json\".")
+    logger.info("wrote schema to file \"schema.json\".")
 
     # Read and validate the JSON file
     if EvaluationTestSchema.validate_test_file('test_example.json'):
-        print("validate_test_file success!")
+        logger.info("validate_test_file success!")
     else:
-        print("validate_test_file failure!")
+        logger.error("validate_test_file failure!")

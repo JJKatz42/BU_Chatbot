@@ -4,9 +4,9 @@ import textwrap
 import html2text
 from typing import List
 
-from embeddings import EmbeddingsClient
-from storage_data_classes import TextContent, Webpage, MimeType
-from weaviate_store import WeaviateStore
+from src.libs.storage.embeddings import EmbeddingsClient
+from src.libs.storage.storage_data_classes import TextContent, Webpage, MimeType
+from src.libs.storage.weaviate_store import WeaviateStore
 from src.libs.config import config
 
 # Constants (modify as necessary)

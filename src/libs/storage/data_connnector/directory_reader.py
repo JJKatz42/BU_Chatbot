@@ -7,6 +7,11 @@ from bs4 import BeautifulSoup
 
 import src.libs.storage.data_connnector.index_data_classes as index_data_classes
 import src.libs.storage.storage_data_classes as storage_data_classes
+import src.libs.logging as logging
+
+
+logger = logging.getLogger(__name__)
+
 
 # Aliases
 WebpageIndex = index_data_classes.WebpageIndex
@@ -60,9 +65,9 @@ class DirectoryReader:
                 mime_type = "text/html"
                 files.append({'id': fullpath, 'name': filename, 'html_content': html_contents, 'mimeType': mime_type})
             else:
-                print(f"Skipping '{filename}' as it is not HTML.")
+                logger.info(f"Skipping '{filename}' as it is not HTML.")
 
-        print(f"{len(files)} webpages available")
+        logger.info(f"{len(files)} webpages available")
 
         file_contents = await asyncio.gather(
             *[self._get_file_contents(file["id"], file["html_content"]) for file in files], return_exceptions=True
@@ -71,7 +76,7 @@ class DirectoryReader:
         webpages = []
         for file, file_content in zip(files, file_contents):
             if isinstance(file_content, Exception):
-                print(f"Failed to get contents for webpage {file['id']}. Error: {str(file_content)}")
+                logger.warning(f"Failed to get contents for webpage {file['id']}. Error: {str(file_content)}")
                 continue
 
             webpage = Webpage(
