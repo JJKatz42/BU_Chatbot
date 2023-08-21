@@ -10,6 +10,8 @@ from fastapi import HTTPException, Query, FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
+from starlette.responses import RedirectResponse
+
 
 import src.libs.config as config
 import src.libs.logging as logging
@@ -171,8 +173,9 @@ async def auth_callback(code: str = Query(...)):
         # Create a session for the user
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
-            token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
-            return {"token": token, "email": email, "first_name": first_name, "last_name": last_name}
+            jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
+            frontend_url = f"http://localhost:8000/?token={jwt_token}"
+            return RedirectResponse(url=frontend_url)
         else:
             return "There was an error inserting the user into the database."
 
