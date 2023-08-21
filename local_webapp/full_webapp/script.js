@@ -14,16 +14,26 @@ if (jwt_token) {
     document.querySelector('.chat-container').hidden = false;
 }
 
+let currentResponseID = null;
+
 function sendQuestion() {
     const question = document.getElementById('question').value;
     const BEARER_TOKEN = sessionStorage.getItem('BEARER_TOKEN');
+    const sendButton = document.querySelector('button[onclick="sendQuestion()"]');
+    const responseDiv = document.getElementById('response');
+
+    // Disable the send button
+    sendButton.disabled = true;
+
+    // Print the question and show "thinking..." message
+    responseDiv.innerHTML = `<strong>You:</strong> ${question}<br><br><strong>Bot:</strong> thinking...`;
 
     fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ question: question, Authorization: BEARER_TOKEN })
+        body: JSON.stringify({ Authorization: BEARER_TOKEN, question: question })
     })
     .then(response => {
         if (!response.ok) {
@@ -34,12 +44,62 @@ function sendQuestion() {
         return response.json();
     })
     .then(data => {
-        const responseDiv = document.getElementById('response');
-        responseDiv.innerHTML = data.response;
+        currentResponseID = data.responseID; // Store the response ID
+        responseDiv.innerHTML = `<strong>You:</strong> ${question}<br><br><strong>Bot:</strong> ${data.response}`;
+        document.querySelector('.feedback-buttons').hidden = false; // Show feedback buttons
     })
     .catch(error => {
         console.error('Error:', error);
-        const responseDiv = document.getElementById('response');
-        responseDiv.innerHTML = error.message;
+        responseDiv.innerHTML = `<strong>You:</strong> ${question}<br><br><strong>Bot:</strong> Error: ${error.message}`;
+    })
+    .finally(() => {
+        // Re-enable the send button
+        sendButton.disabled = false;
+    });
+}
+
+document.getElementById('likeBtn').addEventListener('click', function() {
+    toggleActiveState(this, document.getElementById('dislikeBtn'));
+    sendFeedback(true);
+});
+
+document.getElementById('dislikeBtn').addEventListener('click', function() {
+    toggleActiveState(this, document.getElementById('likeBtn'));
+    sendFeedback(false);
+});
+
+function toggleActiveState(currentBtn, otherBtn) {
+    if (currentBtn.classList.contains('active')) {
+        currentBtn.classList.remove('active');
+    } else {
+        currentBtn.classList.add('active');
+        otherBtn.classList.remove('active');
+    }
+}
+
+function sendFeedback(liked) {
+    const BEARER_TOKEN = sessionStorage.getItem('BEARER_TOKEN');
+
+    fetch(`${API_BASE_URL}/feedback`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ Authorization: BEARER_TOKEN, responseID: currentResponseID, is_liked: liked })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.error || 'Network response was not ok');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle successful feedback submission (e.g., show a thank you message or hide the buttons)
+
+    })
+    .catch(error => {
+        console.error('Error:', error);
     });
 }

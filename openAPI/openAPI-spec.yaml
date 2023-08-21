@@ -97,13 +97,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/FeedbackRequest'
-      parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-          description: JWT token for authentication.
       responses:
         '200':
           description: Feedback recorded successfully
