@@ -61,7 +61,7 @@ CHATBOT_LOGGING_CONFIG = {
         "__main__": {
             "level": CHATBOT_LOG_LEVEL,
         },
-        "webapp_demo": {
+        "local_chatbot_webapp_demo_local_API": {
             "level": CHATBOT_LOG_LEVEL,
         },
         "testing": {

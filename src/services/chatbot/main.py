@@ -1,25 +1,25 @@
-import httpx
-import time
-import jwt
 import os
-import langchain.chat_models
-
-from typing import Union
+import time
 from dataclasses import asdict
+from typing import Union
+
+import httpx
+import jwt
+import langchain.chat_models
 from fastapi import HTTPException, Query, FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 
-from src.services.chatbot.backend_control.models import ChatResponse, ChatRequest, JWTHeader, FeedbackRequest
-from src.services.chatbot.backend_control.auth import generate_google_auth_url
 import src.libs.config as config
-import src.libs.storage.weaviate_store as store
-import src.libs.search.weaviate_search_engine as search_engine
-from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
-import src.libs.storage.user_management as user_management
-import src.services.chatbot.backend_control.backend as backend
 import src.libs.logging as logging
-
+import src.libs.search.weaviate_search_engine as search_engine
+import src.libs.storage.user_management as user_management
+import src.libs.storage.weaviate_store as store
+import src.services.chatbot.backend_control.backend as backend
+from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
+from src.services.chatbot.backend_control.auth import generate_google_auth_url
+from src.services.chatbot.backend_control.models import ChatResponse, ChatRequest, JWTHeader, FeedbackRequest
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +118,15 @@ search_agent = SearchAgent(
 app = FastAPI()
 
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 @app.get("/login")
 def login():
     google_auth_url = generate_google_auth_url(client_id=CLIENT_ID, redirect_uri=REDIRECT_URI)  # Generate the Google OAuth URL
@@ -170,30 +179,32 @@ async def auth_callback(code: str = Query(...)):
     return "You must use a BU email to log in."
 
 
-@app.api_route("/chat", methods=["POST"], response_model=ChatResponse)
-async def send_question(data: ChatRequest, jwt_header: JWTHeader = Depends()):
-    jwt_token = jwt_header.jwt_token
-    email = get_current_email(jwt_token=jwt_token)
-    if backend.user_exists(user_management=weaviate_user_management, gmail=email):
-        try:
-            response_and_id = await backend.insert_message(search_agent=search_agent, user_management=weaviate_user_management, gmail=email, input_text=data.question)
+@app.post("/chat", response_model=ChatResponse)
+async def send_question(data: ChatRequest):
+    # Get the user's email
+    jwt_token = data.jwt_token
+    gmail = get_current_email(jwt_token=jwt_token)
+    try:
+        response_and_id = await backend.insert_message(search_agent=search_agent,
+                                                       user_management=weaviate_user_management,
+                                                       gmail=gmail,
+                                                       input_text=data.question)
+    except Exception as e:
+        logger.error(f"error: {e}")
+        response_and_id = ["Oh no! my program sucks please go to the insert_message function in the backend file!",
+                           "randomID12345"]
 
-        except Exception as e:
-            logger.error(f"error: {e}")
-            response_and_id = ["Oh no! my program sucks please go to the insert_message funtion in the backend file!", "randomID12345"]
-
-        return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
-    else:
-        return ChatResponse(response="Sorry, you are not a registered user. Please register at https://busearch.com", responseID="randomID12345")
+    # return {'response': response_and_id[0], 'responseID': response_and_id[1]}
+    return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
 
 
 @app.api_route("/feedback", methods=["POST"])
-async def provide_feedback(data: FeedbackRequest, jwt_header: JWTHeader = Depends()):
+async def provide_feedback(data: FeedbackRequest):
     # Store or handle feedback
     # Returns a 200 status code with no body on success
-    jwt_token = jwt_header.jwt_token
-    email = get_current_email(jwt_token=jwt_token)
-    if backend.user_exists(user_management=weaviate_user_management, gmail=email):
+    jwt_token = data.jwt_token
+    gmail = get_current_email(jwt_token=jwt_token)
+    if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
         try:
             backend.insert_feedback(user_management=weaviate_user_management, message_id=data.responseID, is_liked=data.is_liked)
         except:
