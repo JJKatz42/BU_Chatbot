@@ -119,7 +119,7 @@ components:
     ChatRequest:
       type: object
       properties:
-        authorization:
+        Authorization:
           type: string
           description: JWT token for the user.
         question:
@@ -137,6 +137,9 @@ components:
     FeedbackRequest:
       type: object
       properties:
+        Authorization:
+          type: string
+          description: JWT token for the user.
         responseID:
           type: string
           description: The ID of the response being rated.
