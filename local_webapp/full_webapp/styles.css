@@ -21,8 +21,22 @@ button {
     background-color: #007BFF;
     color: #fff;
     cursor: pointer;
+    margin-right: 5px; /* Added to give space between feedback buttons */
 }
 
 button:hover {
     background-color: #0056b3;
+}
+
+button.active {
+    background-color: #0056b3;
+}
+
+.feedback-buttons {
+    margin-top: 10px; /* Added to give space between the response and feedback buttons */
+}
+
+button:disabled {
+    background-color: #b3b3b3;
+    cursor: not-allowed;
 }
