@@ -65,13 +65,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ChatRequest'
-      parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
-          description: JWT token for authentication.
       responses:
         '202':
           description: Accepted but processing incomplete. More information needed.
@@ -133,6 +126,9 @@ components:
     ChatRequest:
       type: object
       properties:
+        authorization:
+          type: string
+          description: JWT token for the user.
         question:
           type: string
           description: The question posed by the user.
