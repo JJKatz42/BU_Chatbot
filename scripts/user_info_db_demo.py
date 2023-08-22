@@ -64,7 +64,7 @@ async def main():
     insert_user_parser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default=".env"
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
     )
     insert_user_parser.add_argument(
         "--full-refresh",
@@ -87,7 +87,7 @@ async def main():
     insert_message_parser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default=".env"
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
     )
     insert_like_parser = subparsers.add_parser(
         "insert-like",
@@ -113,7 +113,7 @@ async def main():
     clear_conversation_parser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default=".env")
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env")
 
     insert_profile_info_pasrser = subparsers.add_parser(
         "insert-profile-info",
@@ -133,7 +133,7 @@ async def main():
     insert_profile_info_pasrser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default=".env"
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
     )
 
     script_args = parser.parse_args()

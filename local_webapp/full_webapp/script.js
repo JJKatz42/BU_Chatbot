@@ -18,22 +18,31 @@ let currentResponseID = null;
 
 function sendQuestion() {
     const question = document.getElementById('question').value;
+    const chatBox = document.querySelector('.chat-box');
     const BEARER_TOKEN = sessionStorage.getItem('BEARER_TOKEN');
     const sendButton = document.querySelector('button[onclick="sendQuestion()"]');
-    const responseDiv = document.getElementById('response');
+
+    // Append user message to chat box
+    const userMessage = document.createElement('div');
+    userMessage.className = 'user-message';
+    userMessage.innerText = question;
+    chatBox.appendChild(userMessage);
+
+    // Append "thinking..." bot message
+    const thinkingMessage = document.createElement('div');
+    thinkingMessage.className = 'bot-message';
+    thinkingMessage.innerText = 'thinking...';
+    chatBox.appendChild(thinkingMessage);
 
     // Disable the send button
     sendButton.disabled = true;
-
-    // Print the question and show "thinking..." message
-    responseDiv.innerHTML = `<strong>You:</strong> ${question}<br><br><strong>Bot:</strong> thinking...`;
 
     fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ Authorization: BEARER_TOKEN, question: question })
+        body: JSON.stringify({Authorization: BEARER_TOKEN, question: question })
     })
     .then(response => {
         if (!response.ok) {
@@ -45,16 +54,18 @@ function sendQuestion() {
     })
     .then(data => {
         currentResponseID = data.responseID; // Store the response ID
-        responseDiv.innerHTML = `<strong>You:</strong> ${question}<br><br><strong>Bot:</strong> ${data.response}`;
+        thinkingMessage.innerText = data.response; // Update the bot's message
         document.querySelector('.feedback-buttons').hidden = false; // Show feedback buttons
     })
     .catch(error => {
         console.error('Error:', error);
-        responseDiv.innerHTML = `<strong>You:</strong> ${question}<br><br><strong>Bot:</strong> Error: ${error.message}`;
+        thinkingMessage.innerText = `Error: ${error.message}`; // Update the bot's message with error
     })
     .finally(() => {
         // Re-enable the send button
         sendButton.disabled = false;
+        // Scroll to the bottom of the chat box
+        chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
 
