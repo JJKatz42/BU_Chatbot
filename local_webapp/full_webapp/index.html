@@ -13,13 +13,13 @@
     </div>
 
     <div class="chat-container" hidden>
-        <div id="response"></div>
-        <div class="feedback-buttons" hidden>
-            <button id="likeBtn">👍</button>
-            <button id="dislikeBtn">👎</button>
+        <div class="chat-box">
+            <!-- Messages will be appended here -->
         </div>
-        <input type="text" id="question" placeholder="Ask a question...">
-        <button onclick="sendQuestion()">Send</button>
+        <div class="input-box">
+            <label for="question"></label><input type="text" id="question" placeholder="You: ">
+            <button onclick="sendQuestion()">➤</button>
+        </div>
     </div>
 
     <script src="script.js"></script>

@@ -8,35 +8,66 @@ body {
 }
 
 .login-container, .chat-container {
+    width: 500px;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #fff;
 }
 
-button {
-    padding: 10px 15px;
+.chat-box {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.input-box {
+    display: flex;
+    border-top: 1px solid #ccc;
+    position: relative;
+}
+
+.input-box input {
+    flex: 1;
     border: none;
-    border-radius: 5px;
-    background-color: #007BFF;
-    color: #fff;
+    padding: 10px;
+    border-radius: 0;
+    outline: none;
+}
+
+.input-box button {
+    padding: 0;
+    border: none;
+    background-color: transparent;
     cursor: pointer;
-    margin-right: 5px; /* Added to give space between feedback buttons */
+    font-size: 1.5em;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-button:hover {
-    background-color: #0056b3;
+.user-message, .bot-message {
+    max-width: 70%;
+    padding: 10px 15px;
+    margin: 5px 0;
+    border-radius: 20px;
+    line-height: 1.5;
+    display: inline-block;
 }
 
-button.active {
-    background-color: #0056b3;
+.user-message {
+    background-color: white;
+    border: 1px solid #ccc;
+    align-self: flex-start;
 }
 
-.feedback-buttons {
-    margin-top: 10px; /* Added to give space between the response and feedback buttons */
-}
-
-button:disabled {
-    background-color: #b3b3b3;
-    cursor: not-allowed;
+.bot-message {
+    background-color: #e0e0e0;
+    border: 5px solid #ccc;
+    align-self: flex-end;
 }
