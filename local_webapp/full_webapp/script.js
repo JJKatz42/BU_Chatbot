@@ -18,31 +18,31 @@ let currentResponseID = null;
 
 function sendQuestion() {
     const question = document.getElementById('question').value;
-    const chatBox = document.querySelector('.chat-box');
     const BEARER_TOKEN = sessionStorage.getItem('BEARER_TOKEN');
     const sendButton = document.querySelector('button[onclick="sendQuestion()"]');
-
-    // Append user message to chat box
-    const userMessage = document.createElement('div');
-    userMessage.className = 'user-message';
-    userMessage.innerText = question;
-    chatBox.appendChild(userMessage);
-
-    // Append "thinking..." bot message
-    const thinkingMessage = document.createElement('div');
-    thinkingMessage.className = 'bot-message';
-    thinkingMessage.innerText = 'thinking...';
-    chatBox.appendChild(thinkingMessage);
+    const chatMessagesDiv = document.querySelector('.chat-messages');
 
     // Disable the send button
     sendButton.disabled = true;
+
+    // Display user's question
+    const userMessage = document.createElement('div');
+    userMessage.className = 'user-message';
+    userMessage.innerHTML = `<strong>You:</strong> ${question}`;
+    chatMessagesDiv.appendChild(userMessage);
+
+    // Show "thinking..." message for the bot
+    const thinkingMessage = document.createElement('div');
+    thinkingMessage.className = 'bot-message thinking';
+    thinkingMessage.innerHTML = `<strong>Bot:</strong> thinking...`;
+    chatMessagesDiv.appendChild(thinkingMessage);
 
     fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({Authorization: BEARER_TOKEN, question: question })
+        body: JSON.stringify({ Authorization: BEARER_TOKEN, question: question })
     })
     .then(response => {
         if (!response.ok) {
@@ -54,18 +54,29 @@ function sendQuestion() {
     })
     .then(data => {
         currentResponseID = data.responseID; // Store the response ID
-        thinkingMessage.innerText = data.response; // Update the bot's message
-        document.querySelector('.feedback-buttons').hidden = false; // Show feedback buttons
+        const botMessage = document.createElement('div');
+        botMessage.className = 'bot-message';
+        botMessage.innerHTML = `<strong>Bot:</strong> ${data.response}`;
+        chatMessagesDiv.appendChild(botMessage);
+
+        // Remove the "thinking..." message
+        const thinkingElem = document.querySelector('.thinking');
+        if (thinkingElem) thinkingElem.remove();
+
+        // Show feedback buttons
+        const feedbackButtons = document.querySelector('.feedback-buttons');
+        if (feedbackButtons) feedbackButtons.hidden = false;
     })
     .catch(error => {
         console.error('Error:', error);
-        thinkingMessage.innerText = `Error: ${error.message}`; // Update the bot's message with error
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'bot-message';
+        errorMessage.innerHTML = `<strong>Bot:</strong> Error: ${error.message}`;
+        chatMessagesDiv.appendChild(errorMessage);
     })
     .finally(() => {
         // Re-enable the send button
         sendButton.disabled = false;
-        // Scroll to the bottom of the chat box
-        chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
 
@@ -108,7 +119,6 @@ function sendFeedback(liked) {
     })
     .then(data => {
         // Handle successful feedback submission (e.g., show a thank you message or hide the buttons)
-
     })
     .catch(error => {
         console.error('Error:', error);
