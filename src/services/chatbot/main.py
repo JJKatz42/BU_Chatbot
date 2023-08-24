@@ -7,11 +7,13 @@ import httpx
 import jwt
 import uuid
 import langchain.chat_models
-from fastapi import HTTPException, Query, FastAPI, Depends
+from fastapi import HTTPException, Query, FastAPI, Response, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 from starlette.responses import RedirectResponse
+from pydantic import BaseModel
+
 
 
 import src.libs.config as config
@@ -44,6 +46,16 @@ def init_config(local_env_file: Union[str, None]):
         ],
         local_env_file=local_env_file
     )
+
+
+def get_jwt_token(request: Request) -> str:
+    """
+    Extract the JWT token from the HttpOnly cookie.
+    """
+    jwt_token = request.cookies.get("jwt_token")
+    if not jwt_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return jwt_token
 
 
 async def search_agent_job(agent: SearchAgent, query: str) -> dict:
@@ -137,7 +149,7 @@ def login():
 
 
 @app.get("/auth/callback")
-async def auth_callback(code: str = Query(...)):
+async def auth_callback(response: Response, code: str = Query(...)):
     # Define the data for the token request
     token_data = {
         "grant_type": "authorization_code",
@@ -175,34 +187,69 @@ async def auth_callback(code: str = Query(...)):
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
             jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
-            frontend_url = f"http://app.busearch.com/?token={jwt_token}"
-            return RedirectResponse(url=frontend_url)
-        else:
-            return "There was an error inserting the user into the database."
+            # Set the JWT token as an HttpOnly cookie
+            frontend_url = "https://app.busearch.com/"
+            response = RedirectResponse(url=frontend_url)
 
-    return "You must use a BU email to log in."
+            # Set the JWT token as an HttpOnly cookie
+            response.set_cookie(
+                key="jwt_token",
+                value=jwt_token,
+                httponly=True,
+                secure=True,  # Use this only if you're using HTTPS
+                samesite="strict"  # This ensures the cookie is only sent for same-site requests
+            )
+
+            return response
+        else:
+            message = "There was an error inserting the user into the database (NOT GOOD! Tell Jonah)."
+
+    else:
+        message = "Sorry, it looks like you tried to use a non BU gmail to log in. Please log in with your BU gmail."
+
+    frontend_url = f"https://app.busearch.com/?message={message}"
+    return RedirectResponse(url=frontend_url)
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def send_question(data: ChatRequest):
+async def send_question(data: ChatRequest, jwt_token: str = Depends(get_jwt_token)):
     # Get the user's email
-    jwt_token = data.jwt_token
     gmail = get_current_email(jwt_token=jwt_token)
-    if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
-        try:
-            response_and_id = await backend.insert_message(search_agent=search_agent,
-                                                           user_management=weaviate_user_management,
-                                                           gmail=gmail,
-                                                           input_text=data.question)
-        except Exception as e:
-            logger.error(f"error: {e}")
-            response_and_id = ["Oh no! my program sucks please go to the insert_message function in the backend file!",
-                               "randomID12345"]
+    if gmail.endswith("@bu.edu"):
+        if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
+            try:
+                response_and_id = await backend.insert_message(search_agent=search_agent,
+                                                               user_management=weaviate_user_management,
+                                                               gmail=gmail,
+                                                               input_text=data.question)
+            except Exception as e:
+                logger.error(f"error: {e}")
+                response_and_id = [
+                    "Oh no! There was an issue finding your answer, please try refreshing or waiting a few seconds.",
+                    str(uuid.uuid4())
+                ]
 
-        # return {'response': response_and_id[0], 'responseID': response_and_id[1]}
-        return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
+            # return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
+        else:
+            # return ChatResponse(
+            #     response="I'm sorry, it seems like there has been an error. Please log in using your BU gmail above",
+            #     responseID=str(uuid.uuid4())
+            # )
+            response_and_id = [
+                "I'm sorry, it seems like there has been an error. Please login using your BU gmail above",
+                str(uuid.uuid4())
+            ]
     else:
-        return ChatResponse(response="Sorry, it seems like you are not logged in. Please login using your BU gmail above", responseID="randomID12345")
+        # return ChatResponse(
+        #     response="I'm sorry, it seems like you are not logged in. Please login using your BU gmail above",
+        #     responseID=str(uuid.uuid4())
+        # )
+        response_and_id = [
+            "I'm sorry, it seems like you are not logged in. Please login using your BU gmail above",
+            str(uuid.uuid4())
+        ]
+
+    return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
 
 
 @app.api_route("/feedback", methods=["POST"])
