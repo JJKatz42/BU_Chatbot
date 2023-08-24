@@ -7,12 +7,22 @@ body {
     background-color: #f4f4f4;
 }
 
-.login-container, .chat-container {
+.login-container {
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #fff;
     width: 400px;
+    text-align: center;
+}
+
+.chat-container {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    width: 600px;
+    height: 600px;
 }
 
 button {
@@ -22,7 +32,7 @@ button {
     background-color: #007BFF;
     color: #fff;
     cursor: pointer;
-    margin-right: 5px;
+    margin-top: 20px;
 }
 
 button:hover {
@@ -37,6 +47,7 @@ button.active {
     margin-top: 10px;
     display: flex;
     justify-content: center;
+    gap: 10px; /* Added gap between feedback buttons */
 }
 
 button:disabled {
@@ -48,7 +59,7 @@ button:disabled {
     border: 1px solid #ccc;
     border-radius: 5px;
     padding: 10px;
-    height: 300px;
+    height: 450px;
     overflow-y: auto;
     margin-bottom: 10px;
 }
@@ -73,16 +84,19 @@ button:disabled {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 5px; /* Added gap between input and button */
 }
 
 input[type="text"] {
     flex: 1;
     padding: 10px;
     border: 1px solid #ccc;
-    border-radius: 5px 0 0 5px;
+    border-radius: 5px;
+    height: 38px;
 }
 
 button[onclick="sendQuestion()"] {
-    border-radius: 0 5px 5px 0;
+    border-radius: 5px;
     padding: 10px 20px;
+    height: 38px;
 }

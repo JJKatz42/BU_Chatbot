@@ -5,6 +5,7 @@ from typing import Union
 
 import httpx
 import jwt
+import uuid
 import langchain.chat_models
 from fastapi import HTTPException, Query, FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -174,7 +175,7 @@ async def auth_callback(code: str = Query(...)):
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
             jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
-            frontend_url = f"http://localhost:8000/?token={jwt_token}"
+            frontend_url = f"http://app.busearch.com/?token={jwt_token}"
             return RedirectResponse(url=frontend_url)
         else:
             return "There was an error inserting the user into the database."
@@ -187,18 +188,21 @@ async def send_question(data: ChatRequest):
     # Get the user's email
     jwt_token = data.jwt_token
     gmail = get_current_email(jwt_token=jwt_token)
-    try:
-        response_and_id = await backend.insert_message(search_agent=search_agent,
-                                                       user_management=weaviate_user_management,
-                                                       gmail=gmail,
-                                                       input_text=data.question)
-    except Exception as e:
-        logger.error(f"error: {e}")
-        response_and_id = ["Oh no! my program sucks please go to the insert_message function in the backend file!",
-                           "randomID12345"]
+    if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
+        try:
+            response_and_id = await backend.insert_message(search_agent=search_agent,
+                                                           user_management=weaviate_user_management,
+                                                           gmail=gmail,
+                                                           input_text=data.question)
+        except Exception as e:
+            logger.error(f"error: {e}")
+            response_and_id = ["Oh no! my program sucks please go to the insert_message function in the backend file!",
+                               "randomID12345"]
 
-    # return {'response': response_and_id[0], 'responseID': response_and_id[1]}
-    return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
+        # return {'response': response_and_id[0], 'responseID': response_and_id[1]}
+        return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
+    else:
+        return ChatResponse(response="Sorry, it seems like you are not logged in. Please login using your BU gmail above", responseID="randomID12345")
 
 
 @app.api_route("/feedback", methods=["POST"])
@@ -210,7 +214,7 @@ async def provide_feedback(data: FeedbackRequest):
     if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
         try:
             backend.insert_feedback(user_management=weaviate_user_management, message_id=data.responseID, is_liked=data.is_liked)
-        except:
-            return "I have no idea why this error is being returned. Please check the insert_feedback function in the backend file."
+        except Exception as e:
+            logger.error(f"Feedback insertion error, {e}")
     else:
-        return "Sorry, you are not a registered user. Please register at https://busearch.com"
+        logger.error(f"User {gmail} does not exist in the database.")
