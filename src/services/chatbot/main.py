@@ -182,7 +182,7 @@ async def auth_callback(response: Response, code: str = Query(...)):
     first_name = user_info["given_name"]
     last_name = user_info["family_name"]
 
-    if email.endswith("@bu.edu"):
+    if email.endswith("@bu.edu") or email == "bradleyjocelyn3@gmail.com" or email == "georgeflint@berkeley.edu":
         # Create a session for the user
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
@@ -215,7 +215,7 @@ async def auth_callback(response: Response, code: str = Query(...)):
 async def send_question(data: ChatRequest, jwt_token: str = Depends(get_jwt_token)):
     # Get the user's email
     gmail = get_current_email(jwt_token=jwt_token)
-    if gmail.endswith("@bu.edu"):
+    if gmail.endswith("@bu.edu") or gmail == "bradleyjocelyn3@gmail.com" or gmail == "georgeflint@berkeley.edu":
         if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
             try:
                 response_and_id = await backend.insert_message(search_agent=search_agent,
