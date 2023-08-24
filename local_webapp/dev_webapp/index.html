@@ -631,7 +631,7 @@
     </div>
 
     <div class="chat-input-container">
-        <input type="text" class="chat-input" placeholder="Type your question..." id="chatInput" onkeydown="handleEnter(event)">
+        <label for="chatInput"></label><input type="text" class="chat-input" placeholder="Type your question..." id="chatInput" onkeydown="handleEnter(event)">
         <button class="send-button" onclick="sendMessage()"></button>
     </div>
 
@@ -778,7 +778,7 @@
             // Create and show "thinking..." message from bot
             const thinkingMsgDiv = document.createElement('div');
             thinkingMsgDiv.className = 'chat-response';
-            thinkingMsgDiv.textContent = "Bot: thinking...";
+            thinkingMsgDiv.textContent = "BUsearch: thinking...";
             chatSpace.insertBefore(thinkingMsgDiv, chatSpace.firstChild);
 
             fetch(`${API_BASE_URL}/chat`, {
@@ -820,19 +820,19 @@
                     // Attach event listeners to the newly created buttons
                     document.getElementById(`likeBtn-${currentResponseID}`).addEventListener('click', function() {
                         toggleActiveState(this, document.getElementById(`dislikeBtn-${currentResponseID}`));
-                        sendFeedback(true, currentResponseID);
+                        sendFeedback(currentResponseID, true);
                     });
 
                     document.getElementById(`dislikeBtn-${currentResponseID}`).addEventListener('click', function() {
                         toggleActiveState(this, document.getElementById(`likeBtn-${currentResponseID}`));
-                        sendFeedback(false, currentResponseID);
+                        sendFeedback(currentResponseID, false);
                     });
                 })
                 .catch(error => {
                     console.error('Error:', error);
 
                     // Replace "thinking..." with error message
-                    thinkingMsgDiv.textContent = "Bot: Error: " + error.message;
+                    thinkingMsgDiv.textContent = "BUsearch: I'm sorry there seems to be a network problem. Please try to refresh the page or try again later.";
                 })
                 .finally(() => {
                     // Re-enable the send button
@@ -889,11 +889,10 @@
         /**
          * Send feedback to the server.
          * @param {string} responseID - The unique ID of the chatbot's response.
-         * @param {string} feedbackType - The type of feedback, either 'like' or 'dislike'.
+         * @param {boolean} isLiked - The type of feedback, either true or false
          */
-        function sendFeedback(responseID, feedbackType) {
+        function sendFeedback(responseID, isLiked) {
             const BEARER_TOKEN = sessionStorage.getItem('BEARER_TOKEN');
-            const isLiked = feedbackType === 'like';
 
             fetch(`${API_BASE_URL}/feedback`, {
                     method: 'POST',
@@ -950,12 +949,12 @@
 
         document.getElementById('likeBtn').addEventListener('click', function() {
             toggleActiveState(this, document.getElementById('dislikeBtn'));
-            sendFeedback(true);
+            sendFeedback(currentResponseID, true);
         });
 
         document.getElementById('dislikeBtn').addEventListener('click', function() {
             toggleActiveState(this, document.getElementById('likeBtn'));
-            sendFeedback(false);
+            sendFeedback(currentResponseID, false);
         });
     </script>
 </body>
