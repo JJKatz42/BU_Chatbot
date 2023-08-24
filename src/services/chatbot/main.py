@@ -211,6 +211,15 @@ async def auth_callback(response: Response, code: str = Query(...)):
     return RedirectResponse(url=frontend_url)
 
 
+@app.get("/is-authenticated")
+def is_authenticated(request: Request) -> dict:
+    jwt_token = request.cookies.get("jwt_token")
+    if not jwt_token:
+        return {"isAuthenticated": False}
+    # Optionally, you can verify the JWT token here
+    return {"isAuthenticated": True}
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def send_question(data: ChatRequest, jwt_token: str = Depends(get_jwt_token)):
     # Get the user's email
@@ -229,21 +238,12 @@ async def send_question(data: ChatRequest, jwt_token: str = Depends(get_jwt_toke
                     str(uuid.uuid4())
                 ]
 
-            # return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
         else:
-            # return ChatResponse(
-            #     response="I'm sorry, it seems like there has been an error. Please log in using your BU gmail above",
-            #     responseID=str(uuid.uuid4())
-            # )
             response_and_id = [
                 "I'm sorry, it seems like there has been an error. Please login using your BU gmail above",
                 str(uuid.uuid4())
             ]
     else:
-        # return ChatResponse(
-        #     response="I'm sorry, it seems like you are not logged in. Please login using your BU gmail above",
-        #     responseID=str(uuid.uuid4())
-        # )
         response_and_id = [
             "I'm sorry, it seems like you are not logged in. Please login using your BU gmail above",
             str(uuid.uuid4())
