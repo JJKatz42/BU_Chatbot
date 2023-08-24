@@ -747,11 +747,8 @@
 
         // Extract JWT token from URL if present
         const urlParams = new URLSearchParams(window.location.search);
-        const jwt_token = urlParams.get('token');
-        if (jwt_token) {
-            sessionStorage.setItem('BEARER_TOKEN', jwt_token);
-            goodToStart = true
-        }
+
+        goodToStart = true // TODO: check if token is valid before setting goodToStart to true Use endpoint /is-authenticated (ask Jonah)
 
         function sendMessage() {
             let element = document.querySelector('.chat-response.welcome');
@@ -759,7 +756,6 @@
 
             const chatInput = document.getElementById('chatInput');
             const question = chatInput.value.trim();
-            const BEARER_TOKEN = sessionStorage.getItem('BEARER_TOKEN');
             const sendButton = document.querySelector('button[onclick="sendMessage()"]');
             const chatSpace = document.querySelector('.chat-space-container');
 
@@ -784,8 +780,7 @@
             fetch(`${API_BASE_URL}/chat`, {
                     method: 'POST',
                     headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${BEARER_TOKEN}`
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         question: question
@@ -892,13 +887,11 @@
          * @param {boolean} isLiked - The type of feedback, either true or false
          */
         function sendFeedback(responseID, isLiked) {
-            const BEARER_TOKEN = sessionStorage.getItem('BEARER_TOKEN');
 
             fetch(`${API_BASE_URL}/feedback`, {
                     method: 'POST',
                     headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${BEARER_TOKEN}`
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         responseID: responseID,
