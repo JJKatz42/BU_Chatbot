@@ -45,7 +45,7 @@
             --white: #ffffff;
             --light-gray: #f2f2f2;
             --dark-gray: #333;
-            --chatbot-response: #e0e0e0;
+            --BUsearch-response: #e0e0e0;
             --monospace: "coordinates-variable", serif;
             --sans: aktiv-grotesk, sans-serif;
             --serif: freight-display-pro, 'Times New Roman', serif;
@@ -174,7 +174,7 @@
             flex: 1;
             padding: 15px;
             box-sizing: border-box;
-            background-color: var(--chatbot-response);
+            background-color: var(--BUsearch-response);
             border: none;
             border-radius: 5px;
             outline: none;
@@ -201,7 +201,7 @@
         }
         
         .chat-response {
-            background-color: var(--chatbot-response);
+            background-color: var(--BUsearch-response);
             padding: 20px;
             margin: 10px auto;
             border-radius: 5px;
@@ -433,7 +433,7 @@
             background-color: var(--dark-gray);
         }
         
-        .bot-icon {
+        .BUsearch-icon {
             background-image: url('bot.png');
         }
         
@@ -625,7 +625,7 @@
                 <title>Welcome to BUsearch</title>
                 <!-- <title class="overlay-title">Welcome</title> -->
                 <p class="welcome-text">BUsearch is an informational chatbot for Boston University students.</p>
-                <p class="welcome-text">To start searching, please <strong>login using your BU email account</strong> above.</p>
+                <p class="welcome-text">To start searching, please <strong>log in using your BU email account</strong> above.</p>
             </div>
         </div>
     </div>
@@ -775,7 +775,7 @@
             userMsgDiv.textContent = "You: " + question;
             chatSpace.insertBefore(userMsgDiv, chatSpace.firstChild);
 
-            // Create and show "thinking..." message from bot
+            // Create and show "thinking..." message from BUsearch
             const thinkingMsgDiv = document.createElement('div');
             thinkingMsgDiv.className = 'chat-response';
             thinkingMsgDiv.textContent = "BUsearch: thinking...";
@@ -803,7 +803,7 @@
                     currentResponseID = data.responseID;
 
                     // Replace "thinking..." with actual response
-                    thinkingMsgDiv.innerHTML = "Bot: " + data.response; // Using innerHTML for HTML rendering
+                    thinkingMsgDiv.innerHTML = "BUsearch: " + data.response; // Using innerHTML for HTML rendering
                     thinkingMsgDiv.id = currentResponseID; // Unique ID
 
                     // Create feedback buttons
@@ -814,7 +814,7 @@
                         <button class="dislikeBtn" id="dislikeBtn-${currentResponseID}"></button>
                     `;
 
-                    // Append feedback buttons to the bot response div
+                    // Append feedback buttons to the BUsearch response div
                     thinkingMsgDiv.appendChild(feedbackDiv);
 
                     // Attach event listeners to the newly created buttons
@@ -888,7 +888,7 @@
 
         /**
          * Send feedback to the server.
-         * @param {string} responseID - The unique ID of the chatbot's response.
+         * @param {string} responseID - The unique ID of the BUsearch's response.
          * @param {boolean} isLiked - The type of feedback, either true or false
          */
         function sendFeedback(responseID, isLiked) {
