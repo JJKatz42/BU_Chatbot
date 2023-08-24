@@ -14,10 +14,16 @@
 
     <div class="chat-container" hidden>
         <div class="chat-box">
-            <!-- Messages will be appended here -->
+            <div class="chat-messages">
+                <!-- Messages will be appended here -->
+            </div>
         </div>
-        <div class="input-box">
-            <label for="question"></label><input type="text" id="question" placeholder="You: ">
+        <div class="feedback-buttons" hidden>
+            <button id="likeBtn">👍</button>
+            <button id="dislikeBtn">👎</button>
+        </div>
+        <div class="input-container">
+            <input type="text" id="question" placeholder="Ask a question...">
             <button onclick="sendQuestion()">➤</button>
         </div>
     </div>
