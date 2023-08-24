@@ -335,6 +335,41 @@ class UserDatabaseManager:
 
             return message_list
 
+    def get_messages(self, gmail: str):
+        """
+        Get the messages for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose messages to get
+
+        Returns:
+            A list of messages for the user
+        """
+
+        message_list = []
+        # Fetch the conversations associated with the user based on Gmail
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace), ["hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, hasBotMessage {... on Jonahs_weaviate_userdb_BotMessage { response_str } } } } } }"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+
+        # Extract and log the messages
+        message_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages']
+        if not message_objects:
+            logger.warning(f"No User object found with the Gmail: {gmail}")
+            return message_list
+
+        else:
+            for message in message_objects:
+
+                tup = [message['query_str'], message['hasBotMessage'][0]['response_str']]
+
+                message_list.append(tup)
+
+            return message_list
+
     def clear_conversation(self, gmail: str):
         """
         Clear the conversation for a user based on their Gmail
