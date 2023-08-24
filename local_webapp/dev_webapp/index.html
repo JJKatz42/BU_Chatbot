@@ -784,10 +784,10 @@
             fetch(`${API_BASE_URL}/chat`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${BEARER_TOKEN}`
                     },
                     body: JSON.stringify({
-                        Authorization: BEARER_TOKEN,
                         question: question
                     })
                 })
@@ -832,7 +832,7 @@
                     console.error('Error:', error);
 
                     // Replace "thinking..." with error message
-                    thinkingMsgDiv.textContent = "BUsearch: I'm sorry there seems to be a network problem. Please try to refresh the page or try again later.";
+                    thinkingMsgDiv.textContent = "BUsearch: I'm sorry there seems to be a connection problem. Please try to refresh the page or login again, using you BU gmail.";
                 })
                 .finally(() => {
                     // Re-enable the send button
@@ -897,10 +897,10 @@
             fetch(`${API_BASE_URL}/feedback`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${BEARER_TOKEN}`
                     },
                     body: JSON.stringify({
-                        Authorization: BEARER_TOKEN,
                         responseID: responseID,
                         is_liked: isLiked
                     })
