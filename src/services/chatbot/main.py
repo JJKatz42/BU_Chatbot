@@ -15,9 +15,7 @@ from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 
 
-
 import src.libs.config as config
-import src.libs.logging as logging
 import src.libs.search.weaviate_search_engine as search_engine
 import src.libs.storage.user_management as user_management
 import src.libs.storage.weaviate_store as store
@@ -25,6 +23,8 @@ import src.services.chatbot.backend_control.backend as backend
 from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
 from src.services.chatbot.backend_control.auth import generate_google_auth_url
 from src.services.chatbot.backend_control.models import ChatResponse, ChatRequest, JWTHeader, FeedbackRequest
+import src.libs.logging as logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +43,20 @@ def init_config(local_env_file: Union[str, None]):
             config.ConfigVarMetadata(var_name="REDIRECT_URI"),
             config.ConfigVarMetadata(var_name="ENCRYPTION_ALGORITHM"),
             config.ConfigVarMetadata(var_name="SECRET_KEY"),
+            config.ConfigVarMetadata(var_name="IS_LOCAL_ENV"),
         ],
         local_env_file=local_env_file
     )
+
+
+def get_current_email(jwt_token: str) -> str:
+    try:
+        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload["email"]
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Signature has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 def get_jwt_token(request: Request) -> str:
@@ -54,8 +65,12 @@ def get_jwt_token(request: Request) -> str:
     """
     jwt_token = request.cookies.get("jwt_token")
     if not jwt_token:
+        logger.warning("No JWT token found in the request")
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return jwt_token
+
+    else:
+        logger.info(f"JWT token: {jwt_token}")
+        return jwt_token
 
 
 async def search_agent_job(agent: SearchAgent, query: str) -> dict:
@@ -83,15 +98,15 @@ CLIENT_ID = config.get("CLIENT_ID")
 CLIENT_SECRET = config.get("CLIENT_SECRET")
 REDIRECT_URI = config.get("REDIRECT_URI")
 
+IS_LOCAL_ENV = config.get("IS_LOCAL_ENV")
 
-def get_current_email(jwt_token: str) -> str:
-    try:
-        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload["email"]
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Signature has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+
+if str(IS_LOCAL_ENV) == "True":
+    BASE_URL = "http://localhost:8080"
+    DOMAIN = "localhost:8080"
+else:
+    BASE_URL = "https://app.busearch.com"
+    DOMAIN = "app.busearch.com"
 
 
 # Initialize WeaviateStore and WeaviateSearchEngine
@@ -144,12 +159,13 @@ app.add_middleware(
 
 @app.get("/login")
 def login():
-    google_auth_url = generate_google_auth_url(client_id=CLIENT_ID, redirect_uri=REDIRECT_URI)  # Generate the Google OAuth URL
+    # Generate the Google OAuth URL
+    google_auth_url = generate_google_auth_url(client_id=CLIENT_ID, redirect_uri=REDIRECT_URI)
     return RedirectResponse(url=google_auth_url)
 
 
 @app.get("/auth/callback")
-async def auth_callback(response: Response, code: str = Query(...)):
+async def auth_callback(code: str = Query(...)):
     # Define the data for the token request
     token_data = {
         "grant_type": "authorization_code",
@@ -176,29 +192,35 @@ async def auth_callback(response: Response, code: str = Query(...)):
 
     user_info = response.json()
 
-    # Return the user info for now (you should handle/store this information securely in production
-
     email = user_info["email"]
-    first_name = user_info["given_name"]
-    last_name = user_info["family_name"]
+    # first_name = user_info["given_name"]
+    # last_name = user_info["family_name"]
 
     if email.endswith("@bu.edu") or email == "bradleyjocelyn3@gmail.com" or email == "georgeflint@berkeley.edu":
         # Create a session for the user
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
+
             jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
-            # Set the JWT token as an HttpOnly cookie
-            frontend_url = "https://app.busearch.com/"
+
+            frontend_url = BASE_URL
+
             response = RedirectResponse(url=frontend_url)
 
             # Set the JWT token as an HttpOnly cookie
-            response.set_cookie(
-                key="jwt_token",
-                value=jwt_token,
-                httponly=True,
-                secure=True,  # Use this only if you're using HTTPS
-                samesite="strict"  # This ensures the cookie is only sent for same-site requests
-            )
+            try:
+                response.set_cookie(
+                    key="jwt_token",
+                    value=jwt_token,
+                    domain="app.busearch.com",
+                    httponly=True,
+                    secure=True,
+                    samesite="none"
+                )
+
+            except Exception as e:
+                response = RedirectResponse(url=frontend_url)
+                logger.error(f"Error setting cookie: {e}")
 
             return response
         else:
@@ -207,49 +229,65 @@ async def auth_callback(response: Response, code: str = Query(...)):
     else:
         message = "Sorry, it looks like you tried to use a non BU gmail to log in. Please log in with your BU gmail."
 
-    frontend_url = f"https://app.busearch.com/?message={message}"
+    frontend_url = f"{BASE_URL}/?message={message}"
     return RedirectResponse(url=frontend_url)
 
 
 @app.get("/is-authenticated")
-def is_authenticated(request: Request) -> dict:
+def is_authenticated(request: Request) -> bool:
     jwt_token = request.cookies.get("jwt_token")
     if not jwt_token:
-        return {"isAuthenticated": False}
+        return False
     # Optionally, you can verify the JWT token here
-    return {"isAuthenticated": True}
+    return True
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def send_question(data: ChatRequest, jwt_token: str = Depends(get_jwt_token)):
     # Get the user's email
-    gmail = get_current_email(jwt_token=jwt_token)
-    if gmail.endswith("@bu.edu") or gmail == "bradleyjocelyn3@gmail.com" or gmail == "georgeflint@berkeley.edu":
-        if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
-            try:
-                response_and_id = await backend.insert_message(search_agent=search_agent,
-                                                               user_management=weaviate_user_management,
-                                                               gmail=gmail,
-                                                               input_text=data.question)
-            except Exception as e:
-                logger.error(f"error: {e}")
+
+    if not jwt_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        # Decode and verify the JWT token
+        gmail = get_current_email(jwt_token=jwt_token)
+
+        # Ensure the email is present in the decoded token
+        if not gmail:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        if gmail.endswith("@bu.edu") or gmail == "bradleyjocelyn3@gmail.com" or gmail == "georgeflint@berkeley.edu":
+            if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
+                try:
+                    response_and_id = await backend.insert_message(search_agent=search_agent,
+                                                                   user_management=weaviate_user_management,
+                                                                   gmail=gmail,
+                                                                   input_text=data.question)
+                except Exception as e:
+                    logger.error(f"error: {e}")
+                    response_and_id = [
+                        "Oh no! There was an issue finding your answer, please try refreshing or waiting a few seconds.",
+                        str(uuid.uuid4())
+                    ]
+
+            else:
                 response_and_id = [
-                    "Oh no! There was an issue finding your answer, please try refreshing or waiting a few seconds.",
+                    "I'm sorry, it seems like there has been an error. Please login using your BU gmail above",
                     str(uuid.uuid4())
                 ]
-
         else:
             response_and_id = [
-                "I'm sorry, it seems like there has been an error. Please login using your BU gmail above",
+                "I'm sorry, it seems like you are not logged in. Please login using your BU gmail above",
                 str(uuid.uuid4())
             ]
-    else:
-        response_and_id = [
-            "I'm sorry, it seems like you are not logged in. Please login using your BU gmail above",
-            str(uuid.uuid4())
-        ]
 
-    return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
+        return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
+
+    # except jwt.ExpiredSignatureError:
+    #     raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 @app.api_route("/feedback", methods=["POST"])
