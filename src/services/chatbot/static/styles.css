@@ -430,7 +430,7 @@ a {
 }
 
 .human-icon {
-    background-image: url('images/user.png');
+    background-image: url("images/user.png");
 }
 
 .chat-response {
@@ -442,7 +442,7 @@ a {
 
 .send-button::before {
     content: "";
-    background-image: url('images/send.png');
+    background-image: url("images/send.png");
     background-size: cover;
     display: inline-block;
     width: 75%;
@@ -476,7 +476,7 @@ a {
 }
 
 .likeBtn {
-    background-image: url('images/like.png');
+    background-image: url("images/like.png");
 }
 
 .dislikeBtn {
