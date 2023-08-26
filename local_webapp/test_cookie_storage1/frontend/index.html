@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth with FastAPI</title>
+</head>
+<body>
+    <button onclick="login()">Login with Google</button>
+
+    <script>
+        function login() {
+            window.location.href = "http://localhost:8000/login";
+        }
+
+        // After login, you can read the JWT token from the cookie in JavaScript (if not set to httpOnly)
+        let jwtToken = document.cookie.split('; ').find(row => row.startsWith('Authorization')).split('=')[1];
+    </script>
+</body>
+</html>

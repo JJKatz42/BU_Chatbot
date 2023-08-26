@@ -13,6 +13,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
 
 import src.libs.config as config
@@ -63,7 +64,7 @@ def get_jwt_token(request: Request) -> str:
     """
     Extract the JWT token from the HttpOnly cookie.
     """
-    jwt_token = request.cookies.get("jwt_token")
+    jwt_token = request.cookies.get("Authorization")
     if not jwt_token:
         logger.warning("No JWT token found in the request")
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -150,7 +151,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -203,26 +204,32 @@ async def auth_callback(code: str = Query(...)):
 
             jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
 
-            frontend_url = BASE_URL
+            chat_url = "http://localhost:8005"
 
-            response = RedirectResponse(url=frontend_url)
+            # response = JSONResponse(content={"message": "Cookie has been set!"})
+            # response.set_cookie("Authorization", f"Bearer {jwt_token}", httponly=True, samesite="none", max_age=3600)
+            #
+            # return response
+            response = RedirectResponse(url=chat_url)
+            response.set_cookie("Authorization", f"Bearer {jwt_token}", httponly=False, samesite="lax", secure=False)
+            return response
+
 
             # Set the JWT token as an HttpOnly cookie
-            try:
-                response.set_cookie(
-                    key="jwt_token",
-                    value=jwt_token,
-                    domain="app.busearch.com",
-                    httponly=True,
-                    secure=True,
-                    samesite="none"
-                )
-
-            except Exception as e:
-                response = RedirectResponse(url=frontend_url)
-                logger.error(f"Error setting cookie: {e}")
-
-            return response
+            # try:
+            #     response.set_cookie(
+            #         key="jwt_token",
+            #         value=jwt_token,
+            #         httponly=False,
+            #         secure=False,
+            #         samesite="lax"
+            #     )
+            #
+            # except Exception as e:
+            #     response = RedirectResponse(url=frontend_url)
+            #     logger.error(f"Error setting cookie: {e}")
+            #
+            # return response
         else:
             message = "There was an error inserting the user into the database (NOT GOOD! Tell Jonah)."
 
@@ -231,15 +238,6 @@ async def auth_callback(code: str = Query(...)):
 
     frontend_url = f"{BASE_URL}/?message={message}"
     return RedirectResponse(url=frontend_url)
-
-
-@app.get("/is-authenticated")
-def is_authenticated(request: Request) -> bool:
-    jwt_token = request.cookies.get("jwt_token")
-    if not jwt_token:
-        return False
-    # Optionally, you can verify the JWT token here
-    return True
 
 
 @app.post("/chat", response_model=ChatResponse)
