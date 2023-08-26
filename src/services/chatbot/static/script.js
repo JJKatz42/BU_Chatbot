@@ -1,6 +1,6 @@
 let currentResponseID = null
 
-document.getElementById('loginBtn').addEventListener('click', function() {
+document.getElementById('loginBtn').addEventListener('click', function () {
     // Start the OAuth2 flow by redirecting to the /login endpoint
     console.log("Login button clicked"); // Debugging line
     window.location.href = `/login`;
@@ -40,13 +40,13 @@ function sendMessage() {
     chatSpace.insertBefore(thinkingMsgDiv, chatSpace.firstChild);
 
     fetch(`/chat`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(requestData)
-        })
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestData)
+    })
         .then(response => {
             if (!response.ok) {
                 return response.json().then(err => {
@@ -74,12 +74,12 @@ function sendMessage() {
             thinkingMsgDiv.appendChild(feedbackDiv);
 
             // Attach event listeners to the newly created buttons
-            document.getElementById(`likeBtn-${currentResponseID}`).addEventListener('click', function() {
+            document.getElementById(`likeBtn-${currentResponseID}`).addEventListener('click', function () {
                 toggleActiveState(this, document.getElementById(`dislikeBtn-${currentResponseID}`));
                 sendFeedback(currentResponseID, true);
             });
 
-            document.getElementById(`dislikeBtn-${currentResponseID}`).addEventListener('click', function() {
+            document.getElementById(`dislikeBtn-${currentResponseID}`).addEventListener('click', function () {
                 toggleActiveState(this, document.getElementById(`likeBtn-${currentResponseID}`));
                 sendFeedback(currentResponseID, false);
             });
@@ -150,16 +150,16 @@ function toggleActiveState(currentBtn, otherBtn) {
 function sendFeedback(responseID, isLiked) {
 
     fetch(`/feedback`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                responseID: responseID,
-                is_liked: isLiked
-            })
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            responseID: responseID,
+            is_liked: isLiked
         })
+    })
         .then(response => {
             if (!response.ok) {
                 return response.json().then(err => {
@@ -192,7 +192,7 @@ function switchSettingsContent(selectedTab) {
 
 // Attach click event listeners to sidebar tabs
 document.querySelectorAll('.settings-sidebar-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
+    tab.addEventListener('click', function () {
         console.log("Tab clicked"); // Debugging line
         const selectedTab = this.getAttribute('data-tab');
         switchSettingsContent(selectedTab);
@@ -202,12 +202,12 @@ document.querySelectorAll('.settings-sidebar-tab').forEach(tab => {
 
 document.addEventListener('keydown', closeSettingsWithEsc);
 
-document.getElementById('likeBtn').addEventListener('click', function() {
+document.getElementById('likeBtn').addEventListener('click', function () {
     toggleActiveState(this, document.getElementById('dislikeBtn'));
     sendFeedback(currentResponseID, true);
 });
 
-document.getElementById('dislikeBtn').addEventListener('click', function() {
+document.getElementById('dislikeBtn').addEventListener('click', function () {
     toggleActiveState(this, document.getElementById('likeBtn'));
     sendFeedback(currentResponseID, false);
 });
