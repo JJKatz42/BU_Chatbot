@@ -1,4 +1,5 @@
 @import url("https://use.typekit.net/edk5oho.css");
+
 .sidebar {
     display: none;
 }
@@ -31,7 +32,7 @@ span.background {
     padding: 5px;
 }
 
- :root {
+:root {
     --bu-red: #CC0000;
     --black: #2D2926;
     --white: #ffffff;
@@ -44,11 +45,13 @@ span.background {
     --button-size: 15px;
     --text-size: 15px;
 }
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 
 .chat-space-container::-webkit-scrollbar {
     display: none !important;
 }
+
 /* Hide scrollbar for IE, Edge and Firefox */
 
 .chat-space-container {
@@ -217,6 +220,7 @@ a {
     .chat-response {
         width: 100%
     }
+
     .chat-input {
         max-width: 100%;
     }

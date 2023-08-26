@@ -58,12 +58,13 @@ if not env_file.startswith("/"):
     current_directory = os.path.dirname(__file__)
     env_file = os.path.join(current_directory, env_file)
 init_config(local_env_file=env_file)
-# Initialize WeaviateStore and WeaviateSearchEngine
 
-
-# Constants for setting and checking cookies
-
-# Constants for Google OAuth
+WHITE_LISTED_EMAILS = [
+    "bradleyjocelyn3@gmail.com",
+    "georgeflint@berkeley.edu",
+    "jonahkatz@gmail.com",
+    "ernisierra@gmail.com"
+]
 
 SECRET_KEY = config.get("SECRET_KEY")
 ALGORITHM = config.get("ENCRYPTION_ALGORITHM")
@@ -228,8 +229,7 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
         if not gmail:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        if gmail.endswith(
-                "@bu.edu") or gmail == "bradleyjocelyn3@gmail.com" or gmail == "georgeflint@berkeley.edu" or "jonahkatz@gmail.com" or "ernisierra@gmail.com":
+        if gmail.endswith("@bu.edu") or gmail in WHITE_LISTED_EMAILS:
             if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
                 try:
                     response_and_id = await backend.insert_message(
@@ -241,7 +241,8 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
                 except Exception as e:
                     logger.error(f"error: {e}")
                     response_and_id = [
-                        "Oh no! There was an issue finding your answer, please try refreshing or waiting a few seconds.",
+                        "Oh no! There was an issue finding your answer, "
+                        "please try refreshing or waiting a few seconds.",
                         str(uuid.uuid4())
                     ]
 
