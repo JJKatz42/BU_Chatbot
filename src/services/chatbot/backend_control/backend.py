@@ -55,8 +55,8 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
 
 async def insert_message(search_agent: SearchAgent, user_management: user_management.UserDatabaseManager, gmail: str, input_text: str):
     # Insert the message into the database
-    is_bad_query = user_management.is_bad_query(input_text)
-    if "False" in is_bad_query:
+    is_good_query = "True"
+    if "False" in is_good_query:
         response = "Sorry, this is a bad query. Please try again."
         return [response, "None"]
 
@@ -68,7 +68,7 @@ async def insert_message(search_agent: SearchAgent, user_management: user_manage
         logger.info("Creating user message")
         user_message = data_classes.UserMessage(
             query_str=input_text,
-            is_bad_query=None,
+            is_good_query=None,
             created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         )
         logger.info("Creating bot message")
