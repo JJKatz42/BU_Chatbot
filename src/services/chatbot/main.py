@@ -58,7 +58,9 @@ WHITE_LISTED_EMAILS = [
     "bradleyjocelyn3@gmail.com",
     "georgeflint@berkeley.edu",
     "jonahkatz@gmail.com",
-    "ernisierra@gmail.com"
+    "ernisierra@gmail.com",
+    "ellenkatz@gmail.com",
+    "henrykatz@gmail.com"
 ]
 
 SECRET_KEY = config.get("SECRET_KEY")
@@ -139,9 +141,10 @@ def get_jwt_token(request: Request) -> str:
 app = FastAPI()
 
 file_dir = pathlib.Path(__file__).parent.resolve()
-index_path = (file_dir / "static").as_posix()
 
-app.mount("/static", StaticFiles(directory=index_path), name="static")
+INDEX_PATH = (file_dir / "static").as_posix()
+
+app.mount("/static", StaticFiles(directory=INDEX_PATH), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -154,9 +157,7 @@ app.add_middleware(
 
 @app.get("/")
 async def read_root():
-    file_dir = pathlib.Path(__file__).parent.resolve()
-    index_path = (file_dir / "static/index.html").as_posix()
-    return FileResponse(index_path)
+    return FileResponse(INDEX_PATH + "/index.html")
 
 
 @app.get("/login")
@@ -235,12 +236,13 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
 
             else:
                 response_and_id = [
-                    "I'm sorry, it seems like there has been an error. Please login using your BU email above",
+                    "I'm sorry, it seems like there has been an error. Please login using your BU email",
                     str(uuid.uuid4())
                 ]
         else:
             response_and_id = [
-                "I'm sorry, it seems like you are not logged in. Please login using your BU email above",
+                "I'm sorry, it seems like there was an error when you signed in. "
+                "Please clear your cookies and log in again using your BU email",
                 str(uuid.uuid4())
             ]
 
