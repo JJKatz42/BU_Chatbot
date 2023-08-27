@@ -59,6 +59,85 @@ class UserDatabaseManager:
             logger.error(f"Error creating schema: {e}")
             # Add further error handling or logging here as needed.
 
+        try:
+            self.client.schema.property.create(User.weaviate_class_name(self.namespace), {
+                "name": "hasConversation",
+                "dataType": [Conversation.weaviate_class_name(self.namespace)]
+            })
+        except:
+            pass
+
+        try:
+            self.client.schema.property.create(User.weaviate_class_name(self.namespace), {
+                "name": "hasProfileInformation",
+                "dataType": [ProfileInformation.weaviate_class_name(self.namespace)]
+            })
+        except:
+            pass
+
+        try:
+            self.client.schema.property.create(ProfileInformation.weaviate_class_name(self.namespace), {
+                "name": "hasUser",
+                "dataType": [User.weaviate_class_name(self.namespace)]
+            })
+
+        except:
+            pass
+
+        try:
+            self.client.schema.property.create(Conversation.weaviate_class_name(self.namespace), {
+                "name": "messages",
+                "dataType": [
+                        UserMessage.weaviate_class_name(namespace=self.namespace),
+                        BotMessage.weaviate_class_name(namespace=self.namespace)
+                    ]
+            })
+        except:
+            pass
+        try:
+            self.client.schema.property.create(Conversation.weaviate_class_name(self.namespace), {
+                "name": "hasUser",
+                "dataType": [User.weaviate_class_name(self.namespace)]
+            })
+        except:
+            pass
+
+        try:
+            self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
+                "name": "hasBotMessage",
+                "dataType": [BotMessage.weaviate_class_name(self.namespace)]
+            })
+
+        except:
+            pass
+
+        try:
+            self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
+                "name": "hasConversation",
+                "dataType": [Conversation.weaviate_class_name(self.namespace)]
+            })
+
+        except:
+            pass
+
+        try:
+            self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
+                "name": "hasUserMessage",
+                "dataType": [UserMessage.weaviate_class_name(self.namespace)]
+            })
+        except:
+            pass
+
+
+        try:
+            self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
+                "name": "hasConversation",
+                "dataType": [Conversation.weaviate_class_name(self.namespace)]
+            })
+        except:
+            pass
+
+
     def user_exists(self, gmail: str) -> bool:
         """Check if a Webpage object exists in Weaviate
 
@@ -137,29 +216,6 @@ class UserDatabaseManager:
         user_message_uuid = ""
         bot_message_uuid = ""
         conversation_uuid = ""
-
-        try:
-            self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
-                "name": "hasConversation",
-                "dataType": [Conversation.weaviate_class_name(self.namespace)]
-            })
-
-            self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
-                "name": "hasConversation",
-                "dataType": [Conversation.weaviate_class_name(self.namespace)]
-            })
-
-            self.client.schema.property.create(UserMessage.weaviate_class_name(self.namespace), {
-                "name": "hasBotMessage",
-                "dataType": [BotMessage.weaviate_class_name(self.namespace)]
-            })
-
-            self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
-                "name": "hasUserMessage",
-                "dataType": [UserMessage.weaviate_class_name(self.namespace)]
-            })
-        except:
-            pass
 
         try:
             conversation_uuid = self._get_conversation_id(gmail=gmail)
@@ -270,24 +326,24 @@ class UserDatabaseManager:
             logger.error(f"Error inserting liked message: {e}")
             return ""
 
-    def is_bad_query(self, query_str: str):
-        # openai.api_key = self.openai_api_key
-        # try:
-        #     completion = openai.ChatCompletion.create(
-        #         model="gpt-3.5-turbo",
-        #         temperature=0,
-        #         messages=[
-        #             {"role": "system", "content": "You are a competant University chatbot. You can only respond with True or False. You're job is to determine whether a student's question is related to any topic corresponding to their university. You are given a question if it is not related to any aspect of a university then respond with 'False' if it is related to any aspect of a university response with 'True'."},
-        #             {"role": "user", "content": query_str}
-        #         ]
-        #     )
-        #
-        #     logger.info(completion.choices[0].message)
-        #     return completion.choices[0].message["content"]
-        # except Exception as e:
-        #     logger.error(e)
-        #     return "Couldn't do it"
-        return "True"
+    # def is_bad_query(self, query_str: str):
+    #     # openai.api_key = self.openai_api_key
+    #     # try:
+    #     #     completion = openai.ChatCompletion.create(
+    #     #         model="gpt-3.5-turbo",
+    #     #         temperature=0,
+    #     #         messages=[
+    #     #             {"role": "system", "content": "You are a competant University chatbot. You can only respond with True or False. You're job is to determine whether a student's question is related to any topic corresponding to their university. You are given a question if it is not related to any aspect of a university then respond with 'False' if it is related to any aspect of a university response with 'True'."},
+    #     #             {"role": "user", "content": query_str}
+    #     #         ]
+    #     #     )
+    #     #
+    #     #     logger.info(completion.choices[0].message)
+    #     #     return completion.choices[0].message["content"]
+    #     # except Exception as e:
+    #     #     logger.error(e)
+    #     #     return "Couldn't do it"
+    #     return "True"
 
     def get_messages_for_user(self, gmail: str):
         """
@@ -310,29 +366,33 @@ class UserDatabaseManager:
         )
 
         # Extract and log the messages
-        message_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages']
-        if not message_objects:
+        try:
+            message_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages']
+            if message_objects == []:
+                logger.info(f"No messages for user {gmail}: {message_objects}")
+
+            else:
+                for message in message_objects:
+
+                    tup = []
+                    u_tup = []
+                    b_tup = []
+
+                    u_tup.append(message['query_str'])
+                    u_tup.append(message['_additional']['id'])
+
+                    b_tup.append(message['hasBotMessage'][0]['response_str'])
+                    b_tup.append(message['hasBotMessage'][0]['_additional']['id'])
+
+                    tup.append(u_tup)
+                    tup.append(b_tup)
+
+                    message_list.append(tup)
+
+                return message_list
+
+        except Exception as e:
             logger.warning(f"No User object found with the Gmail: {gmail}")
-            return message_list
-
-        else:
-            for message in message_objects:
-
-                tup = []
-                u_tup = []
-                b_tup = []
-
-                u_tup.append(message['query_str'])
-                u_tup.append(message['_additional']['id'])
-
-                b_tup.append(message['hasBotMessage'][0]['response_str'])
-                b_tup.append(message['hasBotMessage'][0]['_additional']['id'])
-
-                tup.append(u_tup)
-                tup.append(b_tup)
-
-                message_list.append(tup)
-
             return message_list
 
     def clear_conversation(self, gmail: str):
