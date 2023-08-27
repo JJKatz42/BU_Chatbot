@@ -6,7 +6,6 @@ import time
 import langchain.chat_models
 from dataclasses import asdict
 
-
 import src.libs.storage.weaviate_store as store
 import src.libs.search.weaviate_search_engine as search_engine
 from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
@@ -14,7 +13,6 @@ from src.libs.config import config
 import src.libs.storage.user_management as user_management
 import src.libs.storage.user_data_classes as data_classes
 import src.libs.logging as logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -165,11 +163,6 @@ async def main():
 
     ask_str = "describe sm 132"
 
-    is_bad_query = weaviate_user_management.is_bad_query(query_str=ask_str)
-    if "False" in is_bad_query:
-        logger.info(is_bad_query)
-        logger.info("Bad Query")
-
     # Route to sub command specific logic either build indexes for search or run a search
     if script_args.command == "insert-user":
         # Create weaviate schema
@@ -204,10 +197,8 @@ async def main():
     elif script_args.command == "insert-message":
         ask_str = script_args.ask
 
-        is_bad_query = weaviate_user_management.is_bad_query(query_str=ask_str)
-        if "false" in is_bad_query:
-            logger.info(is_bad_query)
-            logger.info("Bad Query")
+        if True == False:
+            pass
 
         else:
             weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_store_info)
@@ -229,7 +220,6 @@ async def main():
 
             message_list = weaviate_user_management.get_messages_for_user(gmail=script_args.gmail)
             logger.info(message_list)
-
 
             # Run the SearchAgent
             logger.info("Running search agent")
@@ -318,6 +308,7 @@ async def main():
             profile_info_lst=profile_info_lst,
         )
         logger.info("Finished inserting profile info")
+
 
 if __name__ == '__main__':
     asyncio.run(main())
