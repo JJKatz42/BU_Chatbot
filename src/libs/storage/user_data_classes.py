@@ -51,7 +51,7 @@ class UserMessage(WeaviateObject):
             },
             "properties": [
                 {
-                    "name": "is_good_query",
+                    "name": "is_bad_query",
                     "dataType": ["bool"],
                 },
                 {
@@ -80,7 +80,7 @@ class UserMessage(WeaviateObject):
     def to_weaviate_object(self) -> dict:
         return {
             "query_str": self.query_str,
-            "bad_query_tag": self.is_bad_query,
+            "is_bad_query": self.is_bad_query,
             "created_time": self.created_time,
         }
 
@@ -140,7 +140,7 @@ class BotMessage(WeaviateObject):
 
 @dataclasses.dataclass
 class Conversation(WeaviateObject):
-    messages: List[UserMessage | BotMessage]
+    messages: List[UserMessage | BotMessage] | None
     created_time: int | float | str
 
     @classmethod
@@ -227,8 +227,8 @@ class ProfileInformation(WeaviateObject):
 class User(WeaviateObject):
     gmail: str
     created_time: int | float | str
-    profile_information: list[ProfileInformation]
-    conversations: list[Conversation]
+    profile_information: list[ProfileInformation] | None
+    conversations: list[Conversation] | None
 
     @classmethod
     def weaviate_class_schema(cls, namespace: str):
