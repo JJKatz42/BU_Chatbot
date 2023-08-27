@@ -52,6 +52,9 @@ CHATBOT_LOGGING_CONFIG = {
             "handlers": ["default"],
             "level": ROOT_LOG_LEVEL,
         },
+        "local_webapp": {
+            "level": CHATBOT_LOG_LEVEL,
+        },
         "src": {
             "level": CHATBOT_LOG_LEVEL,
         },

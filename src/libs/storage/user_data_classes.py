@@ -35,7 +35,7 @@ class WeaviateObject:
 @dataclasses.dataclass
 class UserMessage(WeaviateObject):
     query_str: str
-    is_bad_query: bool | None
+    is_good_query: bool | None
     created_time: int | float | str
 
     @classmethod
@@ -80,7 +80,9 @@ class UserMessage(WeaviateObject):
     def to_weaviate_object(self) -> dict:
         return {
             "query_str": self.query_str,
-            "is_bad_query": self.is_bad_query,
+
+            "bad_query_tag": self.is_good_query,
+
             "created_time": self.created_time,
         }
 

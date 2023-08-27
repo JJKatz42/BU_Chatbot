@@ -6,7 +6,6 @@ class JWTHeader(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    jwt_token: str = Field(..., alias="Authorization")
     question: str
 
 
@@ -16,7 +15,6 @@ class ChatResponse(BaseModel):
 
 
 class FeedbackRequest(BaseModel):
-    jwt_token: str = Field(..., alias="Authorization")
     responseID: str
     is_liked: bool
 

@@ -62,7 +62,7 @@ async def main():
     insert_user_parser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
+        default=".env"
     )
     insert_user_parser.add_argument(
         "--full-refresh",
@@ -131,13 +131,13 @@ async def main():
     insert_profile_info_pasrser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
+        default=".env"
     )
 
     script_args = parser.parse_args()
 
     # Initialize config
-    env_file = script_args.env_file
+    env_file = "/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
     if not env_file.startswith("/"):
         current_directory = os.path.dirname(__file__)
         env_file = os.path.join(current_directory, env_file)

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Authorization and Chat</title>
+</head>
+<body>
+    <button id="loginButton">Login with Google</button>
+    <input type="text" id="chatInput" placeholder="Enter a question">
+    <button id="sendButton">Send</button>
+    <p id="authResult"></p>
+    <p id="chatResult"></p>
+
+    <script>
+
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        function handleChat() {
+            const question = document.getElementById("chatInput").value;
+            fetch("/chat", {
+                method: "POST",
+                body: JSON.stringify({ question }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.authorized === "True") {
+                    document.getElementById("authResult").innerText = "Authorized!";
+                    document.getElementById("chatResult").innerText = "Question: " + data.question + "\nAnswer: " + data.answer + "\nEmail: " + data.gmail;
+                } else {
+                    document.getElementById("authResult").innerText = "Not Authorized!";
+                    document.getElementById("chatResult").innerText = "";
+                }
+            });
+        }
+
+        document.getElementById("sendButton").addEventListener("click", handleChat);
+
+        document.getElementById("loginButton").addEventListener("click", function() {
+            window.location.href = "/login"; // Redirect to the /login endpoint
+        });
+    </script>
+</body>
+</html>
