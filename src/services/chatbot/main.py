@@ -1,5 +1,6 @@
 import os
 import uuid
+import pathlib
 from pathlib import Path
 from typing import Union
 
@@ -151,8 +152,9 @@ app.add_middleware(
 
 @app.get("/")
 async def read_root():
-    html_path = Path("static/index.html")  # Assuming 'index.html' is in the 'static' directory
-    return FileResponse(html_path)
+    file_dir = pathlib.Path(__file__).parent.resolve()
+    index_path = str(file_dir) + "/static/index.html"
+    return FileResponse(index_path)
 
 
 @app.get("/login")
