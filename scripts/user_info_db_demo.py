@@ -64,7 +64,7 @@ async def main():
     insert_user_parser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
+        default=".env"
     )
     insert_user_parser.add_argument(
         "--full-refresh",
@@ -133,13 +133,13 @@ async def main():
     insert_profile_info_pasrser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
+        default=".env"
     )
 
     script_args = parser.parse_args()
 
     # Initialize config
-    env_file = script_args.env_file
+    env_file = "/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
     if not env_file.startswith("/"):
         current_directory = os.path.dirname(__file__)
         env_file = os.path.join(current_directory, env_file)
@@ -278,7 +278,7 @@ async def main():
 
     elif script_args.command == "insert-like":
         # Insert like into user
-        logger.infot("Inserting like into user")
+        logger.info("Inserting like into user")
         weaviate_user_management.insert_liked(
             liked=script_args.liked,
             bot_message_id=script_args.message_id
