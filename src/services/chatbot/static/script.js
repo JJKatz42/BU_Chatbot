@@ -88,7 +88,7 @@ function sendMessage() {
             console.error('Error:', error);
 
             // Replace "thinking..." with error message
-            thinkingMsgDiv.textContent = "BUsearch: I'm sorry there seems to be a connection problem. Please try to refresh the page or login again, using you BU gmail.";
+            thinkingMsgDiv.textContent = "BUsearch: Please log in using you BU email.";
         })
         .finally(() => {
             // Re-enable the send button

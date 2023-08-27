@@ -1,10 +1,5 @@
 import os
-import random
-import string
-import time
-import urllib.parse
 import uuid
-from dataclasses import asdict
 from pathlib import Path
 from typing import Union
 
@@ -117,22 +112,6 @@ search_agent = SearchAgent(
 )
 
 
-def generate_google_auth_url(client_id: str, redirect_uri: str) -> str:
-    base_url = "https://accounts.google.com/o/oauth2/v2/auth"
-    scope = "openid profile email"
-    response_type = "code"
-    state = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-    params = {
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "scope": scope,
-        "response_type": response_type,
-        "state": state
-    }
-    auth_url = base_url + "?" + urllib.parse.urlencode(params)
-    return auth_url
-
-
 def get_current_email(jwt_token: str) -> str:
     try:
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -155,16 +134,6 @@ def get_jwt_token(request: Request) -> str:
     else:
         print(f"JWT token: {jwt_token}")
         return jwt_token
-
-
-async def search_agent_job(agent: SearchAgent, query: str) -> dict:
-    logger.info(f"Running job: {query}")
-    search_job_start_time = time.time()
-    result = await agent.run(query)
-    result_dict = asdict(result)
-    result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
-    logger.info(f"Running job: {query} finished")
-    return result_dict
 
 
 app = FastAPI()
@@ -201,6 +170,8 @@ async def auth_callback(code: str = Query(...)):
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
     }
+
+    # Fetch user's info
     async with httpx.AsyncClient() as client:
         response = await client.post("https://oauth2.googleapis.com/token", data=token_data)
     token_response = response.json()
@@ -210,32 +181,42 @@ async def auth_callback(code: str = Query(...)):
     }
     async with httpx.AsyncClient() as client:
         response = await client.get("https://www.googleapis.com/oauth2/v2/userinfo", headers=headers)
+
     user_info = response.json()
+
     email = user_info["email"]
-    jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
-    # response = Response(content="Logged in successfully!")
-    response = RedirectResponse(url="/")
-    response.set_cookie(key="auth_token", value=jwt_token)  # Set the token as a cookie
-    return response
+
+    if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:
+        # Create a session for the user
+        user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
+        if user_inserted_successfully:
+            jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
+            response = RedirectResponse(url="/")
+            response.set_cookie(key="auth_token", value=jwt_token)  # Set the token as a cookie
+            return response
+        else:
+            return "There was an error inserting the user into the database."
+
+    return "You must use a BU email to log in."
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
     if auth_token:
         # Decode and verify the JWT token
-        gmail = get_current_email(jwt_token=auth_token)
+        email = get_current_email(jwt_token=auth_token)
 
         # Ensure the email is present in the decoded token
-        if not gmail:
+        if not email:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        if gmail.endswith("@bu.edu") or gmail in WHITE_LISTED_EMAILS:
-            if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
+        if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:
+            if backend.user_exists(user_management=weaviate_user_management, gmail=email):
                 try:
                     response_and_id = await backend.insert_message(
                         search_agent=search_agent,
                         user_management=weaviate_user_management,
-                        gmail=gmail,
+                        gmail=email,
                         input_text=data.question
                     )
                 except Exception as e:
@@ -248,12 +229,12 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
 
             else:
                 response_and_id = [
-                    "I'm sorry, it seems like there has been an error. Please login using your BU gmail above",
+                    "I'm sorry, it seems like there has been an error. Please login using your BU email above",
                     str(uuid.uuid4())
                 ]
         else:
             response_and_id = [
-                "I'm sorry, it seems like you are not logged in. Please login using your BU gmail above",
+                "I'm sorry, it seems like you are not logged in. Please login using your BU email above",
                 str(uuid.uuid4())
             ]
 
@@ -268,15 +249,15 @@ async def provide_feedback(data: FeedbackRequest, auth_token: str = Cookie(None)
     # Store or handle feedback
     # Returns a 200 status code with no body on success
     jwt_token = auth_token
-    gmail = get_current_email(jwt_token=jwt_token)
-    if backend.user_exists(user_management=weaviate_user_management, gmail=gmail):
+    email = get_current_email(jwt_token=jwt_token)
+    if backend.user_exists(user_management=weaviate_user_management, gmail=email):
         try:
             backend.insert_feedback(user_management=weaviate_user_management, message_id=data.responseID,
                                     is_liked=data.is_liked)
         except Exception as e:
             logger.error(f"Feedback insertion error, {e}")
     else:
-        logger.error(f"User {gmail} does not exist in the database.")
+        logger.error(f"User {email} does not exist in the database.")
 
 
 if __name__ == "__main__":
