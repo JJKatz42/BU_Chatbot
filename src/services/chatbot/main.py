@@ -138,7 +138,10 @@ def get_jwt_token(request: Request) -> str:
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+file_dir = pathlib.Path(__file__).parent.resolve()
+index_path = (file_dir / "static").as_posix()
+
+app.mount("/static", StaticFiles(directory=index_path), name="static")
 
 app.add_middleware(
     CORSMiddleware,
