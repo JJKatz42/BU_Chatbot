@@ -1,7 +1,6 @@
 import os
 import uuid
 import pathlib
-from pathlib import Path
 from typing import Union
 
 import httpx
@@ -153,7 +152,7 @@ app.add_middleware(
 @app.get("/")
 async def read_root():
     file_dir = pathlib.Path(__file__).parent.resolve()
-    index_path = str(file_dir) + "/static/index.html"
+    index_path = (file_dir / "static/index.html").as_posix()
     return FileResponse(index_path)
 
 
@@ -197,9 +196,11 @@ async def auth_callback(code: str = Query(...)):
             response.set_cookie(key="auth_token", value=jwt_token)  # Set the token as a cookie
             return response
         else:
-            return "There was an error inserting the user into the database."
+            response = RedirectResponse(url="/?message=you-must-use-a-BU-account-access-this-page")
+            return response
 
-    return "You must use a BU email to log in."
+    response = RedirectResponse(url="/?message=you-must-use-a-BU-account-access-this-page")
+    return response
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -260,9 +261,3 @@ async def provide_feedback(data: FeedbackRequest, auth_token: str = Cookie(None)
             logger.error(f"Feedback insertion error, {e}")
     else:
         logger.error(f"User {email} does not exist in the database.")
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="localhost", port=8000)
