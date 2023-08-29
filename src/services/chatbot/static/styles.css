@@ -1,4 +1,74 @@
 @import url("https://use.typekit.net/edk5oho.css");
+.chat-input-container.disabled {
+    opacity: 0.4;
+}
+
+.discord-button {
+    background-color: var(--bu-red);
+    border-radius: 5px;
+    position: absolute;
+    bottom: 55px;
+    right: 55px;
+    padding: 7px;
+    padding-bottom: 4px;
+}
+
+.discord-button a {
+    filter: invert(1);
+}
+
+.discord-button img {
+    width: 30px;
+    height: auto;
+}
+
+a.link {
+    color: red !important;
+    text-decoration: underline !important;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--white);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--bu-red);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--black);
+}
+
+input:checked+.slider:before {
+    transform: translateX(26px);
+    background-color: var(--light-gray);
+}
 
 .sidebar {
     display: none;
@@ -23,7 +93,7 @@
 }
 
 .navbar-menu a {
-    transform: translate(0, 5px);
+    transform: translate(0, 15px);
 }
 
 span.background {
@@ -46,11 +116,13 @@ span.background {
     --text-size: 15px;
 }
 
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 
 .chat-space-container::-webkit-scrollbar {
     display: none !important;
 }
+
 
 /* Hide scrollbar for IE, Edge and Firefox */
 
@@ -113,8 +185,13 @@ a {
     gap: 20px;
 }
 
-.navbar-menu *:hover {
+.navbar-menu a:hover,
+.discord-button:hover {
     opacity: 0.8;
+}
+
+.navbar-menu .toggle-button:hover {
+    opacity: 0.9;
 }
 
 .sidebar {
@@ -179,7 +256,48 @@ a {
 
 @media only screen and (max-width: 1030px) {
     .chat-input-container {
-        width: 100%
+        width: calc(100% - 30px) !important;
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+    .discord-button {
+        display: none;
+    }
+    .navbar {
+        font-size: 14px;
+    }
+    .chat-response {
+        width: 100%;
+    }
+    .navbar-menu {
+        gap: 10px;
+    }
+    .chat-response {
+        width: calc(100% - 40px) !important
+    }
+    .chat-input {
+        max-width: 100%;
+        margin-left: 0;
+    }
+    .settings-sidebar {
+        background-color: var(--black) !important;
+        color: var(--white) !important;
+        height: 74px !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+        float: none !important;
+        border-radius: 10px !important;
+        border-top-right-radius: 10px !important;
+        border-bottom-right-radius: 0px !important;
+        display: flex !important;
+        border-bottom-left-radius: 0 !important;
+        width: 100% !important;
+    }
+    .settings-content-container {
+        padding: 20px !important;
+        box-sizing: border-box !important;
+        height: calc(100% - 60px) !important;
+        position: relative !important;
     }
 }
 
@@ -204,7 +322,8 @@ a {
     text-align: left;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 10px;
     width: 600px;
 }
 
@@ -214,16 +333,6 @@ a {
 
 .chat-response {
     font-family: var(--sans);
-}
-
-@media only screen and (max-width: 1030px) {
-    .chat-response {
-        width: 100%
-    }
-
-    .chat-input {
-        max-width: 100%;
-    }
 }
 
 .chat-response.input {
