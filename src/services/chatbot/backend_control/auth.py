@@ -23,7 +23,6 @@ def generate_google_auth_url(client_id: str, redirect_uri: str) -> str:
     The 'state' parameter is a random string used to protect against
     cross-site request forgery attacks.
     """
-
     # Google's OAuth 2.0 endpoint.
     base_url = "https://accounts.google.com/o/oauth2/v2/auth"
 

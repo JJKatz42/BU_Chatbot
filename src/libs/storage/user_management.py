@@ -1,10 +1,9 @@
 import weaviate
-import src.libs.storage.user_data_classes as data_classes
-import src.libs.logging as logging
 
+import src.libs.logging as logging
+import src.libs.storage.user_data_classes as data_classes
 
 logger = logging.getLogger(__name__)
-
 
 # Aliases for clarity
 User = data_classes.User
@@ -88,9 +87,9 @@ class UserDatabaseManager:
             self.client.schema.property.create(Conversation.weaviate_class_name(self.namespace), {
                 "name": "messages",
                 "dataType": [
-                        UserMessage.weaviate_class_name(namespace=self.namespace),
-                        BotMessage.weaviate_class_name(namespace=self.namespace)
-                    ]
+                    UserMessage.weaviate_class_name(namespace=self.namespace),
+                    BotMessage.weaviate_class_name(namespace=self.namespace)
+                ]
             })
         except:
             pass
@@ -128,7 +127,6 @@ class UserDatabaseManager:
         except:
             pass
 
-
         try:
             self.client.schema.property.create(BotMessage.weaviate_class_name(self.namespace), {
                 "name": "hasConversation",
@@ -136,7 +134,6 @@ class UserDatabaseManager:
             })
         except:
             pass
-
 
     def user_exists(self, gmail: str) -> bool:
         """Check if a Webpage object exists in Weaviate
@@ -301,7 +298,6 @@ class UserDatabaseManager:
         pass
         # TODO
 
-
     def insert_liked(self, liked: bool, bot_message_id: str):
         try:
             current_liked_state = self._get_current_liked_state(bot_message_id=bot_message_id)
@@ -360,20 +356,22 @@ class UserDatabaseManager:
         # Fetch the conversations associated with the user based on Gmail
         results = (
             self.client.query
-            .get(User.weaviate_class_name(namespace=self.namespace), ["hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, _additional { id }, hasBotMessage {... on Jonahs_weaviate_userdb_BotMessage { response_str, _additional { id } } } } } } }"])
+            .get(User.weaviate_class_name(namespace=self.namespace), [
+                "hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, _additional { id }, hasBotMessage {... on Jonahs_weaviate_userdb_BotMessage { response_str, _additional { id } } } } } } }"])
             .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
             .do()
         )
 
         # Extract and log the messages
         try:
-            message_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages']
+            message_objects = \
+            results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0][
+                'messages']
             if message_objects == []:
                 logger.info(f"No messages for user {gmail}: {message_objects}")
 
             else:
                 for message in message_objects:
-
                     tup = []
                     u_tup = []
                     b_tup = []
@@ -431,7 +429,8 @@ class UserDatabaseManager:
             .do()
         )
 
-        logger.info(results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0]['messages'])
+        logger.info(results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasConversation'][0][
+                        'messages'])
 
     def insert_profile_info(self, gmail: str, profile_info_lst: [ProfileInformation]):
         """
@@ -458,8 +457,6 @@ class UserDatabaseManager:
 
         try:
             for profile_information in profile_info_lst:
-
-
                 profile_information_uuid = self.client.data_object.create(
                     class_name=ProfileInformation.weaviate_class_name(self.namespace),
                     uuid=profile_information.weaviate_id,
@@ -507,7 +504,8 @@ class UserDatabaseManager:
         )
 
         # Extract and return profile information
-        profile_info_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0]['hasProfileInformation']
+        profile_info_objects = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0][
+            'hasProfileInformation']
         if not profile_info_objects:
             logger.warning(f"No User object found with the Gmail: {gmail}")
             return profile_info_dict
