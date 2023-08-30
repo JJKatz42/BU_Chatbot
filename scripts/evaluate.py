@@ -137,12 +137,22 @@ async def main():
         prog="Evaluate Bot",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--env-file", help="Local .env file containing config values. Default=/Users/jonahkatz/Desktop/BU_Chatbot/src/services/chatbot/.env",
-                        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env")
-    parser.add_argument("--test-file", help="File containing tests. Default=/Users/jonahkatz/Desktop/BU_Chatbot/src/libs/eval/test_registry.json",
-                        default="/Users/jonahkatz/Dev/BU_Chatbot/src/libs/eval/test_registry.json")
-    parser.add_argument("--score-thresh", help="Log test results to summary.txt if test score is equal to or less "
-                                               "than this score. Default=100", type=int, default=100)
+    parser.add_argument(
+        "--env-file",
+        help="Local .env file containing config values.",
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
+    )
+    parser.add_argument(
+        "--test-file",
+        help="File containing tests. Default=/Users/jonahkatz/Desktop/BU_Chatbot/src/libs/eval/test_registry.json",
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/libs/eval/test_registry.json"
+    )
+    parser.add_argument(
+        "--score-thresh",
+        help="Log test results to summary.txt if test score is equal to or less than this score. Default=100",
+        type=int,
+        default=100
+    )
     parser.add_argument("--reasoning-llm", help="Reasoning LLM model name. Default=gpt-3.5-turbo-0613",
                         default="gpt-3.5-turbo-0613")
     parser.add_argument("--evaluation-llm", help="Evaluation LLM model name. Default=gpt-4-0613",

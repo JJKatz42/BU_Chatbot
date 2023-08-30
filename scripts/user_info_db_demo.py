@@ -113,22 +113,22 @@ async def main():
         help="Local .env file containing config values",
         default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env")
 
-    insert_profile_info_pasrser = subparsers.add_parser(
+    insert_profile_info_parser = subparsers.add_parser(
         "insert-profile-info",
         help="inserts dict of profile info into user")
 
-    insert_profile_info_pasrser.add_argument(
+    insert_profile_info_parser.add_argument(
         "profile_info",
         nargs="?",
         default="{'name': 'John', 'age': '25'}"
     )
-    insert_profile_info_pasrser.add_argument(
+    insert_profile_info_parser.add_argument(
         "--gmail",
         help="By default gmail is jjkatz@bu.edu",
         default="jjkatz2@bu.edu",
         action="store_true"
     )
-    insert_profile_info_pasrser.add_argument(
+    insert_profile_info_parser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
         default=".env"
@@ -160,8 +160,6 @@ async def main():
         namespace=config.get("INFO_DATA_NAMESPACE"),
         cohere_api_key=config.get("COHERE_API_KEY")
     )
-
-    ask_str = "describe sm 132"
 
     # Route to sub command specific logic either build indexes for search or run a search
     if script_args.command == "insert-user":
@@ -197,74 +195,70 @@ async def main():
     elif script_args.command == "insert-message":
         ask_str = script_args.ask
 
-        if True == False:
-            pass
+        weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_store_info)
 
-        else:
-            weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_store_info)
+        # Initialize a reasoning LLM
+        reasoning_llm = langchain.chat_models.ChatOpenAI(
+            model_name="gpt-3.5-turbo-0613",
+            temperature=0.0,
+            openai_api_key=config.get("OPENAI_API_KEY")
+        )
 
-            # Initialize a reasoning LLM
-            reasoning_llm = langchain.chat_models.ChatOpenAI(
-                model_name="gpt-3.5-turbo-0613",
-                temperature=0.0,
-                openai_api_key=config.get("OPENAI_API_KEY")
-            )
+        features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QUERY_PLANNING]
 
-            features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QUERY_PLANNING]
+        search_agent = SearchAgent(
+            weaviate_search_engine=weaviate_engine,
+            reasoning_llm=reasoning_llm,
+            features=features
+        )
 
-            search_agent = SearchAgent(
-                weaviate_search_engine=weaviate_engine,
-                reasoning_llm=reasoning_llm,
-                features=features
-            )
+        message_list = weaviate_user_management.get_messages_for_user(gmail=script_args.gmail)
+        logger.info(message_list)
 
-            message_list = weaviate_user_management.get_messages_for_user(gmail=script_args.gmail)
-            logger.info(message_list)
+        # Run the SearchAgent
+        logger.info("Running search agent")
 
-            # Run the SearchAgent
-            logger.info("Running search agent")
+        agent_result = await search_agent_job(search_agent, ask_str)
+        # sort the sources by score
+        sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
+        # Extract the first 5 URLs
+        top_5_urls = [item['url'] for item in sorted_lst[:10]]
+        # Create a string of the URLs
+        url_str = ""
+        num = 0
+        for url in top_5_urls:
+            if url in url_str:
+                continue
 
-            agent_result = await search_agent_job(search_agent, ask_str)
-            # sort the sources by score
-            sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
-            # Extract the first 5 URLs
-            top_5_urls = [item['url'] for item in sorted_lst[:10]]
-            # Create a string of the URLs
-            url_str = ""
-            num = 0
-            for url in top_5_urls:
-                if url in url_str:
-                    continue
+            num += 1
+            url_str += "\n"  # Use HTML break line tag here
+            url_str += f"{num}. {url} "
 
-                num += 1
-                url_str += "\n"  # Use HTML break line tag here
-                url_str += f"{num}. {url} "
+        response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
 
-            response = f"{agent_result['answer']} \n\n Sources: {url_str}"  # Use HTML break line tag here
+        # response = "This is a test response 2"
+        # Create messages
+        logger.info("Creating user message")
+        user_message = data_classes.UserMessage(
+            query_str=ask_str,
+            is_good_query=None,
+            created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+        logger.info("Creating bot message")
+        bot_message = data_classes.BotMessage(
+            response_str=response,
+            is_liked=None,
+            created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
 
-            # response = "This is a test response 2"
-            # Create messages
-            logger.info("Creating user message")
-            user_message = data_classes.UserMessage(
-                query_str=ask_str,
-                is_bad_query=None,
-                created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-            )
-            logger.info("Creating bot message")
-            bot_message = data_classes.BotMessage(
-                response_str=response,
-                is_liked=None,
-                created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-            )
-
-            # Insert message into user
-            logger.info("Inserting message into user")
-            weaviate_user_management.insert_message(
-                user_message=user_message,
-                bot_message=bot_message,
-                gmail=script_args.gmail
-            )
-            logger.info("Finished inserting message")
+        # Insert message into user
+        logger.info("Inserting message into user")
+        weaviate_user_management.insert_message(
+            user_message=user_message,
+            bot_message=bot_message,
+            gmail=script_args.gmail
+        )
+        logger.info("Finished inserting message")
 
     elif script_args.command == "insert-like":
         # Insert like into user
