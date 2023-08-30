@@ -73,11 +73,13 @@ REDIRECT_URI = config.get("REDIRECT_URI")
 IS_LOCAL_ENV = config.get("IS_LOCAL_ENV")
 
 if str(IS_LOCAL_ENV) == "True":
-    BASE_URL = "http://localhost:8080"
-    DOMAIN = "localhost:8080"
+    BASE_URL = "http://localhost:8000"
+    DOMAIN = "localhost:8000"
+    SECURE = False
 else:
     BASE_URL = "https://app.busearch.com"
     DOMAIN = "app.busearch.com"
+    SECURE = True
 
 # Initialize WeaviateStore and WeaviateSearchEngine
 weaviate_store = store.WeaviateStore(
@@ -157,17 +159,26 @@ app.add_middleware(
 
 @app.get("/")
 async def read_root():
+    """
+    Serves the index.html file.
+    """
     return FileResponse(INDEX_PATH + "/index.html")
 
 
 @app.get("/login")
 def login():
+    """
+    Redirects the user to the Google OAuth2 login page.
+    """
     google_auth_url = generate_google_auth_url(client_id=CLIENT_ID, redirect_uri=REDIRECT_URI)
     return RedirectResponse(url=google_auth_url)
 
 
 @app.get("/auth/callback")
 async def auth_callback(code: str = Query(...)):
+    """
+    Callback URL for Google OAuth2.
+    """
     token_data = {
         "grant_type": "authorization_code",
         "code": code,
@@ -192,17 +203,29 @@ async def auth_callback(code: str = Query(...)):
     email = user_info["email"]
 
     if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:
-        # Create a session for the user
+        # Insert the user into the database
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
+            # Create a JWT token
             jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
+            # Redirect user to the root after logging in
             response = RedirectResponse(url="/")
-            response.set_cookie(key="auth_token", value=jwt_token, secure=True, httponly=True, samesite="lax", max_age=7 * 24 * 60 * 60)  # Set the token as a cookie
+            # Set the token as a cookie
+            response.set_cookie(
+                key="auth_token",
+                value=jwt_token,
+                secure=SECURE,
+                httponly=True,
+                samesite="lax",
+                max_age=7 * 24 * 60 * 60
+            )
+
             return response
         else:
-            response = RedirectResponse(url="/?message=you-must-use-a-BU-account-to-access-this-page")
+            # User was not inserted successfully
+            response = RedirectResponse(url="/?message=you-must-be-a-BU-student-to-access-this-page")
             return response
-
+    # User did not use a BU email
     response = RedirectResponse(url="/?message=you-must-use-a-BU-account-to-access-this-page")
     return response
 
@@ -222,12 +245,12 @@ async def is_authorized(request: Request):
     """
     Checks if the user has a valid JWT token in their cookies and is authorized.
     """
-    jwt_token = request.cookies.get("auth_token")
+    jwt_token = request.cookies.get("auth_token")  # Get the JWT token from the cookies
     if not jwt_token:
-        return {"isAuthorized": False}
+        return {"isAuthorized": False}  # If there is no JWT token, the user is not authorized
 
     try:
-        get_current_email(jwt_token=jwt_token)
+        get_current_email(jwt_token=jwt_token)  # If the JWT token is valid, the user is authorized
         return {"isAuthorized": True}
     except HTTPException as e:
         if e.status_code == 401:
@@ -237,6 +260,9 @@ async def is_authorized(request: Request):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
+    """
+    Chat with the bot.
+    """
     if auth_token:
         # Decode and verify the JWT token
         email = get_current_email(jwt_token=auth_token)
@@ -245,7 +271,7 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:
+        if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:  # Check if the user is a BU student
             if backend.user_exists(user_management=weaviate_user_management, gmail=email):
                 try:
                     response_and_id = await backend.insert_message(
@@ -253,7 +279,7 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
                         user_management=weaviate_user_management,
                         gmail=email,
                         input_text=data.question
-                    )
+                    )  # Insert the question and answer into the database
                 except Exception as e:
                     logger.error(f"error: {e}")
                     response_and_id = [
@@ -264,28 +290,33 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
 
             else:
                 response_and_id = [
-                    "I'm sorry, it seems like there has been an error. Please login using your BU email",
+                    "I'm sorry, it seems like there has been an error. Please try logging in again.",
                     str(uuid.uuid4())
-                ]
+                ]  # User does not exist in the database
         else:
             response_and_id = [
                 "I'm sorry, it seems like there was an error when you signed in. "
-                "Please clear your cookies and log in again using your BU email",
+                "Please clear your cookies and log in again using your BU email.",
                 str(uuid.uuid4())
-            ]
-
-        return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])
+            ]  # User is not a BU student
     else:
         logger.warning(f"User not authenticated")
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        response_and_id = [
+            "I'm sorry, it seems like there was an error when you signed in. "
+            "Please clear your cookies and log in again using your BU email",
+            str(uuid.uuid4())
+        ]  # User is not authenticated
+
+    return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])  # Return the response
 
 
 @app.api_route("/feedback", methods=["POST"])
 async def provide_feedback(data: FeedbackRequest, auth_token: str = Cookie(None)):
-    # Store or handle feedback
-    # Returns a 200 status code with no body on success
-    jwt_token = auth_token
-    email = get_current_email(jwt_token=jwt_token)
+    """
+    Provide feedback on the bot's response.
+    """
+    jwt_token = auth_token  # Get the JWT token from the cookies
+    email = get_current_email(jwt_token=jwt_token)  # Decode and verify the JWT token
     if backend.user_exists(user_management=weaviate_user_management, gmail=email):
         try:
             backend.insert_feedback(user_management=weaviate_user_management, message_id=data.responseID,
