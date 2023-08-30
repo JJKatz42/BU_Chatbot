@@ -2,16 +2,28 @@ import time
 from dataclasses import asdict
 import datetime
 
-from src.libs.search.search_agent.search_agent import SearchAgent
 import src.libs.storage.user_data_classes as data_classes
-import src.libs.storage.user_management as user_management
 import src.libs.logging as logging
-
+from src.libs.search.search_agent.search_agent import SearchAgent
+from src.libs.storage.user_management import UserDatabaseManager
 
 logger = logging.getLogger(__name__)
 
 
 async def search_agent_job(agent: SearchAgent, query: str) -> dict:
+    """
+    Runs a search agent job.
+
+    Parameters:
+    - agent (SearchAgent): The search agent to use for the job.
+    - query (str): The search query to run.
+
+    Returns:
+    - dict: A dictionary containing the search result and metadata. Includes:
+        - answer (str): The generated answer text.
+        - sources (list): List of source objects used to generate answer.
+        - search_job_duration (float): Time taken to run the search job.
+    """
     logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
     result = await agent.run(query)
@@ -44,16 +56,15 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
 
         response = f"{agent_result['answer']} <br><br> Sources: {url_str}"  # Use HTML break line tag here
 
-        # logger.info("response: ", response)
-
-        # response = "It worked"
-
         return response
-    except:
-        return "Sorry, there was an error finding your answer please check the get_answer function in the testerbackend file."
+    except Exception as e:
+        logger.error(f"Error getting answer from agent: {e}")
+
+        return "Sorry, there was an error finding your answer please wait a few moments before trying again."
 
 
-async def insert_message(search_agent: SearchAgent, user_management: user_management.UserDatabaseManager, gmail: str, input_text: str):
+async def insert_message(search_agent: SearchAgent, user_management: UserDatabaseManager, gmail: str,
+                         input_text: str):
     # Insert the message into the database
     is_good_query = "True"
     if "False" in is_good_query:
@@ -93,11 +104,11 @@ async def insert_message(search_agent: SearchAgent, user_management: user_manage
         return ["Sorry, you are not a registered user. Please register at https://busearch.com", "None"]
 
 
-def user_exists(user_management: user_management.UserDatabaseManager, gmail: str) -> bool:
+def user_exists(user_management: UserDatabaseManager, gmail: str) -> bool:
     return user_management.user_exists(gmail)
 
 
-def insert_user(user_management: user_management.UserDatabaseManager, gmail: str) -> bool:
+def insert_user(user_management: UserDatabaseManager, gmail: str) -> bool:
     user = data_classes.User(
         gmail=gmail,
         created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -121,7 +132,7 @@ def insert_user(user_management: user_management.UserDatabaseManager, gmail: str
     return succeeded
 
 
-def insert_feedback(user_management: user_management.UserDatabaseManager, message_id: str, is_liked: bool):
+def insert_feedback(user_management: UserDatabaseManager, message_id: str, is_liked: bool):
     logger.info("Inserting like into user")
     user_management.insert_liked(
         liked=is_liked,
