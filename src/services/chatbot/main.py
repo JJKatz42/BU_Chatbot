@@ -197,14 +197,42 @@ async def auth_callback(code: str = Query(...)):
         if user_inserted_successfully:
             jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
             response = RedirectResponse(url="/")
-            response.set_cookie(key="auth_token", value=jwt_token)  # Set the token as a cookie
+            response.set_cookie(key="auth_token", value=jwt_token, secure=True, httponly=True, samesite="lax", max_age=7 * 24 * 60 * 60)  # Set the token as a cookie
             return response
         else:
-            response = RedirectResponse(url="/?message=you-must-use-a-BU-account-access-this-page")
+            response = RedirectResponse(url="/?message=you-must-use-a-BU-account-to-access-this-page")
             return response
 
-    response = RedirectResponse(url="/?message=you-must-use-a-BU-account-access-this-page")
+    response = RedirectResponse(url="/?message=you-must-use-a-BU-account-to-access-this-page")
     return response
+
+
+@app.get("/logout")
+async def logout(request: Request):
+    """
+    Logs out the user by clearing the JWT token from their cookies.
+    """
+    response = RedirectResponse(url="/")  # Redirect user to the root after logging out
+    response.delete_cookie("auth_token")  # Delete the JWT token cookie
+    return response
+
+
+@app.get("/is-authorized")
+async def is_authorized(request: Request):
+    """
+    Checks if the user has a valid JWT token in their cookies and is authorized.
+    """
+    jwt_token = request.cookies.get("auth_token")
+    if not jwt_token:
+        return {"isAuthorized": False}
+
+    try:
+        get_current_email(jwt_token=jwt_token)
+        return {"isAuthorized": True}
+    except HTTPException as e:
+        if e.status_code == 401:
+            return {"isAuthorized": False}
+        raise  # Any other unexpected errors can be raised normally
 
 
 @app.post("/chat", response_model=ChatResponse)
