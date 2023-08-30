@@ -58,7 +58,9 @@ WHITE_LISTED_EMAILS = [
     "bradleyjocelyn3@gmail.com",
     "georgeflint@berkeley.edu",
     "jonahkatz@gmail.com",
-    "ernisierra@gmail.com"
+    "ernisierra@gmail.com",
+    "ellenkatz@gmail.com",
+    "henrykatz@gmail.com"
 ]
 
 SECRET_KEY = config.get("SECRET_KEY")
@@ -139,9 +141,10 @@ def get_jwt_token(request: Request) -> str:
 app = FastAPI()
 
 file_dir = pathlib.Path(__file__).parent.resolve()
-index_path = (file_dir / "static").as_posix()
 
-app.mount("/static", StaticFiles(directory=index_path), name="static")
+INDEX_PATH = (file_dir / "static").as_posix()
+
+app.mount("/static", StaticFiles(directory=INDEX_PATH), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -154,9 +157,7 @@ app.add_middleware(
 
 @app.get("/")
 async def read_root():
-    file_dir = pathlib.Path(__file__).parent.resolve()
-    index_path = (file_dir / "static/index.html").as_posix()
-    return FileResponse(index_path)
+    return FileResponse(INDEX_PATH + "/index.html")
 
 
 @app.get("/login")
@@ -196,14 +197,42 @@ async def auth_callback(code: str = Query(...)):
         if user_inserted_successfully:
             jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
             response = RedirectResponse(url="/")
-            response.set_cookie(key="auth_token", value=jwt_token)  # Set the token as a cookie
+            response.set_cookie(key="auth_token", value=jwt_token, secure=True, httponly=True, samesite="lax", max_age=7 * 24 * 60 * 60)  # Set the token as a cookie
             return response
         else:
-            response = RedirectResponse(url="/?message=you-must-use-a-BU-account-access-this-page")
+            response = RedirectResponse(url="/?message=you-must-use-a-BU-account-to-access-this-page")
             return response
 
-    response = RedirectResponse(url="/?message=you-must-use-a-BU-account-access-this-page")
+    response = RedirectResponse(url="/?message=you-must-use-a-BU-account-to-access-this-page")
     return response
+
+
+@app.get("/logout")
+async def logout(request: Request):
+    """
+    Logs out the user by clearing the JWT token from their cookies.
+    """
+    response = RedirectResponse(url="/")  # Redirect user to the root after logging out
+    response.delete_cookie("auth_token")  # Delete the JWT token cookie
+    return response
+
+
+@app.get("/is-authorized")
+async def is_authorized(request: Request):
+    """
+    Checks if the user has a valid JWT token in their cookies and is authorized.
+    """
+    jwt_token = request.cookies.get("auth_token")
+    if not jwt_token:
+        return {"isAuthorized": False}
+
+    try:
+        get_current_email(jwt_token=jwt_token)
+        return {"isAuthorized": True}
+    except HTTPException as e:
+        if e.status_code == 401:
+            return {"isAuthorized": False}
+        raise  # Any other unexpected errors can be raised normally
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -235,12 +264,13 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
 
             else:
                 response_and_id = [
-                    "I'm sorry, it seems like there has been an error. Please login using your BU email above",
+                    "I'm sorry, it seems like there has been an error. Please login using your BU email",
                     str(uuid.uuid4())
                 ]
         else:
             response_and_id = [
-                "I'm sorry, it seems like you are not logged in. Please login using your BU email above",
+                "I'm sorry, it seems like there was an error when you signed in. "
+                "Please clear your cookies and log in again using your BU email",
                 str(uuid.uuid4())
             ]
 
