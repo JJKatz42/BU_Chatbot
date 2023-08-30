@@ -38,23 +38,27 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
     try:
         agent_result = await search_agent_job(search_agent, input_text)
 
-        sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
+        if "related to your query." in agent_result['answer']:
+            response = agent_result['answer']
 
-        # Extract the first 5 URLs
+        else:
+            sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
 
-        top_5_urls = [item['url'] for item in sorted_lst[:10]]
+            # Extract the first 5 URLs
 
-        url_str = ""
-        num = 0
-        for url in top_5_urls:
-            if url in url_str:
-                continue
+            top_10_urls = [item['url'] for item in sorted_lst[:10]]
 
-            num += 1
-            url_str += "<br>"  # Use HTML break line tag here
-            url_str += f"{num}. {url} "
+            url_str = ""
+            num = 0
+            for url in top_10_urls:
+                if url in url_str:
+                    continue
 
-        response = f"{agent_result['answer']} <br><br> Sources: {url_str}"  # Use HTML break line tag here
+                num += 1
+                url_str += "<br>"  # Use HTML break line tag here
+                url_str += f"{num}. {url} "
+
+            response = f"{agent_result['answer']} <br><br> Sources: {url_str}"  # Use HTML break line tag here
 
         return response
     except Exception as e:
@@ -72,9 +76,8 @@ async def insert_message(search_agent: SearchAgent, user_management: UserDatabas
         return [response, "None"]
 
     if user_management.user_exists(gmail):
-        response = await get_answer(search_agent, input_text)
 
-        # response = "This is a test response 2"
+        response = await get_answer(search_agent, input_text)
         # Create messages
         logger.info("Creating user message")
         user_message = data_classes.UserMessage(
