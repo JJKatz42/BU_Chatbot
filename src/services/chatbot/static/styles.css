@@ -1,6 +1,14 @@
 @import url("https://use.typekit.net/edk5oho.css");
+ol {
+    list-style: decimal;
+}
+
 .chat-input-container.disabled {
-    opacity: 0.4;
+    /* opacity: 0.4; */
+}
+
+button.active:hover {
+    opacity: 1 !important;
 }
 
 .discord-button {
@@ -23,8 +31,9 @@
 }
 
 a.link {
-    color: red !important;
+    color: rgb(0, 153, 255) !important;
     text-decoration: underline !important;
+    overflow-wrap: break-word;
 }
 
 .switch {
@@ -90,10 +99,6 @@ input:checked+.slider:before {
     left: 0 !important;
     transform: none !important;
     background-color: transparent !important;
-}
-
-.navbar-menu a {
-    transform: translate(0, 15px);
 }
 
 span.background {
@@ -172,7 +177,7 @@ a {
 }
 
 .navbar-container {
-    max-width: 1200px;
+    /* max-width: 1200px; */
     width: 100%;
     padding: 0 20px;
     display: flex;
@@ -183,6 +188,7 @@ a {
 .navbar-menu {
     display: flex;
     gap: 20px;
+    align-items: center;
 }
 
 .navbar-menu a:hover,
@@ -254,7 +260,7 @@ a {
     margin-left: 13px;
 }
 
-@media only screen and (max-width: 1030px) {
+@media only screen and (max-width: 740px) {
     .chat-input-container {
         width: calc(100% - 30px) !important;
         margin-left: 10px;
@@ -270,10 +276,10 @@ a {
         width: 100%;
     }
     .navbar-menu {
-        gap: 10px;
+        gap: 4px;
     }
     .chat-response {
-        width: calc(100% - 40px) !important
+        width: calc(100% - 40px) !important;
     }
     .chat-input {
         max-width: 100%;
@@ -299,6 +305,33 @@ a {
         height: calc(100% - 60px) !important;
         position: relative !important;
     }
+    .feedback-buttons {
+        margin-left: 0 !important;
+    }
+}
+
+input:checked+.slider:before {
+    transform: translateX(18px);
+    background-color: var(--light-gray);
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 19px;
+    width: 19px;
+    left: 4px;
+    bottom: 3px;
+    background-color: var(--bu-red);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 45px;
+    height: 25px;
 }
 
 .send-button {
@@ -318,11 +351,9 @@ a {
     padding: 20px;
     margin: 10px auto;
     border-radius: 5px;
-    word-wrap: break-word;
+    /* word-wrap: break-word; */
     text-align: left;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    display: block !important;
     gap: 10px;
     width: 600px;
 }
@@ -383,7 +414,7 @@ a {
     background-color: var(--black);
     color: var(--white);
     border: none;
-    padding: 5px 10px;
+    padding: 10px;
     cursor: pointer;
     border-radius: 5px;
 }
@@ -439,7 +470,6 @@ a {
 .settings-sidebar-tab,
 .sidebar-tab {
     padding: 10px;
-    margin-bottom: 14px;
     border-radius: 10px;
 }
 
@@ -631,8 +661,9 @@ p.welcome-text {
 .feedback-buttons {
     /* width: 285px; */
     position: inherit;
-    margin-left: 10px;
+    /* margin-left: 10px; */
     /* margin-right: -20px; */
+    text-align: right;
 }
 
 button:hover {

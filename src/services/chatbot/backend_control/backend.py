@@ -49,12 +49,13 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
         for url in top_5_urls:
             if url in url_str:
                 continue
+            url_str += f'<li><a class="link" href="{url}" target="_blank">{url}</a></li>'
 
-            num += 1
-            url_str += "<br>"  # Use HTML break line tag here
-            url_str += f"{num}. {url} "
+            # num += 1
+            # url_str += "<br>"  # Use HTML break line tag here
+            # url_str += f"{num}. {url} "
 
-        response = f"{agent_result['answer']} <br><br> Sources: {url_str}"  # Use HTML break line tag here
+        response = f"<p><strong>BUsearch: </strong>{agent_result['answer']}</p> <p>Sources:</p> <ol>{url_str}</ol>"  # Use HTML break line tag here
 
         return response
     except Exception as e:

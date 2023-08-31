@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BUsearch</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="static/styles.css">
 </head>
-
-
 <body>
     <div class="navbar">
         <div class="navbar-container">
@@ -25,12 +22,10 @@
             </div>
         </div>
     </div>
-
     <div class="sidebar">
         <div class="sidebar-tab"><a href="#">Current Chat</a></div>
         <!-- <button class="toggle-button" onclick="toggleDarkMode()">toggle dark/light mode</button> -->
     </div>
-
     <div class="chat-space">
         <div class="chat-space-container">
             <!-- Existing chat-response blocks will be dynamically generated -->
@@ -49,6 +44,7 @@
         <button class="send-button" onclick="sendMessage()"></button>
     </div>
 
+
     <!-- Settings Popup -->
     <div class="settings-popup light-mode" id="settingsPopup">
         <button class="settings-close" onclick="closeSettings()">&times;</button>
@@ -61,15 +57,12 @@
             <div class="settings-content" data-content="about">
                 <h3>About BUsearch</h3>
                 <p>Welcome to BUsearch, the informational chatbot designed to make relevant university information instantly accessible, ensuring swift and concise answers for every Boston University student.</p>
-
                 <h3>Our Mission</h3>
                 <p>At BUsearch, our mission is to empower every student at Boston University with instant access to essential information, ensuring a seamless and enriched campus experience. We believe in harnessing the power of technology to bridge the
                     gap between students and the vast resources available at BU.</p>
-
                 <h3>Our Product</h3>
                 <p>BUsearch is an informational assistant custom-built for every BU student's day-to-day needs. Whether you're a freshman trying to navigate your way around campus, a senior looking for graduation details, or an international student seeking
                     housing advice, BUsearch is here to assist.</p>
-
                 <h3>Key Features</h3>
                 <ul>
                     <li>Instant Answers: No more waiting for appointments or sifting through web pages. Get immediate responses to your questions in just seconds.
@@ -81,11 +74,9 @@
                     <li>Secure and Private: We prioritize your privacy. Rest assured, your interactions with BUsearch are confidential.
                     </li>
                 </ul>
-
                 <h3>Our Team</h3>
                 <p>We are a group of dedicated students across multiple universities, including Boston University, UC Berkeley, and Columbia, who are passionate about utilizing the newest technology to enhance the academic experience and streamline access
                     to essential resources for students everywhere, starting with Boston University.</p>
-
                 <h3>Join Us</h3>
                 <p>We believe in the power of collaboration. If you have suggestions, feedback, or want to be a part of the team, please reach out.</p>
             </div>
@@ -99,18 +90,11 @@
         <button class="save-button" onclick="closeSettings()">save</button> -->
         </div>
     </div>
-
     <div class="discord-button">
-        <a href="https://discord.gg/bt6ZhyNB" target="_blank"><img src="images/discord.png" alt="discord"></a>
+        <a href="https://discord.gg/bt6ZhyNB" target="_blank"><img src="static/images/discord.png" alt="discord"></a>
     </div>
-
     <!-- Background overlay -->
     <div class="overlay" id="overlay"></div>
-
-
-    <script src="script.js"></script>
-
-
+    <script src="/static/script.js"></script>
 </body>
-
 </html>
