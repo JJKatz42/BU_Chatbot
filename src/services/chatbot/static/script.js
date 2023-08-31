@@ -1,5 +1,7 @@
-const jwt_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Impqa2F0ekBidS5lZHUifQ._PYi4cxWBGHa7cL90K4RNrDXC_AApqkbyCzfUwNfrx8';
-const urlParams = new URLSearchParams(window.location.search);
+// const jwt_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Impqa2F0ekBidS5lZHUifQ._PYi4cxWBGHa7cL90K4RNrDXC_AApqkbyCzfUwNfrx8';
+// const urlParams = new URLSearchParams(window.location.search);
+
+// sendButton.disabled = false;
 
 const API_BASE_URL = "https://busearch-wbtak2vipq-ue.a.run.app";
 
@@ -8,8 +10,18 @@ let currentResponseID = null
 document.getElementById('loginBtn').addEventListener('click', function() {
     // Start the OAuth2 flow by redirecting to the /login endpoint
     console.log("Login button clicked"); // Debugging line
-    window.location.href = API_BASE_URL + `/login`;
+    window.location.href = API_BASE_URL + `/login`
 });
+
+function makeUrlsClickable(str) {
+    // Use a regular expression to match URLs
+    const urlPattern = /https?:\/\/[^\s]+/g;
+
+    // Replace URLs in the string with anchor tags
+    return str.replace(urlPattern, function(url) {
+        return `<a href="${url}" target="_blank">${url}</a>`;
+    });
+}
 
 let thinkingInterval;
 
@@ -42,6 +54,7 @@ async function fetchPageTitle(url) {
     return titleMatch ? titleMatch[1] : url;
 }
 
+let lastFeedbackDiv = null; // Variable to keep track of the last feedback div
 
 function sendMessage() {
 
@@ -79,11 +92,12 @@ function sendMessage() {
     // Start animating the "thinking..." message
     animateThinking(thinkingMsgDiv);
 
-    fetch(`/chat`, {
+    fetch(`${API_BASE_URL}/chat`, {
             method: 'POST',
             credentials: 'include',
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imdlb3JnZWZsaW50QGJlcmtlbGV5LmVkdSJ9.OW0OCq_f0c-IOL_GBZmv383PaquJWcVQZhcnIiPfVN8"
             },
             body: JSON.stringify(requestData)
         })
@@ -98,25 +112,17 @@ function sendMessage() {
         .then(data => {
             currentResponseID = data.responseID;
 
+
+
             // Replace "thinking..." with actual response
-            const responseText = data.response;
+            let responseText = convertPlainTextURLsToLinks(data.response);
 
-            // Detect URLs in the response text
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            let modifiedResponseText = responseText;
+            thinkingMsgDiv.innerHTML = `<strong>BUsearch:</strong> ${responseText}`;
 
-            const urls = responseText.match(urlRegex);
-            if (urls) {
-                for (const url of urls) {
-                    const title = fetchPageTitle(url); // Fetch the title (may not work due to CORS)
-                    modifiedResponseText = modifiedResponseText.replace(url, `<a href="${url}" target="_blank">${title}</a>`);
-                }
+            if (lastFeedbackDiv) {
+                lastFeedbackDiv.style.display = 'none';
             }
 
-            thinkingMsgDiv.innerHTML = `<strong>BUsearch:</strong> ${modifiedResponseText}`;
-
-
-            // Create feedback buttons
             const feedbackDiv = document.createElement('div');
             feedbackDiv.className = 'feedback-buttons';
             feedbackDiv.innerHTML = `
@@ -126,6 +132,9 @@ function sendMessage() {
 
             // Append feedback buttons to the BUsearch response div
             thinkingMsgDiv.appendChild(feedbackDiv);
+
+            // Update the last feedback button container
+            lastFeedbackDiv = feedbackDiv;
 
             // Attach event listeners to the newly created buttons
             document.getElementById(`likeBtn-${currentResponseID}`).addEventListener('click', function() {
@@ -139,10 +148,12 @@ function sendMessage() {
             });
         })
         .catch(error => {
+            stopThinkingAnimation()
             console.error('Error:', error);
+            thinkingMsgDiv.innerHTML = "<strong>BUsearch:</strong> there was an error. Please reload and try again."
 
             // Replace "thinking..." with error message
-            thinkingMsgDiv.innerHTML = "<strong>BUsearch:</strong> Please log in using you BU email.";
+            // thinkingMsgDiv.innerHTML = "<strong>BUsearch:</strong> Please log in using you BU email.";
         })
         .finally(() => {
             // Re-enable the send button
@@ -207,7 +218,8 @@ function sendFeedback(responseID, isLiked) {
             method: 'POST',
             credentials: 'include',
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imdlb3JnZWZsaW50QGJlcmtlbGV5LmVkdSJ9.OW0OCq_f0c-IOL_GBZmv383PaquJWcVQZhcnIiPfVN8"
             },
             body: JSON.stringify({
                 responseID: responseID,
@@ -256,12 +268,12 @@ document.querySelectorAll('.settings-sidebar-tab').forEach(tab => {
 
 document.addEventListener('keydown', closeSettingsWithEsc);
 
-document.getElementById('likeBtn').addEventListener('click', function() {
+document.getElementsByClassName('likeBtn').addEventListener('click', function() {
     toggleActiveState(this, document.getElementById('dislikeBtn'));
     sendFeedback(currentResponseID, true);
 });
 
-document.getElementById('dislikeBtn').addEventListener('click', function() {
+document.getElementsByClassName('dislikeBtn').addEventListener('click', function() {
     toggleActiveState(this, document.getElementById('likeBtn'));
     sendFeedback(currentResponseID, false);
 });

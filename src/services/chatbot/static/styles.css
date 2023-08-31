@@ -1,6 +1,10 @@
 @import url("https://use.typekit.net/edk5oho.css");
 .chat-input-container.disabled {
-    opacity: 0.4;
+    /* opacity: 0.4; */
+}
+
+button.active:hover {
+    opacity: 1 !important;
 }
 
 .discord-button {
@@ -92,10 +96,6 @@ input:checked+.slider:before {
     background-color: transparent !important;
 }
 
-.navbar-menu a {
-    transform: translate(0, 15px);
-}
-
 span.background {
     background-color: #aa0000;
     border-radius: 5px;
@@ -172,7 +172,7 @@ a {
 }
 
 .navbar-container {
-    max-width: 1200px;
+    /* max-width: 1200px; */
     width: 100%;
     padding: 0 20px;
     display: flex;
@@ -183,6 +183,7 @@ a {
 .navbar-menu {
     display: flex;
     gap: 20px;
+    align-items: center;
 }
 
 .navbar-menu a:hover,
@@ -439,7 +440,6 @@ a {
 .settings-sidebar-tab,
 .sidebar-tab {
     padding: 10px;
-    margin-bottom: 14px;
     border-radius: 10px;
 }
 
