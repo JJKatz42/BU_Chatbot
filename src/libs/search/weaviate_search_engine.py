@@ -300,6 +300,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
             query = query.with_near_text(content={"concepts": [query_str]})
         elif mode == "hybrid":
             query = query.with_hybrid(query=query_str, properties=["text"], alpha=alpha)
+            query = query.with_autocut(1)
         elif mode == "keyword":
             query = query.with_bm25(query=query_str, properties=["text"])
 
