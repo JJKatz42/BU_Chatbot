@@ -38,30 +38,31 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
     try:
         agent_result = await search_agent_job(search_agent, input_text)
 
-        sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
+        if "related to your query." in agent_result['answer'] or "couldn't find any relevant" in agent_result['answer']:
+            response = f"<p><strong>BUsearch: </strong>{agent_result['answer']}</p>"
 
-        # Extract the first 5 URLs
+        else:
+            sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
 
-        top_5_urls = [item['url'] for item in sorted_lst[:10]]
+            # Extract the first 5 URLs
+            top_10_urls = [item['url'] for item in sorted_lst[:10]]
 
-        url_str = ""
-        num = 0
-        for url in top_5_urls:
-            if url in url_str:
-                continue
-            url_str += f'<li><a class="link" href="{url}" target="_blank">{url}</a></li>'
+            url_str = ""
 
-            # num += 1
-            # url_str += "<br>"  # Use HTML break line tag here
-            # url_str += f"{num}. {url} "
+            for url in top_10_urls:
+                if url in url_str:
+                    continue
 
-        response = f"<p><strong>BUsearch: </strong>{agent_result['answer']}</p> <p>Sources:</p> <ol>{url_str}</ol>"  # Use HTML break line tag here
+                url_str += f'<li><a class="link" href="{url}" target="_blank">{url}</a></li>'
+
+            response = f"<p><strong>BUsearch: </strong>{agent_result['answer']}</p> <p>Sources:</p> <ol>{url_str}</ol>"  # Use HTML break line tag here
 
         return response
+
     except Exception as e:
         logger.error(f"Error getting answer from agent: {e}")
 
-        return "Sorry, there was an error finding your answer please wait a few moments before trying again."
+        return "<p><strong>BUsearch: </strong>Sorry, there was an error finding your answer please wait a few moments before trying again.</p>"
 
 
 async def insert_message(search_agent: SearchAgent, user_management: UserDatabaseManager, gmail: str,
@@ -73,9 +74,8 @@ async def insert_message(search_agent: SearchAgent, user_management: UserDatabas
         return [response, "None"]
 
     if user_management.user_exists(gmail):
-        response = await get_answer(search_agent, input_text)
 
-        # response = "This is a test response 2"
+        response = await get_answer(search_agent, input_text)
         # Create messages
         logger.info("Creating user message")
         user_message = data_classes.UserMessage(
