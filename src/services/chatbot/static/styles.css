@@ -90,7 +90,7 @@ input:checked+.slider:before {
 .chat-input-container {
     left: 0 !important;
     align-self: center !important;
-    width: calc(100% - 78px) !important;
+    width: 640px;
 }
 
 .toggle-button.working-version {
@@ -236,16 +236,16 @@ a {
 
 .chat-input-container {
     display: flex;
-    gap: 10px;
     align-items: center;
-    position: fixed;
-    bottom: 20px;
-    margin: 34px;
-    left: 250px;
-    width: calc(100% - 330px);
     box-sizing: border-box;
     background-color: var(--white);
     justify-content: center;
+    max-width: 640px;
+    position: absolute;
+    left: 50% !important;
+    transform: translateX(-50%);
+    margin-left: 0px;
+    bottom: 54px;
 }
 
 .chat-input {
@@ -256,27 +256,36 @@ a {
     border: none;
     border-radius: 5px;
     outline: none;
-    max-width: 890px;
-    margin-left: 13px;
+    box-shadow: 1px 1px 5px 0.0001px darkgray;
+}
+
+@media only screen and (max-width: 900px) {
+    .discord-button {
+        display: none !important;
+    }
 }
 
 @media only screen and (max-width: 740px) {
     .chat-input-container {
-        width: calc(100% - 30px) !important;
-        margin-left: 10px;
-        margin-right: 10px;
+        width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .send-button {
+        transform: translateX(-20px);
     }
     .discord-button {
         display: none;
     }
-    .navbar {
-        font-size: 14px;
+    .navbar,
+    .navbar a {
+        font-size: 13px !important;
     }
     .chat-response {
         width: 100%;
     }
     .navbar-menu {
-        gap: 4px;
+        gap: 18px;
     }
     .chat-response {
         width: calc(100% - 40px) !important;
@@ -335,7 +344,7 @@ input:checked+.slider:before {
 }
 
 .send-button {
-    background-color: var(--bu-red);
+    background-color: transparent !important;
     color: var(--white);
     font-family: var(--monospace-font);
     font-weight: bold;
@@ -356,10 +365,6 @@ input:checked+.slider:before {
     display: block !important;
     gap: 10px;
     width: 600px;
-}
-
-.chat-input {
-    max-width: 585px;
 }
 
 .chat-response {
@@ -414,7 +419,7 @@ input:checked+.slider:before {
     background-color: var(--black);
     color: var(--white);
     border: none;
-    padding: 10px;
+    padding: 0px;
     cursor: pointer;
     border-radius: 5px;
 }
@@ -585,19 +590,30 @@ input:checked+.slider:before {
 
 .send-button::before {
     content: "";
-    background-image: url("images/send.png");
+    background-image: url(images/send.png);
     background-size: cover;
     display: inline-block;
-    width: 75%;
-    height: 75%;
-    filter: invert(1);
-    margin-bottom: -3px;
+    width: 64%;
+    height: 64%;
+    filter: invert(0.5);
+    margin-bottom: -2px;
 }
 
 .send-button {
-    width: 45px;
-    height: 45px;
-    padding: 12px;
+    width: 34px;
+    height: 34px;
+    /* padding: 12px; */
+    position: absolute;
+    right: 10px;
+    background-color: transparent;
+}
+
+.send-button.active {
+    background-color: var(--bu-red);
+}
+
+.send-button.active::before {
+    filter: invert(1);
 }
 
 .likeBtn,
@@ -688,4 +704,31 @@ button:hover {
 
 .dislikeBtn.active {
     background-image: url(images/dislike-white.png) !important;
+}
+
+
+/* .chat-input-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    position: fixed;
+    margin: 34px;
+    left: 250px;
+    width: calc(100% - 330px);
+    box-sizing: border-box;
+    background-color: var(--white);
+    justify-content: center;
+} */
+
+.send-button {
+    background-color: var(--bu-red);
+    color: var(--white);
+    font-family: var(--monospace-font);
+    font-weight: bold;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    text-transform: lowercase;
+    border-radius: 5px;
+    position: absolute;
 }

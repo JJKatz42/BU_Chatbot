@@ -1,16 +1,36 @@
-// const jwt_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Impqa2F0ekBidS5lZHUifQ._PYi4cxWBGHa7cL90K4RNrDXC_AApqkbyCzfUwNfrx8';
-// const urlParams = new URLSearchParams(window.location.search);
-
-// sendButton.disabled = false;
-
-// const API_BASE_URL = "https://busearch-wbtak2vipq-ue.a.run.app";
 
 let currentResponseID = null
+
+let thinkingInterval;
+
+let lastFeedbackDiv = null; // Variable to keep track of the last feedback div
+
 
 document.getElementById('loginBtn').addEventListener('click', function() {
     // Start the OAuth2 flow by redirecting to the /login endpoint
     console.log("Login button clicked"); // Debugging line
     window.location.href = `/login`
+});
+
+// Attach click event listeners to sidebar tabs
+document.querySelectorAll('.settings-sidebar-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        console.log("Tab clicked"); // Debugging line
+        const selectedTab = this.getAttribute('data-tab');
+        switchSettingsContent(selectedTab);
+    });
+});
+
+document.addEventListener('keydown', closeSettingsWithEsc);
+
+document.getElementsByClassName('likeBtn').addEventListener('click', function() {
+    toggleActiveState(this, document.getElementById('dislikeBtn'));
+    sendFeedback(currentResponseID, true);
+});
+
+document.getElementsByClassName('dislikeBtn').addEventListener('click', function() {
+    toggleActiveState(this, document.getElementById('likeBtn'));
+    sendFeedback(currentResponseID, false);
 });
 
 function makeUrlsClickable(str) {
@@ -23,7 +43,6 @@ function makeUrlsClickable(str) {
     });
 }
 
-let thinkingInterval;
 
 function animateThinking(thinkingMsgDiv) {
     let counter = 0;
@@ -44,7 +63,53 @@ function stopThinkingAnimation() {
     clearInterval(thinkingInterval);
 }
 
-let lastFeedbackDiv = null; // Variable to keep track of the last feedback div
+
+function openSettings(tab) {
+    const settingsPopup = document.getElementById('settingsPopup');
+    const overlay = document.getElementById('overlay');
+
+    // Show the popup and overlay
+    settingsPopup.style.display = 'block';
+    overlay.style.display = 'block';
+
+    // Switch to the tab specified in the argument
+    if (tab) {
+        switchSettingsContent(tab);
+    }
+}
+
+function closeSettings() {
+    const settingsPopup = document.getElementById('settingsPopup');
+    const overlay = document.getElementById('overlay');
+    settingsPopup.style.display = 'none';
+    overlay.style.display = 'none';
+}
+
+function closeSettingsWithEsc(event) {
+    if (event.key === 'Escape') {
+        closeSettings();
+    }
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
+
+function handleEnter(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function toggleActiveState(currentBtn, otherBtn) {
+    if (currentBtn.classList.contains('active')) {
+        currentBtn.classList.remove('active');
+    } else {
+        currentBtn.classList.add('active');
+        otherBtn.classList.remove('active');
+    }
+}
+
 
 function sendMessage() {
 
@@ -151,52 +216,6 @@ function sendMessage() {
         });
 }
 
-function openSettings(tab) {
-    const settingsPopup = document.getElementById('settingsPopup');
-    const overlay = document.getElementById('overlay');
-
-    // Show the popup and overlay
-    settingsPopup.style.display = 'block';
-    overlay.style.display = 'block';
-
-    // Switch to the tab specified in the argument
-    if (tab) {
-        switchSettingsContent(tab);
-    }
-}
-
-function closeSettings() {
-    const settingsPopup = document.getElementById('settingsPopup');
-    const overlay = document.getElementById('overlay');
-    settingsPopup.style.display = 'none';
-    overlay.style.display = 'none';
-}
-
-function closeSettingsWithEsc(event) {
-    if (event.key === 'Escape') {
-        closeSettings();
-    }
-}
-
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-}
-
-function handleEnter(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
-    }
-}
-
-function toggleActiveState(currentBtn, otherBtn) {
-    if (currentBtn.classList.contains('active')) {
-        currentBtn.classList.remove('active');
-    } else {
-        currentBtn.classList.add('active');
-        otherBtn.classList.remove('active');
-    }
-}
-
 /**
  * Send feedback to the server.
  * @param {string} responseID - The unique ID of the BUsearch's response.
@@ -245,25 +264,3 @@ function switchSettingsContent(selectedTab) {
         selectedContent.style.display = 'block';
     }
 }
-
-// Attach click event listeners to sidebar tabs
-document.querySelectorAll('.settings-sidebar-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        console.log("Tab clicked"); // Debugging line
-        const selectedTab = this.getAttribute('data-tab');
-        switchSettingsContent(selectedTab);
-    });
-});
-
-
-document.addEventListener('keydown', closeSettingsWithEsc);
-
-document.getElementsByClassName('likeBtn').addEventListener('click', function() {
-    toggleActiveState(this, document.getElementById('dislikeBtn'));
-    sendFeedback(currentResponseID, true);
-});
-
-document.getElementsByClassName('dislikeBtn').addEventListener('click', function() {
-    toggleActiveState(this, document.getElementById('likeBtn'));
-    sendFeedback(currentResponseID, false);
-});
