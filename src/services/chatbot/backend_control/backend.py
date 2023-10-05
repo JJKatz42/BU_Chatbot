@@ -1,9 +1,9 @@
+import datetime
 import time
 from dataclasses import asdict
-import datetime
 
-import src.libs.storage.user_data_classes as data_classes
 import src.libs.logging as logging
+import src.libs.storage.user_data_classes as data_classes
 from src.libs.search.search_agent.search_agent import SearchAgent
 from src.libs.storage.user_management import UserDatabaseManager
 
@@ -19,17 +19,20 @@ async def search_agent_job(agent: SearchAgent, query: str) -> dict:
     - query (str): The search query to run.
 
     Returns:
-    - dict: A dictionary containing the search result and metadata. Includes:
-        - answer (str): The generated answer text.
-        - sources (list): List of source objects used to generate answer.
-        - search_job_duration (float): Time taken to run the search job.
+        dict: A dictionary containing the search result and metadata. Includes:
+            answer (str): The generated answer text.
+            sources (list): List of source objects used to generate answer.
+            search_job_duration (float): Time taken to run the search job.
     """
     logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
+
     result = await agent.run(query)
+
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
     logger.info(f"Running job: {query} finished")
+
     return result_dict
 
 
@@ -62,54 +65,98 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
     except Exception as e:
         logger.error(f"Error getting answer from agent: {e}")
 
-        return "<p><strong>BUsearch: </strong>Sorry, there was an error finding your answer please wait a few moments before trying again.</p>"
+        return ("<p><strong>BUsearch: </strong>Sorry, there was an error finding your answer please wait a few moments "
+                "before trying again.</p>")
 
 
-async def insert_message(search_agent: SearchAgent, user_management: UserDatabaseManager, gmail: str,
-                         input_text: str):
+async def insert_message(
+        search_agent: SearchAgent,
+        user_management: UserDatabaseManager,
+        gmail: str,
+        input_text: str,
+        cap: int
+):
+    """
+    Inserts a message into the database.
+
+    Parameters:
+        search_agent (SearchAgent): The search agent to use.
+        user_management (UserDatabaseManager): The user management object to use.
+        gmail (str): The gmail of the user to insert the message for.
+        input_text (str): The input text to insert.
+        cap (int): The maximum number of messages a user can send within 24 hours.
+
+    Returns:
+        list: A list containing the response and the bot message uuid.
+    """
     # Insert the message into the database
     is_good_query = "True"
+
     if "False" in is_good_query:
         response = "Sorry, this is a bad query. Please try again."
         return [response, "None"]
 
     if user_management.user_exists(gmail):
+        if user_management.num_user_messages_24hrs(gmail=gmail) < cap:
 
-        response = await get_answer(search_agent, input_text)
-        # Create messages
-        logger.info("Creating user message")
-        user_message = data_classes.UserMessage(
-            query_str=input_text,
-            is_good_query=None,
-            created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-        )
-        logger.info("Creating bot message")
-        bot_message = data_classes.BotMessage(
-            response_str=response,
-            is_liked=None,
-            created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-        )
+            response = await get_answer(search_agent, input_text)
+            # Create messages
+            logger.info("Creating user message")
+            user_message = data_classes.UserMessage(
+                query_str=input_text,
+                is_good_query=None,
+                created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+            )
+            logger.info("Creating bot message")
+            bot_message = data_classes.BotMessage(
+                response_str=response,
+                is_liked=None,
+                created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+            )
 
-        # Insert message into user
-        logger.info("Inserting message into user")
-        bot_message_uuid = user_management.insert_message(
-            user_message=user_message,
-            bot_message=bot_message,
-            gmail=gmail
-        )
-        logger.info("Finished inserting message")
+            # Insert message into user
+            logger.info("Inserting message into user")
+            bot_message_uuid = user_management.insert_message(
+                user_message=user_message,
+                bot_message=bot_message,
+                gmail=gmail
+            )
+            logger.info("Finished inserting message")
 
-        return [response, bot_message_uuid]
+            return [response, bot_message_uuid]
+
+        else:
+            return ["Sorry, you have reached the maximum number of queries in 24 hours. Please try again tomorrow.", "None"]
 
     else:
         return ["Sorry, you are not a registered user. Please register at https://busearch.com", "None"]
 
 
 def user_exists(user_management: UserDatabaseManager, gmail: str) -> bool:
+    """
+    Checks if a user exists in the database.
+
+    Parameters:
+        user_management (UserDatabaseManager): The user management object to use.
+        gmail (str): The gmail of the user to check.
+
+    Returns:
+        bool: True if the user exists, False otherwise.
+    """
     return user_management.user_exists(gmail)
 
 
 def insert_user(user_management: UserDatabaseManager, gmail: str) -> bool:
+    """
+    Inserts a user into the database.
+
+    Parameters:
+        user_management (UserDatabaseManager): The user management object to use.
+        gmail (str): The gmail of the user to insert.
+
+    Returns:
+        bool: True if the user was inserted, False otherwise.
+    """
     user = data_classes.User(
         gmail=gmail,
         created_time=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -134,6 +181,17 @@ def insert_user(user_management: UserDatabaseManager, gmail: str) -> bool:
 
 
 def insert_feedback(user_management: UserDatabaseManager, message_id: str, is_liked: bool):
+    """
+    Inserts feedback into the database.
+
+    Parameters:
+        user_management (UserDatabaseManager): The user management object to use.
+        message_id (str): The message id to insert feedback for.
+        is_liked (bool): True if the message was liked, False otherwise.
+
+    Returns:
+        str: A string indicating the result of the insert.
+    """
     logger.info("Inserting like into user")
     user_management.insert_liked(
         liked=is_liked,

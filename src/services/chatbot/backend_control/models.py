@@ -39,6 +39,10 @@ class ChatResponse(BaseModel):
     responseID: str
 
 
+class IsAuthorizedResponse(BaseModel):
+    authorized: bool
+
+
 class FeedbackRequest(BaseModel):
     responseID: str
     is_liked: bool

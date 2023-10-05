@@ -102,51 +102,51 @@ function sendMessage() {
         });
 }
 
-function openSettings(tab) {
-    const settingsPopup = document.getElementById('settingsPopup');
-    const overlay = document.getElementById('overlay');
-
-    // Show the popup and overlay
-    settingsPopup.style.display = 'block';
-    overlay.style.display = 'block';
-
-    // Switch to the tab specified in the argument
-    if (tab) {
-        switchSettingsContent(tab);
-    }
-}
-
-function closeSettings() {
-    const settingsPopup = document.getElementById('settingsPopup');
-    const overlay = document.getElementById('overlay');
-    settingsPopup.style.display = 'none';
-    overlay.style.display = 'none';
-}
-
-function closeSettingsWithEsc(event) {
-    if (event.key === 'Escape') {
-        closeSettings();
-    }
-}
-
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-}
-
-function handleEnter(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
-    }
-}
-
-function toggleActiveState(currentBtn, otherBtn) {
-    if (currentBtn.classList.contains('active')) {
-        currentBtn.classList.remove('active');
-    } else {
-        currentBtn.classList.add('active');
-        otherBtn.classList.remove('active');
-    }
-}
+// function openSettings(tab) {
+//     const settingsPopup = document.getElementById('settingsPopup');
+//     const overlay = document.getElementById('overlay');
+//
+//     // Show the popup and overlay
+//     settingsPopup.style.display = 'block';
+//     overlay.style.display = 'block';
+//
+//     // Switch to the tab specified in the argument
+//     if (tab) {
+//         switchSettingsContent(tab);
+//     }
+// }
+//
+// function closeSettings() {
+//     const settingsPopup = document.getElementById('settingsPopup');
+//     const overlay = document.getElementById('overlay');
+//     settingsPopup.style.display = 'none';
+//     overlay.style.display = 'none';
+// }
+//
+// function closeSettingsWithEsc(event) {
+//     if (event.key === 'Escape') {
+//         closeSettings();
+//     }
+// }
+//
+// function toggleDarkMode() {
+//     document.body.classList.toggle('dark-mode');
+// }
+//
+// function handleEnter(event) {
+//     if (event.key === 'Enter') {
+//         sendMessage();
+//     }
+// }
+//
+// function toggleActiveState(currentBtn, otherBtn) {
+//     if (currentBtn.classList.contains('active')) {
+//         currentBtn.classList.remove('active');
+//     } else {
+//         currentBtn.classList.add('active');
+//         otherBtn.classList.remove('active');
+//     }
+// }
 
 /**
  * Send feedback to the server.

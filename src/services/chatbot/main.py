@@ -23,12 +23,21 @@ import src.services.chatbot.backend_control.backend as backend
 from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
 from src.services.chatbot.backend_control.auth import generate_google_auth_url
 from src.services.chatbot.backend_control.models import ChatRequest, FeedbackRequest
-from src.services.chatbot.backend_control.models import ChatResponse
+from src.services.chatbot.backend_control.models import ChatResponse, IsAuthorizedResponse
 
 logger = logging.getLogger(__name__)
 
 
 def init_config(local_env_file: Union[str, None]):
+    """
+    Initialize the config module.
+
+    Parameters:
+        local_env_file (str | None): Path to the local .env file.
+
+    Returns:
+        None
+    """
     config.init(
         metadata=[
             config.ConfigVarMetadata(var_name="INFO_DATA_NAMESPACE"),
@@ -60,7 +69,11 @@ WHITE_LISTED_EMAILS = [
     "jonahkatz@gmail.com",
     "ernisierra@gmail.com",
     "ellenkatz@gmail.com",
-    "henrykatz@gmail.com"
+    "henrykatz@gmail.com",
+    "ellenkatz@gmail.com",
+    "sasha.vasu@gmail.com",
+    "dgkatz@gmail.com",
+    "nathanvlad@gmail.com"
 ]
 
 SECRET_KEY = config.get("SECRET_KEY")
@@ -117,6 +130,15 @@ search_agent = SearchAgent(
 
 
 def get_current_email(jwt_token: str) -> str:
+    """
+    Decode and verify the JWT token.
+
+    Parameters:
+        jwt_token (str): The JWT token to decode and verify.
+
+    Returns:
+        str: The email address of the user.
+    """
     try:
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload["email"]
@@ -129,6 +151,12 @@ def get_current_email(jwt_token: str) -> str:
 def get_jwt_token(request: Request) -> str:
     """
     Extract the JWT token from the HttpOnly cookie.
+
+    Parameters:
+        request (Request): The request object.
+
+    Returns:
+        str: The JWT token.
     """
     jwt_token = request.cookies.get("Authorization")
     if not jwt_token:
@@ -240,21 +268,20 @@ async def logout(request: Request):
     return response
 
 
-@app.get("/is-authorized")
+@app.get("/is-authorized", response_model=IsAuthorizedResponse)
 async def is_authorized(request: Request):
     """
     Checks if the user has a valid JWT token in their cookies and is authorized.
     """
     jwt_token = request.cookies.get("auth_token")  # Get the JWT token from the cookies
     if not jwt_token:
-        return {"isAuthorized": False}  # If there is no JWT token, the user is not authorized
-
+        return IsAuthorizedResponse(isAuthorized=False)  # Return the response
     try:
         get_current_email(jwt_token=jwt_token)  # If the JWT token is valid, the user is authorized
-        return {"isAuthorized": True}
+        return IsAuthorizedResponse(isAuthorized=True)  # Return the response
     except HTTPException as e:
         if e.status_code == 401:
-            return {"isAuthorized": False}
+            return IsAuthorizedResponse(isAuthorized=False)  # Return the response
         raise  # Any other unexpected errors can be raised normally
 
 
@@ -278,7 +305,8 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
                         search_agent=search_agent,
                         user_management=weaviate_user_management,
                         gmail=email,
-                        input_text=data.question
+                        input_text=data.question,
+                        cap=50
                     )  # Insert the question and answer into the database
                 except Exception as e:
                     logger.error(f"error: {e}")
@@ -290,7 +318,7 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
 
             else:
                 response_and_id = [
-                    "I'm sorry, it seems like there has been an error. Please try logging in again.",
+                    "I'm sorry, it seems like you have not been logged in. BUsearch is exclusive to BU students.",
                     str(uuid.uuid4())
                 ]  # User does not exist in the database
         else:
