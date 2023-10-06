@@ -1,4 +1,6 @@
 import weaviate
+import datetime
+from datetime import datetime as dt
 
 import src.libs.logging as logging
 import src.libs.storage.user_data_classes as data_classes
@@ -392,6 +394,40 @@ class UserDatabaseManager:
         except Exception as e:
             logger.warning(f"No User object found with the Gmail: {gmail}")
             return message_list
+
+    def num_user_messages_24hrs(self, gmail: str):
+        """
+        Get the number of messages for a user based on their Gmail
+        """
+
+        num_user_messages = 0
+
+        date_format = "%Y-%m-%dT%H:%M:%SZ"
+
+        # Fetch the conversations associated with the user based on Gmail
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace), [
+                "hasConversation {... on Jonahs_weaviate_userdb_Conversation { messages { ... on Jonahs_weaviate_userdb_UserMessage { query_str, created_time } } } }"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+
+        # Extract and log the messages
+        try:
+            user_messages = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0][
+                'hasConversation'][0]['messages']
+
+            for message in user_messages:
+                created_time = datetime.datetime.strptime(message['created_time'], date_format)
+                if created_time > datetime.datetime.now() - datetime.timedelta(hours=24):
+                    num_user_messages += 1
+
+            return num_user_messages
+
+        except Exception as e:
+            logger.warning(f"No User object found with the Gmail: {gmail}")
+            return num_user_messages
 
     def clear_conversation(self, gmail: str):
         """

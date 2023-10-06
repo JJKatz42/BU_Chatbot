@@ -262,6 +262,8 @@ async def main():
 
     elif script_args.command == "insert-like":
         # Insert like into user
+        num_messages = weaviate_user_management.num_user_messages_24hrs(gmail="jjkatz@bu.edu")
+        print(num_messages)
         logger.info("Inserting like into user")
         weaviate_user_management.insert_liked(
             liked=script_args.liked,
