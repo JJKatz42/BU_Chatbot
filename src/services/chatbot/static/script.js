@@ -222,18 +222,18 @@ function sendMessage() {
  * @param {boolean} isLiked - The type of feedback, either true or false
  */
 function sendFeedback(responseID, isLiked) {
+    const requestData = {
+        responseID: responseID,
+        is_liked: isLiked
+    };
 
     fetch(`/feedback`, {
             method: 'POST',
             credentials: 'include',
             headers: {
                 "Content-Type": "application/json",
-                "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imdlb3JnZWZsaW50QGJlcmtlbGV5LmVkdSJ9.OW0OCq_f0c-IOL_GBZmv383PaquJWcVQZhcnIiPfVN8"
             },
-            body: JSON.stringify({
-                responseID: responseID,
-                is_liked: isLiked
-            })
+            body: JSON.stringify(requestData)
         })
         .then(response => {
             if (!response.ok) {
