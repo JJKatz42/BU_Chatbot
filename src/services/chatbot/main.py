@@ -275,13 +275,13 @@ async def is_authorized(request: Request):
     """
     jwt_token = request.cookies.get("auth_token")  # Get the JWT token from the cookies
     if not jwt_token:
-        return IsAuthorizedResponse(isAuthorized=False)  # Return the response
+        return IsAuthorizedResponse(is_authorized=False)  # Return the response
     try:
         get_current_email(jwt_token=jwt_token)  # If the JWT token is valid, the user is authorized
-        return IsAuthorizedResponse(isAuthorized=True)  # Return the response
+        return IsAuthorizedResponse(is_authorized=True)  # Return the response
     except HTTPException as e:
         if e.status_code == 401:
-            return IsAuthorizedResponse(isAuthorized=False)  # Return the response
+            return IsAuthorizedResponse(is_authorized=False)  # Return the response
         raise  # Any other unexpected errors can be raised normally
 
 

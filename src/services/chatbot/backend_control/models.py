@@ -40,7 +40,7 @@ class ChatResponse(BaseModel):
 
 
 class IsAuthorizedResponse(BaseModel):
-    authorized: bool
+    is_authorized: bool
 
 
 class FeedbackRequest(BaseModel):
