@@ -15,8 +15,8 @@ async def search_agent_job(agent: SearchAgent, query: str) -> dict:
     Runs a search agent job.
 
     Parameters:
-    - agent (SearchAgent): The search agent to use for the job.
-    - query (str): The search query to run.
+        agent (SearchAgent): The search agent to use for the job.
+        query (str): The search query to run.
 
     Returns:
         dict: A dictionary containing the search result and metadata. Includes:
@@ -37,12 +37,21 @@ async def search_agent_job(agent: SearchAgent, query: str) -> dict:
 
 
 async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
-    # Get the answer from the search agent
+    """
+    Gets an answer from a search agent.
+
+    Parameters:
+        search_agent (SearchAgent): The search agent to use.
+        input_text (str): The input text to get an answer for.
+
+    Returns:
+        str: The generated answer text.
+    """
     try:
         agent_result = await search_agent_job(search_agent, input_text)
 
         if "related to your query." in agent_result['answer'] or "couldn't find any relevant" in agent_result['answer']:
-            response = f"<p><strong>BUsearch: </strong>{agent_result['answer']}</p>"
+            response = f"<p>{agent_result['answer']}</p>"
 
         else:
             sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
@@ -58,14 +67,14 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
 
                 url_str += f'<li><a class="link" href="{url}" target="_blank">{url}</a></li>'
 
-            response = f"<p><strong>BUsearch: </strong>{agent_result['answer']}</p> <p>Sources:</p> <ol>{url_str}</ol>"  # Use HTML break line tag here
+            response = f"<p>{agent_result['answer']}</p> <p>Sources:</p> <ol>{url_str}</ol>"  # Use HTML break line tag here
 
         return response
 
     except Exception as e:
         logger.error(f"Error getting answer from agent: {e}")
 
-        return ("<p><strong>BUsearch: </strong>Sorry, there was an error finding your answer please wait a few moments "
+        return ("<p>Sorry, there was an error finding your answer please wait a few moments "
                 "before trying again.</p>")
 
 
