@@ -14,5 +14,85 @@
         "inverse_test": false,
         "expected_sources": []
       }
-  }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-2",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Describe sm 132",
+        "enable": true,
+        "expected_response": "The course sm 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation. The content is relevant to understand a broad class of problems and decisions for businesses or individuals. It offers applications across decision domains. The teaching materials include online problem solving and case writing. Students may not take SM132 and FE101 for credit.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+        "metadata": {
+          "related_kips": [],
+          "related_tests": [],
+          "date_added": "2023/07/5",
+          "test_id": "tid-3",
+          "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+        },
+        "definition": {
+          "request": "Describe the course Measuring Financial Value",
+          "enable": true,
+          "expected_response": "The course sm 132 offers an overview of fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation. The content is relevant to understand a broad class of problems and decisions for businesses or individuals. It offers applications across decision domains. The teaching materials include online problem solving and case writing. Students may not take SM132 and FE101 for credit.",
+          "inverse_test": false,
+          "expected_sources": []
+        }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-4",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What kind of financial analysis is taught in the course Measuring Financial Value?",
+        "enable": true,
+        "expected_response": "fundamental financial analyses, such as time value of money, interest rates, basic valuation of cash flow streams, and basic stock and bond valuation.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-5",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "What is the primary focus of courses offered in the Accounting department at Questrom? Please list them out.",
+        "enable": true,
+        "expected_response": "The courses in the Accounting department at Questrom focus on financial accounting, managerial accounting, financial reporting, auditing, and various specialized areas of accounting such as sustainability reporting and financial analytics.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    },
+    {
+      "metadata": {
+        "related_kips": [],
+        "related_tests": [],
+        "date_added": "2023/07/5",
+        "test_id": "tid-6",
+        "classification_tags": ["REQ_LANGUAGE_MISSPELLING"]
+      },
+      "definition": {
+        "request": "Are there any online MBA courses offered at Questrom?",
+        "enable": true,
+        "expected_response": "Yes, Questrom School of Business offers Online MBA Courses.",
+        "inverse_test": false,
+        "expected_sources": []
+      }
+    }
 ]
