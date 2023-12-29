@@ -13,6 +13,7 @@ import numpy as np
 import src.libs.search.search_agent.query_planning as query_planning
 import src.libs.search.search_agent.search_parameter_gen as search_parameter_gen
 import src.libs.search.weaviate_search_engine as weaviate_search_engine
+import src.libs.search.search_agent.answer_formatting as answer_formatting
 import src.libs.storage.storage_data_classes as storage_data_classes
 import src.libs.logging as logging
 
@@ -119,9 +120,17 @@ class SearchAgent:
                 if source not in all_sources:
                     all_sources.append(source)
 
+        formatted_answer = await answer_formatting.format_answer(
+            generated_answer=root_query_result.result,
+            sources=all_sources,
+            llm=self._qa_llm,
+            fallback_llm=self._reasoning_llm,
+            query=query,
+        )
+
         return AgentResult(
             query=query,
-            answer=root_query_result.result,
+            answer=formatted_answer,
             sources=all_sources,
             query_plan=query_plan,
             query_plan_results=query_plan_results,
