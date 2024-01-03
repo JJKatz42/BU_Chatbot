@@ -265,7 +265,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
             top_k: int = 3,
             alpha: float = 0.75,
             re_rank: bool = False,
-            filters: dict = None
+            filters: dict = None,
     ) -> weaviate.gql.get.GetBuilder:
         """Build a search query for most relevant information to the query
 
@@ -286,7 +286,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         query = (
             self._weaviate_store.client.query
             .get(TextContent.weaviate_class_name(namespace=self.namespace),
-                 ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { url, webpage_id, mimeType } }"])
+                 ["index", "text", "contentOf { ... on Jonahs_weaviate_infodb_Webpage { url, webpage_id, mimeType, university } }"])
         )
 
         query = query.with_additional(properties=["id"])
@@ -311,13 +311,22 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 ]
             )
 
-        # Build where filters
-        where_filter = None
+        # Check for university filter in filters
+        if filters and "university" in filters:
+            university_filter = {
+                "path": [
+                    "contentOf",
+                    "Jonahs_weaviate_infodb_Webpage",
+                    "university"
+                ],
+                "operator": "Equal",
+                "valueText":  filters["university"]
 
-        if filters:
-            where_filter = filters
+                # "path": ["contentOf", "university"],
+                # "operator": "Equal",
+                # "valueText": filters["university"]  # might need to change to valueString
+            }
 
-        if where_filter:
-            query = query.with_where(where_filter)
+            query = query.with_where(university_filter)
 
         return query

@@ -7,6 +7,7 @@ from src.libs.storage import storage_data_classes as storage_data_classes
 # Redeclare Source and MimeType in local scope, so it can be imported from here directly in search modules
 MimeType = storage_data_classes.MimeType
 
+
 @dataclasses.dataclass
 class WebpageSourceInfo:
     id: str

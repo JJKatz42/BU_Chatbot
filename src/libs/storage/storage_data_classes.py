@@ -81,6 +81,7 @@ class TextContent(WeaviateObject):
 class Webpage(WeaviateObject):
     id: str
     url: str
+    university: str
     mime_type: MimeType
     html_content: str
     text_contents: list[TextContent]
@@ -114,6 +115,10 @@ class Webpage(WeaviateObject):
                     "dataType": ["text"],
                 },
                 {
+                    "name": "university",
+                    "dataType": ["text"],
+                },
+                {
                     "name": "html_content",
                     "dataType": ["text"],
                 },
@@ -135,6 +140,7 @@ class Webpage(WeaviateObject):
         return {
             "webpage_id": self.id,
             "url": self.url,
+            "university": self.university,
             "mimeType": self.mime_type,
             "html_content": self.html_content,
         }
