@@ -46,12 +46,14 @@ class SearchAgent:
     def __init__(
         self,
         weaviate_search_engine: weaviate_search_engine.WeaviateSearchEngine,
+        university: str,
         reasoning_llm: langchain.chat_models.ChatOpenAI,
         qa_llm: langchain.chat_models.ChatOpenAI | None = None,
         features: list["SearchAgentFeatures"] | None = None,
         include_source_types: list[SOURCE_TYPE] | None = None
     ):
         self._weaviate_search_engine = weaviate_search_engine
+        self._university_type_filter = university
         self._reasoning_llm = reasoning_llm
         self._qa_llm = qa_llm or reasoning_llm
         self._features = features or []
@@ -199,6 +201,7 @@ class SearchAgent:
             A QueryResult object which is a container for the generated answer with sources used.
         """
         # If the automatic search param generation feature is enabled, use LLM to pick optimal params
+
         if self.is_enabled(SearchAgentFeatures.AUTO_SEARCH_PARAMETER_GEN):
             search_parameters = await self._generate_search_parameters(query=query.question)
         else:
@@ -207,6 +210,8 @@ class SearchAgent:
         # Number of search results used to generate answer
         num_results_for_gen = search_parameters["top_k"]
 
+        search_parameters["filters"] = {"university": self._university_type_filter}
+
         # If the cross encoder re-ranking feature is enabled, increase number of search
         # results retrieved from search engine to cast a wider initial net.
         if self.is_enabled(SearchAgentFeatures.CROSS_ENCODER_RE_RANKING):
@@ -214,7 +219,7 @@ class SearchAgent:
 
         # If the Agent is configured to only use specific source types, apply the filter to the search query
         if self._source_type_filter:
-            search_parameters["filters"] = self._source_type_filter
+            search_parameters["filters"].append(self._source_type_filter)
 
         # Get main loop so the synchronous Weaviate search function can be
         # run async in the default loop's executor (ThreadPoolExecutor)
@@ -266,7 +271,7 @@ class SearchAgent:
 
         # AI message (impersonate the AI) containing the search results
         search_results_prompt_message = langchain.schema.AIMessage(
-            content="I searched the company's data for supporting information and found the "
+            content="I searched the university's data for supporting information and found the "
                     "following results related to your question. "
                     f"The search results are in order of trustworthiness:\n{sources_context}"
         )
