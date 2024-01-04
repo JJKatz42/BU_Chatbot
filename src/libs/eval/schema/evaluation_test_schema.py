@@ -150,7 +150,7 @@ if __name__ == "__main__":
     logger.info("wrote schema to file \"schema.json\".")
 
     # Read and validate the JSON file
-    if EvaluationTestSchema.validate_test_file('test_example.json'):
+    if EvaluationTestSchema.validate_test_file('../defintions/test_example.json'):
         logger.info("validate_test_file success!")
     else:
         logger.error("validate_test_file failure!")

@@ -12,7 +12,7 @@ from datetime import datetime
 import langchain.chat_models
 
 import src.libs.eval.utils as utils
-import src.libs.eval.evaluation_test_schema as evaluation_test_schema
+import src.libs.eval.schema.evaluation_test_schema as evaluation_test_schema
 from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
 import src.libs.eval.evaluation_agent as evaluation_agent
 import src.libs.config as config
