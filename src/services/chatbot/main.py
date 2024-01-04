@@ -124,6 +124,7 @@ features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QU
 
 search_agent = SearchAgent(
     weaviate_search_engine=weaviate_engine,
+    university="BU",
     reasoning_llm=reasoning_llm,
     features=features
 )
