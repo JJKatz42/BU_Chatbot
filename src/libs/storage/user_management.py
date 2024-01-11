@@ -484,7 +484,7 @@ class UserDatabaseManager:
                 "dataType": [User.weaviate_class_name(self.namespace)]
             })
         except Exception as e:
-            logger.error(f"Error creating properties (doesn't matter tho): {e}")
+            logger.warning(f"Error creating properties (may need to delete this code later): {e}")
 
         try:
             user_uuid = self._get_user_id(gmail=gmail)
@@ -517,7 +517,7 @@ class UserDatabaseManager:
                 )
 
         except Exception as e:
-            logger.error(f"Error adding user_message: {e}")
+            logger.error(f"Error adding profile information: {e}")
 
     def get_profile_info_for_user(self, gmail: str):
         """
@@ -551,6 +551,95 @@ class UserDatabaseManager:
                 profile_info_dict[profile_info['key']] = profile_info['value']
 
             return profile_info_dict
+
+    def delete_profile_info_for_user(self, gmail: str):
+        """
+        Delete the profile information for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose profile information to delete
+        """
+        user_uuid = ""
+        try:
+            user_uuid = self._get_user_id(gmail=gmail)
+        except Exception as e:
+            logger.error(f"Error getting conversation ID: {e}")
+
+        try:
+            self.client.data_object.update(
+                uuid=user_uuid,
+                class_name=User.weaviate_class_name(self.namespace),
+                data_object={
+                    'hasProfileInformation': None,
+                },
+            )
+
+            self.client.data_object.update(
+                uuid=user_uuid,
+                class_name=User.weaviate_class_name(self.namespace),
+                data_object={
+                    'hasProfileInformation': [],
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error clearing profile information: {e}")
+
+    def get_profile_info_vector_for_user(self, gmail: str):
+        """
+        Get the profile information vector for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose profile information to get
+
+        Returns:
+            A vector representation of profile information for the user
+        """
+        profile_info_vector = []
+        # Fetch the conversations associated with the user based on Gmail
+        results = (
+            self.client.query
+            .get(User.weaviate_class_name(namespace=self.namespace), [
+                "personalized_info_vector"])
+            .with_where({"path": ["gmail"], "operator": "Equal", "valueText": gmail})
+            .do()
+        )
+        try:
+            # Extract and return profile information
+            profile_info_object = results['data']['Get'][User.weaviate_class_name(namespace=self.namespace)][0][
+                'personalized_info_vector']
+        except Exception as e:
+            logger.error(f"Error getting profile information vector: {e}")
+        if not profile_info_object:
+            logger.warning(f"User has no inputted profile information: {gmail}")
+            return profile_info_vector
+
+        else:
+            return profile_info_object
+
+    def update_profile_info_vector(self, gmail: str, profile_info_vect: list[float]):
+        """
+        Update the profile information vector for a user based on their Gmail
+
+        Args:
+            gmail: The Gmail of the user whose profile information vector to update
+            profile_info_vect: The profile information vector to update
+        """
+        user_uuid = ""
+        try:
+            user_uuid = self._get_user_id(gmail=gmail)
+        except Exception as e:
+            logger.error(f"Error getting conversation ID: {e}")
+
+        try:
+            self.client.data_object.update(
+                uuid=user_uuid,
+                class_name=User.weaviate_class_name(self.namespace),
+                data_object={
+                    'personalized_info_vector': profile_info_vect,
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error updating profile information vector: {e}")
 
     def _create_cross_reference(self, cross_ref: CrossReference):
         """

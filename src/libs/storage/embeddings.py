@@ -181,3 +181,20 @@ class EmbeddingsClient:
         for weaviate_object, embeddings in zip(weaviate_objects, results):
             for text_content, embedding in zip(weaviate_object.text_contents, embeddings):
                 text_content.vector = embedding
+
+    @openai_retry_config
+    def create_embedding(self, text: str) -> list[list[float]]:
+        """Create embedding using OpenAI Embedding API"""
+        resp = openai.Embedding.create(
+            input=text,
+            model=self._model_name,
+            api_key=self._openai_api_key
+        )
+
+        for data in resp["data"]:
+            if data["embedding"] == "" or data["embedding"] is None or data["embedding"] == []:
+                logger.warning(f"Error creating embedding: {text}")
+                return []
+
+        embeddings = [data["embedding"] for data in resp["data"]]
+        return embeddings
