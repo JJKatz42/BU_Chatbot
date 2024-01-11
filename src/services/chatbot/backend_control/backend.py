@@ -1,22 +1,31 @@
 import datetime
 import time
+import markdown
 from dataclasses import asdict
 
 import src.libs.logging as logging
 import src.libs.storage.user_data_classes as data_classes
 from src.libs.search.search_agent.search_agent import SearchAgent
 from src.libs.storage.user_management import UserDatabaseManager
+from src.libs.storage.weaviate_store import WeaviateStore
 
 logger = logging.getLogger(__name__)
 
 
-async def search_agent_job(agent: SearchAgent, query: str) -> dict:
+async def search_agent_job(
+        agent: SearchAgent,
+        query: str,
+        current_profile_info: dict,
+        profile_info_vector: list[float]
+) -> dict:
     """
     Runs a search agent job.
 
     Parameters:
         agent (SearchAgent): The search agent to use for the job.
         query (str): The search query to run.
+        current_profile_info (dict): The current profile information for the user.
+        profile_info_vector (list[float]): The profile information vector for the user.
 
     Returns:
         dict: A dictionary containing the search result and metadata. Includes:
@@ -27,7 +36,7 @@ async def search_agent_job(agent: SearchAgent, query: str) -> dict:
     logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
 
-    result = await agent.run(query)
+    result = await agent.run(query, current_profile_info, profile_info_vector)
 
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
@@ -36,22 +45,32 @@ async def search_agent_job(agent: SearchAgent, query: str) -> dict:
     return result_dict
 
 
-async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
+async def get_answer(
+        search_agent: SearchAgent,
+        input_text: str,
+        current_profile_info: dict,
+        profile_info_vector: list[float]
+) -> str:
     """
     Gets an answer from a search agent.
 
     Parameters:
         search_agent (SearchAgent): The search agent to use.
         input_text (str): The input text to get an answer for.
+        current_profile_info (dict): The current profile information for the user.
+        profile_info_vector (list[float]): The profile information vector for the user.
 
     Returns:
         str: The generated answer text.
     """
     try:
-        agent_result = await search_agent_job(search_agent, input_text)
+        agent_result = await search_agent_job(search_agent, input_text, current_profile_info, profile_info_vector)
 
-        if "related to your query." in agent_result['answer'] or "couldn't find any relevant" in agent_result['answer']:
-            response = f"<p>{agent_result['answer']}</p>"
+        answer = markdown.markdown(agent_result['answer'])
+
+        if "related to your query." in answer or "couldn't find any relevant" in answer or "does not have any specific meaning or relevance" in answer or "I apologize" in answer:
+            response = f"<p>{answer[34:]}</p>"  # This is a really quick and not good way of checking to see
+            # if the searchengine could not find a result
 
         else:
             sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
@@ -67,7 +86,8 @@ async def get_answer(search_agent: SearchAgent, input_text: str) -> str:
 
                 url_str += f'<li><a class="link" href="{url}" target="_blank">{url}</a></li>'
 
-            response = f"<p>{agent_result['answer']}</p> <p>Sources:</p> <ol>{url_str}</ol>"  # Use HTML break line tag here
+            response = f"<p>{answer}</p> <p><br>Below are the related sources:</p> <ol>{url_str}</ol>"
+            # Used HTML break line tag here
 
         return response
 
@@ -108,7 +128,11 @@ async def insert_message(
     if user_management.user_exists(gmail):
         if user_management.num_user_messages_24hrs(gmail=gmail) < cap:
 
-            response = await get_answer(search_agent, input_text)
+            current_profile_info = user_management.get_profile_info_for_user(gmail=gmail)
+
+            profile_info_vector = user_management.get_profile_info_vector_for_user(gmail=gmail)
+
+            response = await get_answer(search_agent, input_text, current_profile_info, profile_info_vector)
             # Create messages
             logger.info("Creating user message")
             user_message = data_classes.UserMessage(
@@ -135,7 +159,10 @@ async def insert_message(
             return [response, bot_message_uuid]
 
         else:
-            return ["Sorry, you have reached the maximum number of queries in 24 hours. Please try again tomorrow.", "None"]
+            return [
+                "Sorry, you have reached the maximum number of queries in 24 hours. Please try again tomorrow.",
+                "None"
+            ]
 
     else:
         return ["Sorry, you are not a registered user. Please register at https://busearch.com", "None"]
@@ -207,3 +234,51 @@ def insert_feedback(user_management: UserDatabaseManager, message_id: str, is_li
         bot_message_id=message_id
     )
     return "Finished inserting like"
+
+
+def insert_profile_info(
+        user_management: UserDatabaseManager,
+        weaviate_store: WeaviateStore,
+        gmail: str,
+        profile_info_dict: dict
+):
+    """
+    Inserts profile information into the database.
+
+    Parameters:
+        user_management (UserDatabaseManager): The user management object to use.
+        weaviate_store (WeaviateStore): The weaviate store object to use.
+        gmail (str): The gmail of the user to insert profile information for.
+        profile_info_dict (dict): The profile information to insert.
+
+    Returns:
+        str: A string indicating the result of the insert.
+    """
+    # Get current profile info for user
+    logger.info("Deleting current profile info from user")
+    user_management.delete_profile_info_for_user(gmail=gmail)
+    # Insert profile info into user
+    profile_info_lst = []
+
+    for key, value in profile_info_dict.items():
+        profile_info = data_classes.ProfileInformation(
+            key=key,
+            value=value
+        )
+
+        profile_info_lst.append(profile_info)
+
+    user_management.insert_profile_info(
+        gmail=gmail,
+        profile_info_lst=profile_info_lst,
+    )
+    logger.info("Finished inserting profile info")
+    # Create profile information vector
+    logger.info("Creating profile info vector")
+    profile_info_vect = weaviate_store.create_embedding(str(profile_info_dict))[0]
+    # insert profile information vector into user
+    logger.info("Inserting profile info vector into user")
+    user_management.update_profile_info_vector(
+        gmail=gmail,
+        profile_info_vect=profile_info_vect
+    )

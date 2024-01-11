@@ -31,10 +31,10 @@ def init_config(local_env_file: str | None):
     )
 
 
-async def search_agent_job(agent: SearchAgent, query: str) -> dict:
+async def search_agent_job(agent: SearchAgent, query: str, current_profile_info: dict) -> dict:
     logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
-    result = await agent.run(query)
+    result = await agent.run(query, current_profile_info=current_profile_info)
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
     logger.info(f"Running job: {query} finished")
@@ -68,7 +68,7 @@ async def main():
         "--full-refresh",
         help="By default indexing is incremental. Set this flag to build indexes from scratch. "
              "This includes re-creating Weaviate schema by deleting all existing objects.",
-        default=False,
+        default=True,
         action="store_true"
     )
     insert_message_parser = subparsers.add_parser(
@@ -120,12 +120,12 @@ async def main():
     insert_profile_info_parser.add_argument(
         "profile_info",
         nargs="?",
-        default="{'name': 'John', 'age': '25'}"
+        default="{'name': 'Jonathan', 'age': '19', 'location': 'Boston', 'major': 'Business Administration'}"
     )
     insert_profile_info_parser.add_argument(
         "--gmail",
         help="By default gmail is jjkatz@bu.edu",
-        default="jjkatz2@bu.edu",
+        default="jjkatz@bu.edu",
         action="store_true"
     )
     insert_profile_info_parser.add_argument(
@@ -194,6 +194,7 @@ async def main():
 
     elif script_args.command == "insert-message":
         ask_str = script_args.ask
+        current_profile_info = weaviate_user_management.get_profile_info_for_user(gmail=script_args.gmail)
 
         weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_store_info)
 
@@ -209,7 +210,8 @@ async def main():
         search_agent = SearchAgent(
             weaviate_search_engine=weaviate_engine,
             reasoning_llm=reasoning_llm,
-            features=features
+            features=features,
+            university="BU"
         )
 
         message_list = weaviate_user_management.get_messages_for_user(gmail=script_args.gmail)
@@ -218,7 +220,7 @@ async def main():
         # Run the SearchAgent
         logger.info("Running search agent")
 
-        agent_result = await search_agent_job(search_agent, ask_str)
+        agent_result = await search_agent_job(search_agent, ask_str, current_profile_info)
         # sort the sources by score
         sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
         # Extract the first 5 URLs
@@ -281,11 +283,9 @@ async def main():
 
     elif script_args.command == "insert-profile-info":
         # Get current profile info for user
-        current_profile_info_dict = weaviate_user_management.get_profile_info_for_user(gmail=script_args.gmail)
-        logger.info(f"Inserting {current_profile_info_dict}")
-
+        logger.info("Deleting current profile info from user")
+        weaviate_user_management.delete_profile_info_for_user(gmail=script_args.gmail)
         # Insert profile info into user
-        logger.info("Inserting profile info into user")
 
         profile_info_dict = eval(script_args.profile_info)
 
@@ -304,6 +304,15 @@ async def main():
             profile_info_lst=profile_info_lst,
         )
         logger.info("Finished inserting profile info")
+        # Create profile information vector
+        logger.info("Creating profile info vector")
+        profile_info_vect = weaviate_store_info.create_embedding(str(profile_info_dict))[0]
+        # insert profile information vector into user
+        logger.info("Inserting profile info vector into user")
+        weaviate_user_management.update_profile_info_vector(
+            gmail=script_args.gmail,
+            profile_info_vect=profile_info_vect
+        )
 
 
 if __name__ == '__main__':

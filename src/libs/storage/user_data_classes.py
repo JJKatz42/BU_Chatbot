@@ -253,6 +253,10 @@ class User(WeaviateObject):
                     "dataType": ["date"],
                 },
                 {
+                    "name": "personalized_info_vector",
+                    "dataType": ["number[]"],
+                },
+                {
                     "name": "hasProfileInformation",
                     "dataType": [ProfileInformation.weaviate_class_name(namespace=namespace)]
                 },
