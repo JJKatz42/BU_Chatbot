@@ -65,7 +65,7 @@ class SearchAgent:
 
         # LLM used when prompt size is larger than the QA LLM supported context size
         self._fallback_qa_llm_model_name = "gpt-3.5-turbo-16k"
-
+        # self._fallback_qa_llm_model_name = "gpt-4-32k"
         # Get the max context sizes for LLMs
         self._reasoning_llm_context_size = openai_utils.openai_modelname_to_contextsize(
             self._reasoning_llm.model_name
@@ -77,11 +77,19 @@ class SearchAgent:
             self._fallback_qa_llm_model_name
         )
 
-    async def run(self, query: str, context: "Context" = None) -> "AgentResult":
+    async def run(
+            self,
+            query: str,
+            current_profile_info: dict,
+            profile_info_vector: list[float],
+            context: "Context" = None
+    ) -> "AgentResult":
         """Get an answer to a query by searching for information then generating response
 
         Args:
             query: The query posed as a question
+            current_profile_info: The current profile information for the user.
+            profile_info_vector: The current profile information for the user.
             context: Context related to the query used for disambiguation
 
         Returns:
@@ -104,7 +112,10 @@ class SearchAgent:
 
             # Execute the query plan
             query_plan_results = await self.execute_query_plan(
-                query_plan=query_plan, context=context
+                query_plan=query_plan,
+                current_profile_info=current_profile_info,
+                profile_info_vector=profile_info_vector,
+                context=context
             )
 
             # Capture the total number of LLM tokens used over the course of query plan execution
@@ -145,12 +156,16 @@ class SearchAgent:
     async def execute_query_plan(
         self,
         query_plan: query_planning.QueryPlan,
+        current_profile_info: dict,
+        profile_info_vector: list[float],
         context: "Context"
     ) -> dict[int, query_planning.QueryResult]:
         """Executes the queries in the query plan in the correct order.
 
         Args:
             query_plan: The query plan to execute
+            current_profile_info: The current profile information for the user.
+            profile_info_vector:
             context: Context in which to run queries
 
         Returns:
@@ -174,6 +189,8 @@ class SearchAgent:
                 *[
                     self.execute_query(
                         query=query,
+                        current_profile_info=current_profile_info,
+                        profile_info_vector=profile_info_vector,
                         sub_query_results=query_planning.QueryResults(
                             results=[
                                 result
@@ -196,6 +213,8 @@ class SearchAgent:
         self,
         query: query_planning.Query,
         sub_query_results: query_planning.QueryResults,
+        current_profile_info: dict,
+        profile_info_vector: list[float],
         context: "Context"
     ) -> query_planning.QueryResult:
         """Execute a query in the query plan.
@@ -204,6 +223,8 @@ class SearchAgent:
             query: The query to execute
             sub_query_results: The results of sub-queries for this query that will be used
                 to generate an answer for this query.
+            current_profile_info: The current profile information for the user.
+            profile_info_vector:
             context: Context in which to run the query
 
         Returns:
@@ -218,6 +239,8 @@ class SearchAgent:
 
         # Number of search results used to generate answer
         num_results_for_gen = search_parameters["top_k"]
+
+        search_parameters["personalized_info_vector"] = profile_info_vector
 
         search_parameters["filters"] = {"university": self._university_type_filter}
 
@@ -295,18 +318,25 @@ class SearchAgent:
         answer_rules_prompt_message = langchain.schema.SystemMessage(
             content=f"Use the above search results "
                     f"{'and answers to related questions ' if sub_query_results_prompt_message else ''}"
-                    f"to provide a helpful, accurate and concise answer to the employee's question. "
+                    f"to provide a helpful, accurate and concise answer to the student's question. "
                     f"If there is conflicting information between search results, "
                     f"use the more trustworthy result (higher up in search results). "
-                    "If you can't answer the question, be honest and tell the employee what information "
+                    "If you can't answer the question, be honest and tell the student what information "
                     "you were able to find and what information is missing to answer their question."
+        )
+
+        user_personal_information = langchain.schema.SystemMessage(
+            content=f"If a user asks about themselves or uses 'I' in their question, use the following "
+                    f"information provided in the dictionary below to answer the question: \n"
+                    f"{current_profile_info}"
         )
 
         # Create the artificial history of messages to prompt LLM
         llm_prompt_messages = [
             role_prompt_message,
             question_prompt_message,
-            search_results_prompt_message
+            search_results_prompt_message,
+            user_personal_information
         ]
         if sub_query_results_prompt_message:
             llm_prompt_messages.append(sub_query_results_prompt_message)

@@ -1,5 +1,7 @@
 import json
 import time
+from typing import List
+
 import requests
 import tenacity
 import tqdm
@@ -231,3 +233,7 @@ class WeaviateStore:
             return [url, html_content]
 
         return []
+
+    def create_embedding(self, text: str) -> list[list[float]]:
+        """Get the embedding for a text using OpenAI Embedding API"""
+        return self._embeddings_client.create_embedding(text=text)
