@@ -48,11 +48,15 @@
         <div class="settings-popup light-mode" id="settingsPopup">
             <button class="settings-close" onclick="closeSettings()">&times;</button>
             <div class="settings-sidebar">
+                <div class="settings-sidebar-tab" data-tab="profile" onclick="switchSettingsContent('profile')"><a href="#">profile</a></div>
                 <div class="settings-sidebar-tab" data-tab="about" onclick="switchSettingsContent('about')"><a href="#">about</a></div>
                 <div class="settings-sidebar-tab" data-tab="contact" onclick="switchSettingsContent('contact')"><a href="#">contact</a></div>
 
             </div>
             <div class="settings-content-container">
+                <div class="settings-content profile-content" data-content="profile">
+                    <p>blahblahblah</p>
+                </div>
                 <div class="settings-content about-content" data-content="about">
 
                 </div>

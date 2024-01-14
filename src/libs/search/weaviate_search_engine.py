@@ -53,6 +53,8 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
             mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
             top_k: int = 3,
             alpha: float = 0.75,
+            beta: float = 0.05,
+            personalized_info_vector: list[float] = None,
             re_rank: bool = False,
             filters: dict = None
     ) -> list[SearchResult]:
@@ -65,9 +67,11 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 If "hybrid", both vector and keyword search will be used together.
             top_k: Number of most relevant results to return
             alpha: Only relevant for hybrid mode searches: https://weaviate.io/developers/weaviate/search/hybrid#weight-keyword-vs-vector-results
+            beta: The weight of the personalized info vector
+            personalized_info_vector: The centroid vector of the users personalized information
             re_rank: Re-rank results using Cohere API
             filters: Additional filters in the Weaviate format: https://weaviate.io/developers/weaviate/search/filters
-
+query = query.with_autocut(1)
         Returns:
             List of SearchResult objects representing the top_k results returned by the search
         """
@@ -78,6 +82,8 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
             mode=mode,
             top_k=top_k,
             alpha=alpha,
+            beta=beta,
+            personalized_info_vector=personalized_info_vector,
             re_rank=re_rank,
             filters=filters
         )
@@ -264,8 +270,10 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
             mode: typing.Literal["semantic", "hybrid", "keyword"] = "hybrid",
             top_k: int = 3,
             alpha: float = 0.75,
+            beta: float = 0.01,
+            personalized_info_vector: list[float] = None,
             re_rank: bool = False,
-            filters: dict = None
+            filters: dict = None,
     ) -> weaviate.gql.get.GetBuilder:
         """Build a search query for most relevant information to the query
 
@@ -276,6 +284,8 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 If "hybrid", both vector and keyword search will be used together.
             top_k: Number of most relevant results to return
             alpha: Only relevant for hybrid mode searches: https://weaviate.io/developers/weaviate/search/hybrid#weight-keyword-vs-vector-results
+            beta: The weight of the personalized info vector
+            personalized_info_vector: The centroid vector of the users personalized information
             re_rank: Re-rank results using Cohere API
             filters: Additional filters in the Weaviate format: https://weaviate.io/developers/weaviate/search/filters
 
@@ -286,7 +296,7 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         query = (
             self._weaviate_store.client.query
             .get(TextContent.weaviate_class_name(namespace=self.namespace),
-                 ["index", "text", "contentOf { ... on Jonahs_weaviate_Webpage { url, webpage_id, mimeType } }"])
+                 ["index", "text", "contentOf { ... on Jonahs_weaviate_infodb_Webpage { url, webpage_id, mimeType, university } }"])
         )
 
         query = query.with_additional(properties=["id"])
@@ -299,8 +309,13 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
         if mode == "semantic":
             query = query.with_near_text(content={"concepts": [query_str]})
         elif mode == "hybrid":
-            query = query.with_hybrid(query=query_str, properties=["text"], alpha=alpha)
-            query = query.with_autocut(1)
+            if not personalized_info_vector:
+                query = query.with_hybrid(query=query_str, properties=["text"], alpha=alpha)
+                query = query.with_autocut(1)
+            else:
+                weighted_vector = self._build_weighted_vector(query_str=query_str, personalized_info_vector=personalized_info_vector, beta=beta)
+                query = query.with_hybrid(query=query_str, properties=["text"], alpha=alpha, vector=weighted_vector)
+                query = query.with_autocut(1)
         elif mode == "keyword":
             query = query.with_bm25(query=query_str, properties=["text"])
 
@@ -311,13 +326,32 @@ class WeaviateSearchEngine(base_retriever.BaseRetriever):
                 ]
             )
 
-        # Build where filters
-        where_filter = None
+        # Check for university filter in filters
+        if filters and "university" in filters:
+            university_filter = {
+                "path": [
+                    "contentOf",
+                    "Jonahs_weaviate_infodb_Webpage",
+                    "university"
+                ],
+                "operator": "Equal",
+                "valueText":  filters["university"]
+            }
 
-        if filters:
-            where_filter = filters
-
-        if where_filter:
-            query = query.with_where(where_filter)
+            query = query.with_where(university_filter)
 
         return query
+
+    def _build_weighted_vector(self, query_str: str, personalized_info_vector: list[float] = None, beta: float = 0.01):
+        """
+        Build a weighted vector from the centroid vector and the query string.
+
+        Args:
+            query_str: The search query
+            personalized_info_vector: The centroid vector of the user's personalized information
+            beta: The weight of the personalized info vector
+        """
+        # personalized_info_vector = self._weaviate_store.create_embedding("I am a student at Questrom school of business")[0]
+        query_vector = self._weaviate_store.create_embedding(query_str)[0]
+        weighted_vector = [(1 - beta) * query_vector[i] + beta * personalized_info_vector[i] for i in range(len(query_vector))]
+        return weighted_vector

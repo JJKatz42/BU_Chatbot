@@ -23,8 +23,9 @@ MimeType = storage_data_classes.MimeType
 class DirectoryReader:
     SUPPORTED_MIME_TYPES = [MimeType.HTML]
 
-    def __init__(self, directory: str):
+    def __init__(self, directory: str, university: str):
         self.directory = directory
+        self.university = university
         self._html2text = html2text.HTML2Text()
         self._html2text.ignore_links = True
 
@@ -83,6 +84,7 @@ class DirectoryReader:
                 id=str(uuid.uuid4()),
                 html_content=file["html_content"],
                 url=file["name"].replace("_", "/"),
+                university=self.university,
                 mime_type=file_content["mime_type"],
                 text_contents=file_content["text_contents"]
             )

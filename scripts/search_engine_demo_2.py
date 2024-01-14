@@ -43,8 +43,12 @@ async def main():
     build_indexes_parser.add_argument(
         "--directory",
         help="By default directory is the beta_info directory",
-        default="/Users/jonahkatz/Desktop/BU_Chatbot/beta_info",
-        action="store_true"
+        default="/Users/jonahkatz/Dev/BU_Chatbot/beta_info"
+    )
+    build_indexes_parser.add_argument(
+        "--university",
+        help="By default university is set to BU",
+        default="BU"
     )
     build_indexes_parser.add_argument(
         "--env-file",
@@ -55,8 +59,7 @@ async def main():
         "--full-refresh",
         help="By default indexing is incremental. Set this flag to build indexes from scratch. "
              "This includes re-creating Weaviate schema by deleting all existing objects.",
-        default=True,
-        action="store_true"
+        default=True
     )
     run_search_parser = subparsers.add_parser("search", help="Run a search query and get back search result")
     run_search_parser.add_argument("query", nargs="?", default="describe sm 132")
@@ -152,7 +155,7 @@ async def main():
 
         # Load Webpages from directory
         logger.info("Loading webpages from directory")
-        loader = directory_reader.DirectoryReader(script_args.directory)
+        loader = directory_reader.DirectoryReader(script_args.directory, university="BU")
         webpages = await loader.load_data()
         logger.info(f"Loaded {len(webpages.webpages)} webpages")
         logger.info("Transforming webpages")

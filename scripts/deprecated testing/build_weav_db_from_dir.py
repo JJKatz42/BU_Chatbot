@@ -9,7 +9,7 @@ from src.libs.storage.weaviate_store import WeaviateStore
 from src.libs.config import config
 
 # Constants (modify as necessary)
-DIRECTORY_PATH = "/workspaces/BU_Chatbot/Questrom_Course_Info"
+DIRECTORY_PATH = "/bu_test_info"
 
 def init_config(local_env_file: str | None):
     config.init(
@@ -59,6 +59,7 @@ def build_webpage(html_content: str, file_url: str) -> Webpage:
     webpage = Webpage(
         id=str(uuid.uuid4()),
         url=file_url,
+        university="BU",
         mime_type=MimeType.MARKDOWN,
         html_content=html_content,
         text_contents=text_contents
@@ -118,14 +119,13 @@ def main():
         env_file = os.path.join(current_directory, env_file)
     init_config(local_env_file=env_file)
     
-    instance_url = config.get("WEAVIATE_URL")
-    api_key = config.get("WEAVIATE_API_KEY")
+    instance_url = "https://test-bu-toevf0ik.weaviate.network"
+    api_key = "Nl3vl9rgW1w1C7yGajToDMZpKbbp7IsXExnf"
     openai_api_key = config.get("OPENAI_API_KEY")
     namespace = config.get("DATA_NAMESPACE")
     directory_path = DIRECTORY_PATH
     
     # embeddings_client = EmbeddingsClient(openai_api_key=config.get("OPENAI_API_KEY"))
-
 
     store = WeaviateStore(instance_url=instance_url, api_key=api_key, openai_api_key=openai_api_key, namespace=namespace)
 
@@ -133,8 +133,6 @@ def main():
     # crawled_webpages = process_directory(directory_path)
 
     # update_db(crawled_webpages, store)
-
-
 
 
 if __name__ == "__main__":

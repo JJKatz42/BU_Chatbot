@@ -1,7 +1,5 @@
 let authorized = true;
 
-auth_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvbmFoa2F0ekBnbWFpbC5jb20ifQ.z9dTq3ZMu49HsBoX2IoQpEh7qiKB3Ug0cJWofMWc4qE';
-
 checkAuthorization();
 
 let currentResponseID = null

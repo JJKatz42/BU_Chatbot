@@ -37,6 +37,22 @@ class SearchParameters(openai_schema.OpenAISchema):
                     "semantic and keyword searches equally, 0 would be a pure keyword search and "
                     "1 would be a pure semantic search."
     )
+    beta: float = pydantic.Field(
+        default=0.05,
+        le=1.0,
+        ge=0.0,
+        description="You can use the beta parameter for hybrid search mode to tune the weighting "
+                    "of personal information vs strictly user query search results. An beta of 0.5 "
+                    "would weight personal information and user query results equally, 0 would be a pure "
+                    "user query search and 1 would be a pure personal information search."
+    )
+    personalized_info_vector: list[float] = pydantic.Field(
+        default=None,
+        description="You can use the personalized_info_vector parameter for hybrid search mode to "
+                    "provide a vector representing the user's personal information. This vector will be "
+                    "used to adjust the search results. If this parameter is not provided, the search results "
+                    "will not be personalized."
+    )
 
     class Config:
         use_enum_values = True

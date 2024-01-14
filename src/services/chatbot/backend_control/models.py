@@ -23,6 +23,9 @@ ErrorResponse:
 
 IncompleteResponse:
     - message (str): Message indicating an incomplete response.
+
+ProfileInformationRequest
+    - profile_info_dict (dict): Dictionary of personal information to use for search.
 """
 
 
@@ -40,7 +43,7 @@ class ChatResponse(BaseModel):
 
 
 class IsAuthorizedResponse(BaseModel):
-    authorized: bool
+    is_authorized: bool
 
 
 class FeedbackRequest(BaseModel):
@@ -55,3 +58,7 @@ class ErrorResponse(BaseModel):
 
 class IncompleteResponse(BaseModel):
     message: str
+
+
+class ProfileInformationRequest(BaseModel):
+    profile_info_dict: dict

@@ -22,7 +22,7 @@ import src.libs.storage.weaviate_store as store
 import src.services.chatbot.backend_control.backend as backend
 from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
 from src.services.chatbot.backend_control.auth import generate_google_auth_url
-from src.services.chatbot.backend_control.models import ChatRequest, FeedbackRequest
+from src.services.chatbot.backend_control.models import ChatRequest, FeedbackRequest, ProfileInformationRequest
 from src.services.chatbot.backend_control.models import ChatResponse, IsAuthorizedResponse
 
 logger = logging.getLogger(__name__)
@@ -122,8 +122,10 @@ reasoning_llm = langchain.chat_models.ChatOpenAI(
 
 features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QUERY_PLANNING]
 
+
 search_agent = SearchAgent(
     weaviate_search_engine=weaviate_engine,
+    university="BU",
     reasoning_llm=reasoning_llm,
     features=features
 )
@@ -275,13 +277,13 @@ async def is_authorized(request: Request):
     """
     jwt_token = request.cookies.get("auth_token")  # Get the JWT token from the cookies
     if not jwt_token:
-        return IsAuthorizedResponse(isAuthorized=False)  # Return the response
+        return IsAuthorizedResponse(is_authorized=False)  # Return the response
     try:
         get_current_email(jwt_token=jwt_token)  # If the JWT token is valid, the user is authorized
-        return IsAuthorizedResponse(isAuthorized=True)  # Return the response
+        return IsAuthorizedResponse(is_authorized=True)  # Return the response
     except HTTPException as e:
         if e.status_code == 401:
-            return IsAuthorizedResponse(isAuthorized=False)  # Return the response
+            return IsAuthorizedResponse(is_authorized=False)  # Return the response
         raise  # Any other unexpected errors can be raised normally
 
 
@@ -351,5 +353,26 @@ async def provide_feedback(data: FeedbackRequest, auth_token: str = Cookie(None)
                                     is_liked=data.is_liked)
         except Exception as e:
             logger.error(f"Feedback insertion error, {e}")
+    else:
+        logger.error(f"User {email} does not exist in the database.")
+
+
+@app.api_route("/insert-profile-info", methods=["POST"])
+async def insert_profile_info(data: ProfileInformationRequest, auth_token: str = Cookie(None)):
+    """
+    Insert the user's profile information into the database.
+    """
+    jwt_token = auth_token
+    email = get_current_email(jwt_token=jwt_token)
+    if backend.user_exists(user_management=weaviate_user_management, gmail=email):
+        try:
+            backend.insert_profile_info(
+                user_management=weaviate_user_management,
+                weaviate_store=weaviate_store,
+                gmail=email,
+                profile_info_dict=data.profile_info_dict
+            )
+        except Exception as e:
+            logger.error(f"Profile info insertion error, {e}")
     else:
         logger.error(f"User {email} does not exist in the database.")
