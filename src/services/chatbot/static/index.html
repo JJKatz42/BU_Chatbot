@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BUsearch</title>
+    <title></title>
     <link rel="stylesheet" href="static/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 </head>
-<body>
+
+<body class="bu">
     <div class="navbar">
         <div class="navbar-container">
-            <div>BUsearch.com <span class="background">BETA</span></div>
+            <div class="logo long"></div>
             <div class="navbar-menu">
-                <a href="#" id="loginBtn">Login</a>
-                <a href="#" onclick="openSettings('about')">About</a>
+                <a href="#" id="loginBtn">login</a>
+                <a href="#" onclick="openSettings('about')">about</a>
                 <button class="toggle-button working-version" onclick="toggleDarkMode()">
                   <label class="switch">
                     <input type="checkbox" id="toggleSwitch" onclick="toggleDarkMode()">
@@ -22,79 +25,61 @@
             </div>
         </div>
     </div>
-    <div class="sidebar">
-        <div class="sidebar-tab"><a href="#">Current Chat</a></div>
-        <!-- <button class="toggle-button" onclick="toggleDarkMode()">toggle dark/light mode</button> -->
-    </div>
+
     <div class="chat-space">
         <div class="chat-space-container">
-            <!-- Existing chat-response blocks will be dynamically generated -->
             <div class="chat-response welcome input">
-                <title>Welcome to BUsearch</title>
-                <!-- <title class="overlay-title">Welcome</title> -->
-                <p class="welcome-text">BUsearch is an informational chatbot exclusive to Boston University students.</p>
-                <p class="welcome-text">To start searching, <strong>log in using your BU email</strong>.
-                </p>
+                <div class="chat-response welcome input">
+
+                </div>
+
             </div>
+            <div class="gradient"></div>
         </div>
-    </div>
 
-    <div class="chat-input-container disabled">
-        <label for="chatInput"></label><input type="text" class="chat-input" placeholder="Type your question..." id="chatInput" onkeydown="handleEnter(event)">
-        <button class="send-button" onclick="sendMessage()"></button>
-    </div>
-
-
-    <!-- Settings Popup -->
-    <div class="settings-popup light-mode" id="settingsPopup">
-        <button class="settings-close" onclick="closeSettings()">&times;</button>
-        <div class="settings-sidebar">
-            <div class="settings-sidebar-tab" data-tab="about"><a href="#">about</a></div>
-            <div class="settings-sidebar-tab" data-tab="contact"><a href="#">contact</a></div>
-            <!-- Add more tabs as needed -->
+        <div class="chat-input-container">
+            <label for="chatInput"></label>
+            <!-- <input type="text" class="chat-input" placeholder="Type your question..." id="chatInput" onkeydown="handleEnter(event)"> -->
+            <textarea class="chat-input" placeholder="send a message" id="chatInput" onkeydown="handleEnter(event)" rows="1"></textarea>
+            <button class="send-button" onclick="sendMessage()"></button>
         </div>
-        <div class="settings-content-container">
-            <div class="settings-content" data-content="about">
-                <h3>About BUsearch</h3>
-                <p>Welcome to BUsearch, the informational chatbot designed to make relevant university information instantly accessible, ensuring swift and concise answers for every Boston University student.</p>
-                <h3>Our Mission</h3>
-                <p>At BUsearch, our mission is to empower every student at Boston University with instant access to essential information, ensuring a seamless and enriched campus experience. We believe in harnessing the power of technology to bridge the
-                    gap between students and the vast resources available at BU.</p>
-                <h3>Our Product</h3>
-                <p>BUsearch is an informational assistant custom-built for every BU student's day-to-day needs. Whether you're a freshman trying to navigate your way around campus, a senior looking for graduation details, or an international student seeking
-                    housing advice, BUsearch is here to assist.</p>
-                <h3>Key Features</h3>
-                <ul>
-                    <li>Instant Answers: No more waiting for appointments or sifting through web pages. Get immediate responses to your questions in just seconds.
-                    </li>
-                    <li>Comprehensive Database: From academic schedules to campus events, BUsearch covers a wide range of topics to cater to every student's needs.
-                    </li>
-                    <li>Continuous Learning: BUsearch evolves with every interaction, ensuring that the information provided is always up-to-date and relevant.
-                    </li>
-                    <li>Secure and Private: We prioritize your privacy. Rest assured, your interactions with BUsearch are confidential.
-                    </li>
-                </ul>
-                <h3>Our Team</h3>
-                <p>We are a group of dedicated students across multiple universities, including Boston University, UC Berkeley, and Columbia, who are passionate about utilizing the newest technology to enhance the academic experience and streamline access
-                    to essential resources for students everywhere, starting with Boston University.</p>
-                <h3>Join Us</h3>
-                <p>We believe in the power of collaboration. If you have suggestions, feedback, or want to be a part of the team, please reach out.</p>
+
+        <!-- Settings Popup -->
+        <div class="settings-popup light-mode" id="settingsPopup">
+            <button class="settings-close" onclick="closeSettings()">&times;</button>
+            <div class="settings-sidebar">
+                <div class="settings-sidebar-tab" data-tab="about" onclick="switchSettingsContent('about')"><a href="#">about</a></div>
+                <div class="settings-sidebar-tab" data-tab="contact" onclick="switchSettingsContent('contact')"><a href="#">contact</a></div>
+
             </div>
-            <div class="settings-content" data-content="contact">
-                <p>Drop us a line!</p>
-                <p>busearchconnect@gmail.com</p>
-                <p>Join our <a class="link" href="https://discord.gg/jMSVqabC" target="_blank">Discord server</a>!</p>
-            </div>
-            <!-- Add more content sections as needed -->
-            <!-- <button class="cancel-button" onclick="closeSettings()">cancel</button>
+            <div class="settings-content-container">
+                <div class="settings-content about-content" data-content="about">
+
+                </div>
+                <div class="settings-content" data-content="contact">
+                    <p>Drop us a line!</p>
+                    <p>busearchconnect@gmail.com</p>
+                    <p>Join our <a class="link" href="https://discord.gg/bt6ZhyNB" target="_blank">Discord server</a>!</p>
+                </div>
+                <!-- Add more content sections as needed -->
+                <!-- <button class="cancel-button" onclick="closeSettings()">cancel</button>
         <button class="save-button" onclick="closeSettings()">save</button> -->
+            </div>
         </div>
-    </div>
-    <div class="discord-button">
-        <a href="https://discord.gg/jMSVqabC" target="_blank"><img src="static/images/discord.png" alt="discord"></a>
-    </div>
-    <!-- Background overlay -->
-    <div class="overlay" id="overlay"></div>
-    <script src="/static/script.js"></script>
+
+        <div class="discord-button">
+            <a href="https://discord.gg/bt6ZhyNB" target="_blank"><img src="static/images/discord.png" alt="discord"></a>
+        </div>
+
+        <!-- Background overlay -->
+        <div class="overlay" id="overlay"></div>
+
+
+        <script src="static/script.js"></script>
+        <script>
+            updateLogoDivs()
+        </script>
+
 </body>
+
 </html>
