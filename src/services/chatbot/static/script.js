@@ -1,4 +1,4 @@
-let authorized = false;
+let authorized = true;
 
 checkAuthorization();
 
@@ -16,9 +16,86 @@ const bodyElement = document.querySelector('body');
 if (bodyElement.classList.contains('cal')) {
     schoolName = 'cal';
     logoText = 'search.ai'
+    aboutText = `
+    <h3>about <div class="logo"></div></h3>
+    <p class="italic">version 0.8</p>
+    <p>Welcome to calsearch.ai, an AI chatbot trained on university documentation that provides relevant, personalized answers to complex, unique questions about your student life.</p>
+
+    <h3>features</h3>
+    <ul>
+    <li><p><span style="font-family: var(--bold-sans);">Knowledge 🧠</span> Calsearch is trained on over 300,000 berkeley.edu webpages.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Speed 🔍</span> Calsearch rapidly navigates its data while building its answer. It is designed to save you hours of Googling or days of waiting for a response from an advisor.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch is continuously expanding its already extensive knowledge base and improving its answer building with the help of your feedback (like/dislike buttons).</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Security and privacy 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> collects any of your personal data: only school documentation and your feedback.</p></li>
+</ul>
+
+<h3>what's coming</h3>
+<ul>
+<li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Student profiles 🙋</span> tell Calsearch anything relevant about yourself that it should keep in mind for all responses, like your major, college, year, etc.</p></li>
+<li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Conversationality 💬</span> have an ongoing conversation with Calsearch instead of asking one question at a time.</p></li>
+<li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Course selection tools 🧑‍🏫</span> get personalized suggestions for the right courses to take and get help navigating the course selection process.</p></li>
+</ul>
+
+
+    <h3>our team</h3>
+    <p>Calsearch is part of a larger group of university chatbots, with another working model at Boston University—<a href="https://app.busearch.com/" target="_blank" class="link">busearch</a>—and models in training at Columbia, Yale, UNC, Harvard, UMass Amherst, Emory, and others on the way. It is currently in beta as we develop more functionality.</p>
+    <p>Calsearch was trained and designed by <a href="https://www.georgeflint.com/" target="_blank" class="link">George Flint, '26</a>, at Cal; busearch was trained and designed by Jonah Katz, '26, at BU.</p>
+
+    <h3>join us</h3>
+    <p>If you'd like to join our team, and/or help us port over to another university, contact us—we're interested in hearing from you.</p>
+`
 } else if (bodyElement.classList.contains('bu')) {
     schoolName = 'bu';
     logoText = 'search.com'
+    aboutText = `
+    <h3>About BUsearch</h3>
+    <p>Welcome to BUsearch, the informational chatbot designed to make relevant university information instantly accessible, ensuring swift and concise answers for every Boston University student.</p>
+
+    <h3>Our Mission</h3>
+    <p>At BUsearch, our mission is to empower every student at Boston University with instant access to essential information, ensuring a seamless and enriched campus experience. We believe in harnessing the power of technology to bridge the
+        gap between students and the vast resources available at BU.</p>
+
+    <h3>Our Product</h3>
+    <p>BUsearch is an informational assistant custom-built for every BU student's day-to-day needs. Whether you're a freshman trying to navigate your way around campus, a senior looking for graduation details, or an international student seeking
+        housing advice, BUsearch is here to assist.</p>
+
+    <h3>Key Features</h3>
+    <ul>
+        <li>Instant Answers: No more waiting for appointments or sifting through web pages. Get immediate responses to your questions in just seconds.
+        </li>
+        <li>Comprehensive Database: From academic schedules to campus events, BUsearch covers a wide range of topics to cater to every student's needs.
+        </li>
+        <li>Continuous Learning: BUsearch evolves with every interaction, ensuring that the information provided is always up-to-date and relevant.
+        </li>
+        <li>Secure and Private: We prioritize your privacy. Rest assured, your interactions with BUsearch are confidential.
+        </li>
+    </ul>
+
+    <h3>Our Team</h3>
+    <p>We are a group of dedicated students across multiple universities, including Boston University, UC Berkeley, and Columbia, who are passionate about utilizing the newest technology to enhance the academic experience and streamline access
+        to essential resources for students everywhere, starting with Boston University.</p>
+
+    <h3>Join Us</h3>
+    <p>We believe in the power of collaboration. If you have suggestions, feedback, or want to be a part of the team, please reach out.</p>
+`
+} else if (bodyElement.classList.contains('emory')) {
+    schoolName = 'emory';
+    logoText = 'search.com'
+} else if (bodyElement.classList.contains('harvard')) {
+    schoolName = 'harvard';
+    logoText = 'search.com'
+} else if (bodyElement.classList.contains('yale')) {
+    schoolName = 'yale';
+    logoText = 'search.com'
+} else if (bodyElement.classList.contains('unc')) {
+    schoolName = 'unc';
+    logoText = 'search.com'
+}
+
+if (document.body.classList.contains('landing')) {
+    document.getElementsByClassName("landing-about")[0].innerHTML = aboutText;
+} else {
+    document.getElementsByClassName("about-content")[0].innerHTML = aboutText;
 }
 
 if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
@@ -26,18 +103,21 @@ if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chr
 }
 
 const originalWelcomeContent = `
-  <div class="chat-response welcome input">
-    <div class="logo-text">Welcome to </div><div class='logo large'></div>
-    <p class="welcome-text">BUsearch is an informational chatbot for Boston University students.</p>
-    <p class="welcome-text">To start searching, please <strong>log in using your BU email account</strong> above.
-    </p>
+
+<div class="logo-text">Welcome to &nbsp;</div>
+<div class="logo large"><span class="school-color">${schoolName}</span>search</div>
+<p class="welcome-text">please login with your <strong>school email</strong> to start searching</p>
 `;
 
-const loggedInWelcomeContent = `<div class="logo-text">Welcome to </div><div class='logo large'></div><div class="suggestions">
+const loggedInWelcomeContent = `<div class="logo-text">Welcome to&nbsp;</div>
+<div class="logo large"><span class="school-color">${schoolName}</span>search</div>
+<div class="suggestions-wrapper">
+<div class="suggestions">
 <div class="suggestion"></div>
 <div class="suggestion"></div>
 <div class="suggestion"></div>
 <div class="suggestion"></div>
+</div>
 </div>`
 
 const suggestions = [
@@ -78,11 +158,39 @@ const suggestions = [
     'How do I set up university email on my phone?'
 ];
 
+function detectAndFormatLists(inputText) {
+    let outputText = '';
+    const lines = inputText.split('\n');
+    let inOrderedList = false;
+
+    lines.forEach((line) => {
+        const isListItem = line.match(/^\s*\d+\.\s+/);
+
+        if (isListItem && !inOrderedList) {
+            inOrderedList = true;
+        } else if (!isListItem && inOrderedList) {
+            inOrderedList = false;
+        }
+
+        if (isListItem) {
+            outputText += `${line.replace(/^\s*\d+\.\s+/, '')}\n`;
+        } else {
+            outputText += `${line}\n`;
+        }
+    });
+
+    return outputText;
+}
+
 function updateLogoDivs() {
+    document.title = `${schoolName}search`
     let logoDivs = document.querySelectorAll('.logo');
     logoDivs.forEach(function(div) {
         if (div.classList.contains('long')) {
             div.innerHTML = `<span class="school-color">${schoolName}</span>${logoText}`;
+        } else if (div.classList.contains('landing-logo')) {
+            div.innerHTML = `Welcome&nbsp;to&nbsp;<span class="school-color">${schoolName}</span>${logoText}`;
+
         } else {
             div.innerHTML = `<span class="school-color">${schoolName}</span>search`;
         }
@@ -110,48 +218,49 @@ function clearWelcomeMessage() {
     welcomeChatResponse.remove();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    updateLogoDivs();
-    let chatSpaceContainer = document.querySelector('.chat-space-container');
+if (!document.body.classList.contains('landing')) {
+    document.addEventListener('DOMContentLoaded', function() {
+        updateLogoDivs();
+        let chatSpaceContainer = document.querySelector('.chat-space-container');
 
-    chatSpaceContainer.addEventListener('click', function(event) {
-        if (event.target.classList.contains('suggestion')) {
-            let suggestionText = event.target.innerHTML;
-            let chatInput = document.querySelector('.chat-input');
-            chatInput.value = suggestionText;
-        }
-    });
-});
-
-window.onload = function() {
-    const chatInput = document.querySelector('.chat-input');
-    const sendButton = document.querySelector('.send-button');
-
-    if (chatInput && sendButton) {
-        chatInput.addEventListener('input', function() {
-            if (this.value.trim() !== '') {
-                sendButton.classList.add('active');
-            } else {
-                sendButton.classList.remove('active');
+        chatSpaceContainer.addEventListener('click', function(event) {
+            if (event.target.classList.contains('suggestion')) {
+                let suggestionText = event.target.innerHTML;
+                let chatInput = document.querySelector('.chat-input');
+                chatInput.value = suggestionText;
             }
         });
-    } else {
-        console.log("error in input div activation");
-    }
-};
+    });
+}
+// BELOW: turns on active class of sendbutton if value in chatinput
+// window.onload = function() {
+//     const chatInput = document.querySelector('.chat-input');
+//     const sendButton = document.querySelector('.send-button');
 
+//     if (chatInput && sendButton) {
+//         chatInput.addEventListener('input', function() {
+//             if (this.value.trim() !== '') {
+//                 sendButton.classList.add('active');
+//             } else {
+//                 sendButton.classList.remove('active');
+//             }
+//         });
+//     } else {
+//         console.log("error in input div activation");
+//     }
+// };
 
 document.getElementById('loginBtn').addEventListener('click', function() {
     if (authorized) {
         // Logout logic
-        console.log("logout button clicked"); // Debugging line
+        // console.log("logout button clicked"); // Debugging line
         window.location.href = `/logout`;
 
         authorized = false;
         console.log("user is not authorized")
     } else {
         // Login logic
-        console.log("login button clicked"); // Debugging line
+        // console.log("login button clicked"); // Debugging line
         window.location.href = `/login`;
 
         checkAuthorization('You Are Logged In!');
@@ -161,15 +270,15 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 
 document.addEventListener('keydown', closeSettingsWithEsc);
 
-document.getElementsByClassName('likeBtn').addEventListener('click', function() {
-    toggleActiveState(this, document.getElementById('dislikeBtn'));
-    sendFeedback(currentResponseID, true);
-});
+// document.getElementsByClassName('likeBtn').addEventListener('click', function() {
+//     toggleActiveState(this, document.getElementById('dislikeBtn'));
+//     sendFeedback(currentResponseID, true);
+// });
 
-document.getElementsByClassName('dislikeBtn').addEventListener('click', function() {
-    toggleActiveState(this, document.getElementById('likeBtn'));
-    sendFeedback(currentResponseID, false);
-});
+// document.getElementsByClassName('dislikeBtn').addEventListener('click', function() {
+//     toggleActiveState(this, document.getElementById('likeBtn'));
+//     sendFeedback(currentResponseID, false);
+// });
 
 function makeUrlsClickable(str) {
     // Use a regular expression to match URLs
@@ -215,6 +324,7 @@ function toggleDarkMode() {
 function handleEnter(event) {
     if (event.key === 'Enter') {
         sendMessage();
+        event.preventDefault();
     }
 }
 
@@ -225,6 +335,23 @@ function toggleActiveState(currentBtn, otherBtn) {
         currentBtn.classList.add('active');
         otherBtn.classList.remove('active');
     }
+}
+
+function formatMarkdownToHTML(text) {
+    return text
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+        .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img alt="$1" src="$2" />')
+        .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>')
+        .replace(/\n$/gim, '<br />')
+        .replace(/^\s*[\r\n]/gim, '<br />')
+        .replace(/<\/h[1-3]>(?![\r\n])/gim, '</h1><br />')
+        .replace(/<\/blockquote>(?![\r\n])/gim, '</blockquote><br />')
+        .split('\n').join('<br />');
 }
 
 function sendMessage() {
@@ -297,9 +424,9 @@ function sendMessage() {
         })
         .then(data => {
 
-            console.log("Data: ", data)
+            // console.log("Data: ", data)
             currentResponseID = data.responseID;
-            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${data.response}`;
+            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${formatMarkdownToHTML(data.response)}`;
 
             if (lastFeedbackDiv) {
                 lastFeedbackDiv.style.display = 'none';
@@ -334,6 +461,8 @@ function sendMessage() {
         })
         .finally(() => {
             sendButton.disabled = false;
+            // Clear the chat input
+            chatInput.value = '';
             updateLogoDivs();
         });
 }
@@ -393,7 +522,7 @@ function checkAuthorization() {
             let sendButton = document.querySelector('.send-button');
             let chatInputContainer = document.querySelector('.chat-input-container');
 
-            if (data.is_authorized === true) {
+            if (data.authorized === true) {
                 console.log("user is authorized");
                 loginBtn.textContent = "logout";
                 welcomeChatResponse.innerHTML = loggedInWelcomeContent;
@@ -403,7 +532,7 @@ function checkAuthorization() {
                 updateLogoDivs()
 
                 authorized = true;
-            } else if (data.is_authorized === false) {
+            } else if (data.authorized === false) {
                 console.log("user is not authorized");
                 loginBtn.textContent = "login";
                 welcomeChatResponse.innerHTML = originalWelcomeContent;
@@ -426,20 +555,25 @@ function checkAuthorization() {
             }
         })
         .catch(error => {
+
             console.log(error)
-            console.log("BUG (catch)!!!!!");
+            console.log("error caught in checkAuthorization()");
             let loginBtn = document.getElementById('loginBtn');
             let welcomeChatResponse = document.querySelector('.chat-response.welcome');
             let chatInput = document.querySelector('.chat-input');
             let sendButton = document.querySelector('.send-button');
             let chatInputContainer = document.querySelector('.chat-input-container');
 
-            console.log("User is not authorized");
+            console.log("user is not authorized");
             loginBtn.textContent = "login";
-            welcomeChatResponse.innerHTML = originalWelcomeContent;
-            chatInput.classList.add('disabled');
-            sendButton.classList.add('disabled');
-            chatInputContainer.classList.add('disabled');
+            if (!document.body.classList.contains('landing')) {
+                welcomeChatResponse.innerHTML = originalWelcomeContent;
+                chatInput.classList.add('disabled');
+                sendButton.classList.add('disabled');
+                chatInputContainer.classList.add('disabled');
+            }
+
+            updateLogoDivs()
 
             authorized = false;
         });
@@ -449,7 +583,6 @@ function checkAuthorization() {
 // Function to switch settings content
 function switchSettingsContent(selectedTab) {
     // Hide all content sections
-    console.log("Switching to tab: ", selectedTab);
     const contentSections = document.querySelectorAll('.settings-content');
     contentSections.forEach(section => {
         section.style.display = 'none';
@@ -476,8 +609,10 @@ function autoGrowTextarea(id) {
 }
 
 // Usage
-const textarea = document.getElementById('chatInput');
-textarea.addEventListener('input', () => autoGrowTextarea('chatInput'));
+if (!document.body.classList.contains('landing')) {
+    const textarea = document.getElementById('chatInput');
+    textarea.addEventListener('input', () => autoGrowTextarea('chatInput'));
+}
 
 // Your existing function
 function switchSettingsContent(selectedTab) {
@@ -491,3 +626,78 @@ function switchSettingsContent(selectedTab) {
         selectedContent.style.display = 'block';
     }
 }
+
+if (document.body.classList.contains('landing')) {
+    function typeOutText(divId, textList, interval) {
+        const divElement = document.getElementById(divId);
+        let textIndex = 0;
+        let charIndex = 0;
+        let usedIndices = new Set();
+        let deleting = false;
+
+        function type() {
+            if (usedIndices.size === textList.length) {
+                usedIndices.clear();
+            }
+
+            if (!deleting && charIndex <= textList[textIndex].length) {
+                divElement.innerHTML = textList[textIndex].substr(0, charIndex) + '<span class="cursor">|</span>';
+                charIndex++;
+            } else {
+                deleting = true;
+                divElement.innerHTML = textList[textIndex].substr(0, charIndex) + '<span class="cursor">|</span>';
+                charIndex--;
+
+                if (charIndex === 0) {
+                    deleting = false;
+                    usedIndices.add(textIndex);
+
+                    while (usedIndices.has(textIndex)) {
+                        textIndex = Math.floor(Math.random() * textList.length);
+                    }
+                }
+            }
+
+            setTimeout(type, interval);
+        }
+
+        type();
+    }
+
+    // Call the function
+    typeOutText('suggestions', suggestions, 100);
+
+    let toggled = false;
+    document.addEventListener('DOMContentLoaded', function() {
+        const aboutBtn = document.getElementById('aboutBtn');
+        const landingContainer = document.querySelector('.landing-container');
+        const navbarMenu = document.querySelector('.navbar-menu');
+        const landingAboutContainer = document.querySelector('.landing-about-container');
+
+        aboutBtn.addEventListener('click', function() {
+            if (toggled) {
+                aboutBtn.textContent = 'about';
+                landingContainer.style.transform = 'translateX(0vw)';
+                navbarMenu.style.width = '33vw';
+                navbarMenu.style.transform = 'translateX(0vw)';
+                landingAboutContainer.style.transform = 'translateX(66vw)';
+            } else {
+                aboutBtn.textContent = 'back';
+                landingContainer.style.transform = 'translateX(-66vw)';
+                navbarMenu.style.width = '34vw';
+                navbarMenu.style.transform = 'translateX(-66vw)';
+                landingAboutContainer.style.transform = 'translateX(0)';
+            }
+            toggled = !toggled;
+        });
+    });
+}
+
+function debug_function() {
+    let welcomeChatResponse = document.querySelector('.chat-response.welcome');
+    welcomeChatResponse.innerHTML = loggedInWelcomeContent;
+    updateLogoDivs()
+
+}
+
+debug_function()
