@@ -4,7 +4,7 @@ import langchain.callbacks
 import langchain.chat_models
 import langchain.schema
 
-import src.libs.eval.evaluation_llm_schema as evaluation_llm_schema
+import src.libs.eval.schema.evaluation_llm_schema as evaluation_llm_schema
 
 
 class EvaluationAgent:
