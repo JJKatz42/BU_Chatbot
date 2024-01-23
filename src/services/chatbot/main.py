@@ -23,7 +23,7 @@ import src.services.chatbot.backend_control.backend as backend
 from src.libs.search.search_agent.search_agent import SearchAgent, SearchAgentFeatures
 from src.services.chatbot.backend_control.auth import generate_google_auth_url
 from src.services.chatbot.backend_control.models import ChatRequest, FeedbackRequest, ProfileInformationRequest
-from src.services.chatbot.backend_control.models import ChatResponse, IsAuthorizedResponse
+from src.services.chatbot.backend_control.models import ChatResponse, IsAuthorizedResponse, CurrentDictResponse
 
 logger = logging.getLogger(__name__)
 
@@ -376,3 +376,23 @@ async def insert_profile_info(data: ProfileInformationRequest, auth_token: str =
             logger.error(f"Profile info insertion error, {e}")
     else:
         logger.error(f"User {email} does not exist in the database.")
+
+
+@app.get("/current-profile-info", response_model=CurrentDictResponse)
+async def get_current_profile(request: Request):
+    """
+    Checks if the user has a valid JWT token in their cookies and is authorized.
+    """
+    jwt_token = request.cookies.get("auth_token")  # Get the JWT token from the cookies
+    if not jwt_token:
+        return CurrentDictResponse(profile_info_dict={})  # Return the response
+    try:
+        email = get_current_email(jwt_token=jwt_token)  # If the JWT token is valid, the user is authorized
+
+        current_dict = weaviate_user_management.get_profile_info_for_user(gmail=email)
+
+        return CurrentDictResponse(profile_info_dict=current_dict)  # Return the response
+    except HTTPException as e:
+        if e.status_code == 401:
+            return CurrentDictResponse(profile_info_dict={})  # Return the response
+        raise  # Any other unexpected errors can be raised normally

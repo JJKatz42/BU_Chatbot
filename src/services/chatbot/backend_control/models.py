@@ -62,3 +62,7 @@ class IncompleteResponse(BaseModel):
 
 class ProfileInformationRequest(BaseModel):
     profile_info_dict: dict
+
+
+class CurrentDictResponse(BaseModel):
+    profile_info_dict: dict
