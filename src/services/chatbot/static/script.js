@@ -10,12 +10,32 @@ let lastFeedbackDiv = null; // Variable to keep track of the last feedback div
 
 let schoolName = ''; // Initialize the variable
 let logoText = '';
+let profilePlaceholderText = '';
+
 const bodyElement = document.querySelector('body');
+
+function setBodyClassBasedOnDomain() {
+    const domainToClassMap = {
+        'calsearch.ai': 'cal',
+        'busearch.com': 'bu'
+            // Add more mappings here as needed
+    };
+
+    const currentDomain = window.location.hostname;
+    const bodyClass = domainToClassMap[currentDomain];
+
+    if (bodyClass) {
+        document.body.className = bodyClass;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', setBodyClassBasedOnDomain);
 
 // Check for class on the body element and update schoolName
 if (bodyElement.classList.contains('cal')) {
     schoolName = 'cal';
     logoText = 'search.ai'
+    profilePlaceholderText = "I'm an in-state Regent's Scholarship student with no other financial aid. I am on pre Haas track and hope to major in coloring and shapes. Expected graduation 2027."
     aboutText = `
     <h3>about <div class="logo"></div></h3>
     <p class="italic">version 0.8</p>
@@ -38,8 +58,8 @@ if (bodyElement.classList.contains('cal')) {
 
 
     <h3>our team</h3>
-    <p>Calsearch is part of a larger group of university chatbots, with another working model at Boston University—<a href="https://app.busearch.com/" target="_blank" class="link">busearch</a>—and models in training at Columbia, Yale, UNC, Harvard, UMass Amherst, Emory, and others on the way. It is currently in beta as we develop more functionality.</p>
-    <p>Calsearch was trained and designed by <a href="https://www.georgeflint.com/" target="_blank" class="link">George Flint, '26</a>, at Cal; busearch was trained and designed by Jonah Katz, '26, at BU.</p>
+    <p>Calsearch is part of a larger group of university chatbots, with another working model at Boston University—<a href="https://app.busearch.com/" target="_blank" class="link">BUsearch</a>—and models in training at Columbia, Yale, UNC, Harvard, UMass Amherst, Emory, and others on the way. It is currently in beta as we develop more functionality.</p>
+    <p>Calsearch was trained and designed by <a href="https://www.georgeflint.com/" target="_blank" class="link">George Flint, '26</a>, at Cal; BUsearch was trained and designed by Jonah Katz, '26, at BU.</p>
 
     <h3>join us</h3>
     <p>If you'd like to join our team, and/or help us port over to another university, contact us—we're interested in hearing from you.</p>
@@ -47,6 +67,7 @@ if (bodyElement.classList.contains('cal')) {
 } else if (bodyElement.classList.contains('bu')) {
     schoolName = 'bu';
     logoText = 'search.com'
+    profilePlaceholderText = "I'm a CS major and Pell Grant student. I am expected to graduate with the class of 2027. "
     aboutText = `
     <h3>About BUsearch</h3>
     <p>Welcome to BUsearch, the informational chatbot designed to make relevant university information instantly accessible, ensuring swift and concise answers for every Boston University student.</p>
@@ -258,6 +279,7 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 
         authorized = false;
         console.log("user is not authorized")
+        console.log("User was authoirzed")
     } else {
         // Login logic
         // console.log("login button clicked"); // Debugging line
@@ -265,6 +287,7 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 
         checkAuthorization('You Are Logged In!');
         console.log("user is not authorized")
+        console.log("User was not authoirzed")
     }
 });
 
@@ -499,6 +522,46 @@ function sendFeedback(responseID, isLiked) {
         });
 }
 
+function collectProfileInformation() {
+    var profileInfoDict = {
+        'major': document.getElementById('major').value,
+        'college': document.getElementById('college').value,
+        'other': document.getElementById('other').value
+    };
+    sendProfileInformation(profileInfoDict);
+}
+
+/**
+ * Send profile information to the server.
+ * @param {dictionary} profile_info_dict - The type of feedback, either true or false
+ */
+function sendFeedback(responseID, profile_info_dict) {
+    const requestData = {
+        responseID: responseID,
+        is_liked: profile_info_dict
+    };
+
+    fetch(`/feedback`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || 'Network response was not ok');
+                });
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
 function checkAuthorization() {
     fetch(`/is-authorized`, {
             method: 'GET',
@@ -516,13 +579,15 @@ function checkAuthorization() {
             return response.json();
         })
         .then(data => {
+            console.log("Data: ", data.is_authorized)
             let loginBtn = document.getElementById('loginBtn');
             let welcomeChatResponse = document.querySelector('.chat-response.welcome');
             let chatInput = document.querySelector('.chat-input');
             let sendButton = document.querySelector('.send-button');
             let chatInputContainer = document.querySelector('.chat-input-container');
 
-            if (data.authorized === true) {
+
+            if (data.is_authorized === true) {
                 console.log("user is authorized");
                 loginBtn.textContent = "logout";
                 welcomeChatResponse.innerHTML = loggedInWelcomeContent;
@@ -532,8 +597,9 @@ function checkAuthorization() {
                 updateLogoDivs()
 
                 authorized = true;
-            } else if (data.authorized === false) {
+            } else if (data.is_authorized === false) {
                 console.log("user is not authorized");
+                console.log("Data: ", data.is_authorized);
                 loginBtn.textContent = "login";
                 welcomeChatResponse.innerHTML = originalWelcomeContent;
                 chatInput.classList.add('disabled');
@@ -602,6 +668,8 @@ function autoGrowTextarea(id) {
     if (lineCount > 6) { // Cap at 6 lines
         lineCount = 6;
         textarea.style.overflowY = 'scroll'; // Enable scroll
+        textarea.style.height = '200px'
+            // ########################################################
     } else {
         textarea.style.overflowY = 'hidden'; // Hide scroll
     }
