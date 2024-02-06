@@ -1383,3 +1383,35 @@ body.dark-mode .dot {
         font-size: 50px !important;
     }
 }
+
+textarea.profile {
+    border-radius: var(--radius);
+    border: none;
+    background-color: var(--gray);
+    height: 40px;
+    min-height: 40px;
+    max-width: 300px;
+    width: 100%;
+    padding: 14px;
+    resize: none;
+    line-height: 1.4;
+}
+
+textarea.profile:focus-visible {
+    border: none;
+    outline: none;
+}
+
+textarea.profile.other {
+    min-height: 140px;
+}
+
+button.save {
+    display: block;
+    margin-top: 20px;
+    font-size: 18px;
+    font-family: var(--bold-sans);
+    background: transparent;
+    border: none;
+    margin-bottom: 40px;
+}
