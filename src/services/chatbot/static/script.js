@@ -321,6 +321,8 @@ function openSettings(tab) {
     settingsPopup.style.display = 'block';
     overlay.style.display = 'block';
 
+    // collectProfileInformation();
+
     // Switch to the tab specified in the argument
     if (tab) {
         switchSettingsContent(tab);
@@ -522,6 +524,34 @@ function sendFeedback(responseID, isLiked) {
         });
 }
 
+function collectCurrentProfileInformation() {
+    fetch(`/current-profile-info`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || 'network problem.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Data: ", data)
+            document.getElementById('college').value = data.profile_info_dict['college']
+            document.getElementById('major').value = data.profile_info_dict['major']
+            document.getElementById('other').value = data.profile_info_dict['other']
+        })
+        .catch(error => {
+            console.log(error)
+            console.log("error caught in collectCurrentProfileInformation()");
+        });
+}
+
 function collectProfileInformation() {
     var profileInfoDict = {
         'major': document.getElementById('major').value,
@@ -535,13 +565,12 @@ function collectProfileInformation() {
  * Send profile information to the server.
  * @param {dictionary} profile_info_dict - The type of feedback, either true or false
  */
-function sendFeedback(responseID, profile_info_dict) {
+function sendProfileInformation(profile_info_dict) {
     const requestData = {
-        responseID: responseID,
-        is_liked: profile_info_dict
+        profile_info_dict: profile_info_dict
     };
 
-    fetch(`/feedback`, {
+    fetch(`/insert-profile-info`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -555,6 +584,9 @@ function sendFeedback(responseID, profile_info_dict) {
                     throw new Error(err.error || 'Network response was not ok');
                 });
             }
+            console.log(profile_info_dict)
+                // if we want to add some UX notifier of profile information status,
+                // we could do something here like saved at {last save date} -> unsaved -> saving... -> saved at {last save date}
             return response.json();
         })
         .catch(error => {
@@ -590,11 +622,13 @@ function checkAuthorization() {
             if (data.is_authorized === true) {
                 console.log("user is authorized");
                 loginBtn.textContent = "logout";
+                console.log("Data: ", data.is_authorized);
                 welcomeChatResponse.innerHTML = loggedInWelcomeContent;
                 chatInput.classList.remove('disabled');
                 sendButton.classList.remove('disabled');
                 chatInputContainer.classList.remove('disabled');
                 updateLogoDivs()
+                    // collectProfileInformation()
 
                 authorized = true;
             } else if (data.is_authorized === false) {
@@ -610,6 +644,7 @@ function checkAuthorization() {
                 authorized = false;
             } else {
                 console.log("user is not authorized");
+                console.log("Data: ", data.is_authorized);
                 loginBtn.textContent = "login";
                 welcomeChatResponse.innerHTML = originalWelcomeContent;
                 chatInput.classList.add('disabled');
@@ -769,3 +804,18 @@ function debug_function() {
 }
 
 debug_function()
+
+function updateBodyClassBasedOnDomain() {
+    // Get the current URL of the page
+    const url = window.location.hostname;
+
+    // Check the domain and set the class name accordingly
+    if (url.includes('calsearch.ai')) {
+        document.body.className = 'cal';
+    } else if (url.includes('busearch.com')) {
+        document.body.className = 'bu';
+    }
+}
+
+// Call the function when the page loads
+window.onload = updateBodyClassBasedOnDomain;

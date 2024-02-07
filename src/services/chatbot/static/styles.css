@@ -650,7 +650,7 @@ input:checked+.slider:before {
     box-shadow: var(--shadow);
     background-color: var(--white);
     max-width: 946px;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .settings-sidebar {
@@ -684,6 +684,11 @@ input:checked+.slider:before {
     font-family: var(--sans);
     overflow: auto;
 }
+
+
+/* .settings-content.profile-content {
+    padding-bottom: 20px !important;
+} */
 
 .settings-sidebar-tab,
 .sidebar-tab {
@@ -1389,9 +1394,9 @@ textarea.profile {
     border: none;
     background-color: var(--gray);
     height: 40px;
+    width: calc(100% - 30px);
     min-height: 40px;
-    max-width: 300px;
-    width: 100%;
+    max-width: 500px;
     padding: 14px;
     resize: none;
     line-height: 1.4;
@@ -1408,10 +1413,18 @@ textarea.profile.other {
 
 button.save {
     display: block;
-    margin-top: 20px;
     font-size: 18px;
     font-family: var(--bold-sans);
-    background: transparent;
+    background: var(--light-gray);
     border: none;
-    margin-bottom: 40px;
+    padding: 10px;
+    border-radius: var(--radius);
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+button.save:hover {
+    background-color: var(--school);
+    cursor: pointer;
+    opacity: 1;
 }
