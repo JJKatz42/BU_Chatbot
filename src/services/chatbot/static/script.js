@@ -451,7 +451,7 @@ function sendMessage() {
 
             // console.log("Data: ", data)
             currentResponseID = data.responseID;
-            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${formatMarkdownToHTML(data.response)}`;
+            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${data.response}`;
 
             if (lastFeedbackDiv) {
                 lastFeedbackDiv.style.display = 'none';

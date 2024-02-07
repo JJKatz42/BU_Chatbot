@@ -325,18 +325,18 @@ class SearchAgent:
                     "you were able to find and what information is missing to answer their question."
         )
 
-        user_personal_information = langchain.schema.SystemMessage(
-            content=f"If a user asks about themselves or uses 'I' in their question, use the following "
-                    f"information provided in the dictionary below to answer the question: \n"
-                    f"{current_profile_info}"
-        )
+        # user_personal_information = langchain.schema.SystemMessage(
+        #     content=f"If a user asks about themselves or uses 'I' in their question, use the following "
+        #             f"information provided in the dictionary below to answer the question: \n"
+        #             f"{current_profile_info}"
+        # )
 
         # Create the artificial history of messages to prompt LLM
         llm_prompt_messages = [
             role_prompt_message,
             question_prompt_message,
             search_results_prompt_message,
-            user_personal_information
+            # user_personal_information
         ]
         if sub_query_results_prompt_message:
             llm_prompt_messages.append(sub_query_results_prompt_message)
