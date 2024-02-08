@@ -803,7 +803,7 @@ function debug_function() {
 
 }
 
-debug_function()
+debug_function();
 
 function updateBodyClassBasedOnDomain() {
     // Get the current URL of the page
@@ -814,8 +814,10 @@ function updateBodyClassBasedOnDomain() {
         document.body.className = 'cal';
     } else if (url.includes('busearch.com')) {
         document.body.className = 'bu';
+    } else {
+        document.body.className = 'bu';
     }
 }
 
 // Call the function when the page loads
-window.onload = updateBodyClassBasedOnDomain;
+// window.onload = updateBodyClassBasedOnDomain;
