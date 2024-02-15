@@ -92,6 +92,8 @@ query = query.with_autocut(1)
         logger.info("Executing search query")
         response = query.do()
 
+        logger.info(f"Search query executed: {response}")
+
         try:
             raw_results = response["data"]["Get"][
                 TextContent.weaviate_class_name(namespace=self.namespace)
@@ -116,6 +118,7 @@ query = query.with_autocut(1)
             )
             search_results.append(search_result)
 
+        logger.info(f"Search results: {search_results}")
         return search_results
 
     def ask(
