@@ -216,6 +216,8 @@ class SearchAgent:
                 query_results[query_result.query.id] = query_result
             if len(query_results) == len(execution_order):
                 break
+
+        logger.info(f"Query results: {query_results}")
         return query_results
 
     async def execute_query(
@@ -369,10 +371,9 @@ class SearchAgent:
             )
             llm_override_params = {"model": self._fallback_qa_llm_model_name}
 
-
-        logger.info(f"About ro predict messages in the execute_query function within search_agent.py")
+        logger.info(f"About to predict messages in the execute_query function within search_agent.py")
         llm_answer_message = await self._qa_llm.apredict_messages(messages=llm_prompt_messages, **llm_override_params)
-
+        logger.info(f"predicted messages in the execute_query function within search_agent.py: {llm_answer_message.content}")
         return query_planning.QueryResult(
             query=query,
             result=llm_answer_message.content,
