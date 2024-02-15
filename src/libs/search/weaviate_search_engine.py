@@ -89,6 +89,7 @@ query = query.with_autocut(1)
         )
 
         # Execute the query
+        logger.info("Executing search query")
         response = query.do()
 
         try:

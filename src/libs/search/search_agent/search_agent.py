@@ -95,6 +95,7 @@ class SearchAgent:
         Returns:
             An AgentResult object which contains the answer, sources used and various debug details
         """
+        logger.info("Running search agent job in run function within search_agent.py")
         with langchain.callbacks.get_openai_callback() as cb:
             # Default query plan consists of just the original query passed to run()
             query_plan = query_planning.QueryPlan(
@@ -110,6 +111,8 @@ class SearchAgent:
             if self.is_enabled(SearchAgentFeatures.QUERY_PLANNING):
                 query_plan = await self.build_query_plan(query=query)
 
+            logger.info(f"Query plan: {query_plan}")
+
             # Execute the query plan
             query_plan_results = await self.execute_query_plan(
                 query_plan=query_plan,
@@ -117,6 +120,8 @@ class SearchAgent:
                 profile_info_vector=profile_info_vector,
                 context=context
             )
+
+            logger.info(f"Query plan results: {query_plan_results}")
 
             # Capture the total number of LLM tokens used over the course of query plan execution
             total_tokens_used = cb.total_tokens
@@ -133,6 +138,8 @@ class SearchAgent:
                 if source not in all_sources:
                     all_sources.append(source)
 
+        logger.info(f"Sources used: {all_sources}")
+
         formatted_answer = await answer_formatting.format_answer(
             generated_answer=root_query_result.result,
             sources=all_sources,
@@ -140,6 +147,8 @@ class SearchAgent:
             fallback_llm=self._reasoning_llm,
             query=query,
         )
+
+        logger.info(f"Formatted answer: {formatted_answer}")
 
         return AgentResult(
             query=query,
@@ -268,6 +277,7 @@ class SearchAgent:
         # Re-rank and get top K sources
         sources = self._re_rank(sources=sources, top_k=num_results_for_gen)
 
+        logger.info(f"Search results: {sources}")
         # Build up the sources context string from the sources returned by search
         source_texts = []
         for source in sources:
@@ -359,6 +369,8 @@ class SearchAgent:
             )
             llm_override_params = {"model": self._fallback_qa_llm_model_name}
 
+
+        logger.info(f"About ro predict messages in the execute_query function within search_agent.py")
         llm_answer_message = await self._qa_llm.apredict_messages(messages=llm_prompt_messages, **llm_override_params)
 
         return query_planning.QueryResult(
