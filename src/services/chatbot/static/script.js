@@ -12,17 +12,20 @@ let schoolName = ''; // Initialize the variable
 let logoText = '';
 let profilePlaceholderText = '';
 
+let running = false;
+
 const bodyElement = document.querySelector('body');
 
 function setBodyClassBasedOnDomain() {
     const domainToClassMap = {
         'calsearch.ai': 'cal',
-        'busearch.com': 'bu'
-            // Add more mappings here as needed
+        'busearch.com': 'bu',
+        '127.0.0.1': 'cal', // Add this line
     };
 
     const currentDomain = window.location.hostname;
     const bodyClass = domainToClassMap[currentDomain];
+    schoolName = bodyClass;
 
     if (bodyClass) {
         document.body.className = bodyClass;
@@ -30,6 +33,66 @@ function setBodyClassBasedOnDomain() {
 }
 
 document.addEventListener('DOMContentLoaded', setBodyClassBasedOnDomain);
+
+function removeBrTagsAroundAndWithinLists(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const lists = doc.querySelectorAll('ol, ul');
+
+    lists.forEach(list => {
+        // Check and remove <br> tag directly before the list
+        let prevElement = list.previousElementSibling;
+        while (prevElement && prevElement.nodeType === Node.TEXT_NODE) { // Skip text nodes
+            prevElement = prevElement.previousElementSibling;
+        }
+        if (prevElement && prevElement.tagName === 'BR') {
+            prevElement.remove();
+        }
+
+        // Check and remove <br> tag directly after the list
+        let nextElement = list.nextElementSibling;
+        while (nextElement && nextElement.nodeType === Node.TEXT_NODE) { // Skip text nodes
+            nextElement = nextElement.nextElementSibling;
+        }
+        if (nextElement && nextElement.tagName === 'BR') {
+            nextElement.remove();
+        }
+
+        // New Code: Remove <br> tags within list items
+        list.querySelectorAll('li').forEach(li => {
+            li.querySelectorAll('br').forEach(br => br.remove());
+        });
+    });
+
+    return doc.body.innerHTML;
+}
+
+function removeAnswerPrefix(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Get the body element or any container element that might directly contain the "Answer:" prefix
+    const bodyContent = doc.body;
+
+    // Check if the "Answer:" prefix is at the start of the body's innerHTML
+    if (bodyContent.innerHTML.startsWith('Answer:')) {
+        // Remove "Answer:" prefix
+        bodyContent.innerHTML = bodyContent.innerHTML.substring(7);
+    }
+
+    // Iterate through all child nodes of the body to handle cases where "Answer:" might be inside a child node
+    const childNodes = bodyContent.childNodes;
+    childNodes.forEach(node => {
+        // Check only text nodes
+        if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim().startsWith('Answer:')) {
+            // Replace "Answer:" with an empty string
+            node.nodeValue = node.nodeValue.replace('Answer:', '').trimStart();
+        }
+    });
+
+    return doc.body.innerHTML;
+}
 
 // Check for class on the body element and update schoolName
 if (bodyElement.classList.contains('cal')) {
@@ -44,14 +107,14 @@ if (bodyElement.classList.contains('cal')) {
     <h3>features</h3>
     <ul>
     <li><p><span style="font-family: var(--bold-sans);">Knowledge 🧠</span> Calsearch is trained on over 300,000 berkeley.edu webpages.</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Speed 🔍</span> Calsearch rapidly navigates its data while building its answer. It is designed to save you hours of Googling or days of waiting for a response from an advisor.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Speed ⚡️</span> Calsearch rapidly navigates its data while building its answer. It is designed to save you hours of Googling or days of waiting for a response from an advisor.</p></li>
     <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch is continuously expanding its already extensive knowledge base and improving its answer building with the help of your feedback (like/dislike buttons).</p></li>
     <li><p><span style="font-family: var(--bold-sans);">Security and privacy 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> collects any of your personal data: only school documentation and your feedback.</p></li>
+    <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Student profiles 🙋</span> tell Calsearch anything relevant about yourself that it should keep in mind for all responses, like your major, college, year, etc.</p></li>
 </ul>
 
 <h3>what's coming</h3>
 <ul>
-<li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Student profiles 🙋</span> tell Calsearch anything relevant about yourself that it should keep in mind for all responses, like your major, college, year, etc.</p></li>
 <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Conversationality 💬</span> have an ongoing conversation with Calsearch instead of asking one question at a time.</p></li>
 <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Course selection tools 🧑‍🏫</span> get personalized suggestions for the right courses to take and get help navigating the course selection process.</p></li>
 </ul>
@@ -127,11 +190,15 @@ const originalWelcomeContent = `
 
 <div class="logo-text">Welcome to &nbsp;</div>
 <div class="logo large"><span class="school-color">${schoolName}</span>search</div>
+<p class="welcome-text">an AI chatbot trained on everything Berkeley</p>
+<p class="welcome-text">we are currently in <strong>BETA</strong></p>
 <p class="welcome-text">please login with your <strong>school email</strong> to start searching</p>
 `;
 
 const loggedInWelcomeContent = `<div class="logo-text">Welcome to&nbsp;</div>
 <div class="logo large"><span class="school-color">${schoolName}</span>search</div>
+<p class="welcome-text">an AI chatbot trained on everything Berkeley</p>
+<p class="welcome-text">we are currently in <strong>BETA</strong></p>
 <div class="suggestions-wrapper">
 <div class="suggestions">
 <div class="suggestion"></div>
@@ -208,7 +275,7 @@ function updateLogoDivs() {
     let logoDivs = document.querySelectorAll('.logo');
     logoDivs.forEach(function(div) {
         if (div.classList.contains('long')) {
-            div.innerHTML = `<span class="school-color">${schoolName}</span>${logoText}`;
+            div.innerHTML = `<span class="school-color">${schoolName}</span>${logoText}<span class="beta">BETA</span>`;
         } else if (div.classList.contains('landing-logo')) {
             div.innerHTML = `Welcome&nbsp;to&nbsp;<span class="school-color">${schoolName}</span>${logoText}`;
 
@@ -389,6 +456,16 @@ function sendMessage() {
 
     const chatInput = document.getElementById('chatInput');
     const question = chatInput.value.trim();
+
+    // Check if the chat input is empty and exit the function if true
+    console.log(question)
+    if (!question || running) { // If question is an empty string
+        return; // Exit the function
+    }
+
+    // Indicator that a job is currently being run
+    running = true;
+
     // Create the request payload
     const requestData = {
         question: question
@@ -451,7 +528,7 @@ function sendMessage() {
 
             // console.log("Data: ", data)
             currentResponseID = data.responseID;
-            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${formatMarkdownToHTML(data.response)}`;
+            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${removeAnswerPrefix(removeBrTagsAroundAndWithinLists(formatMarkdownToHTML(data.response)))}`;
 
             if (lastFeedbackDiv) {
                 lastFeedbackDiv.style.display = 'none';
@@ -486,6 +563,7 @@ function sendMessage() {
         })
         .finally(() => {
             sendButton.disabled = false;
+            running = false;
             // Clear the chat input
             chatInput.value = '';
             updateLogoDivs();

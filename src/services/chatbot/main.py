@@ -125,7 +125,7 @@ features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QU
 
 search_agent = SearchAgent(
     weaviate_search_engine=weaviate_engine,
-    university="BU",
+    university="CAL",
     reasoning_llm=reasoning_llm,
     features=features
 )
@@ -308,7 +308,7 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
                         user_management=weaviate_user_management,
                         gmail=email,
                         input_text=data.question,
-                        cap=50
+                        cap=200
                     )  # Insert the question and answer into the database
                 except Exception as e:
                     logger.error(f"error: {e}")
