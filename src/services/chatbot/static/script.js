@@ -108,7 +108,7 @@ if (bodyElement.classList.contains('cal')) {
     <ul>
     <li><p><span style="font-family: var(--bold-sans);">Knowledge 🧠</span> Calsearch is trained on over 300,000 berkeley.edu webpages.</p></li>
     <li><p><span style="font-family: var(--bold-sans);">Speed ⚡️</span> Calsearch rapidly navigates its data while building its answer. It is designed to save you hours of Googling or days of waiting for a response from an advisor.</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch is continuously expanding its already extensive knowledge base and improving its answer building with the help of your feedback (like/dislike buttons).</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch is continuously expanding its already extensive knowledge base and improving its answer building with the help of your feedback.</p></li>
     <li><p><span style="font-family: var(--bold-sans);">Security and privacy 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> collects any of your personal data: only school documentation and your feedback.</p></li>
     <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Student profiles 🙋</span> tell Calsearch anything relevant about yourself that it should keep in mind for all responses, like your major, college, year, etc.</p></li>
 </ul>
@@ -209,42 +209,26 @@ const loggedInWelcomeContent = `<div class="logo-text">Welcome to&nbsp;</div>
 </div>`
 
 const suggestions = [
-    'How do I register for classes?',
-    "What's the academic calendar for this semester?",
-    'How do I get a parking pass?',
-    'Tell me more about student housing options.',
-    'Where is the financial aid office located?',
-    'How do I reset my student portal password?',
-    'What are the prerequisites for the course CS101?',
-    'Is the Student Health Center open on weekends?',
-    'How can I apply for a work-study job?',
-    'Tell me about the procedures for grade appeals.',
-    'Who should I contact for lost and found items?',
-    'What are the deadlines for scholarship applications?',
-    'Where can I find resources for international students?',
-    'How do I reserve a study room in the library?',
-    'What is the policy for late assignment submissions?',
-    "What's the academic calendar for this year?",
-    'How do I apply for on-campus housing?',
-    'Tell me about study abroad options.',
-    'What are the library hours?',
-    'How can I join a student organization?',
-    "What's the deadline for course registration?",
-    'Where is the career center located?',
-    'How do I get a parking pass?',
-    'Tell me about meal plan options.',
-    'What are some popular campus events?',
-    'How do I get mental health support?',
-    'What are the gym hours?',
-    'How can I contact financial aid?',
-    'Tell me about emergency services on campus.',
-    'How do I get my transcripts?',
-    "What's the process for academic advising?",
-    'Where can I find a campus map?',
-    'How can I report a maintenance issue?',
-    'Tell me about the shuttle services.',
-    'How do I set up university email on my phone?'
+    "How do I join the Undergraduate Research Apprentice Program (URAP)?",
+    "Can you provide the process for founding a new student organization related to environmental advocacy?",
+    "What documents are required to apply for a Blue Zone parking permit?",
+    "How can I report a lost Cal1Card and request a new one?",
+    "What criteria must be met to graduate with High Honors in the English department?",
+    "Where do I submit feedback on accessibility issues within campus facilities?",
+    "How do I request an official transcript for graduate school applications?",
+    "Where can I find free tutoring for upper division Mathematics courses?",
+    "How do I apply for ASUC sponsoring for my club?",
+    "How do I apply for a Minor in Data Science, and what are the prerequisites?",
+    "How can I get involved with the Berkeley Food Network?",
+    "What is the deadline for applying to the Global Internship Program?",
+    "How do I cancel my housing contract with the dorms?",
+    "What scholarships are available for out-of-state students?",
+    "What pottery classes are available for Spring 2024?",
+    "When is Cal Day?",
+    "How do I apply for emergency financial assistance due to unforeseen circumstances?",
+    "Where should I go for a quick lunch on campus?"
 ];
+
 
 function detectAndFormatLists(inputText) {
     let outputText = '';
