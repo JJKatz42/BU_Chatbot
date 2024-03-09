@@ -67,10 +67,10 @@ async def get_answer(
         agent_result = await search_agent_job(search_agent, input_text, current_profile_info, profile_info_vector)
 
         answer = markdown.markdown(agent_result['answer'])
-        if "related to your query." in answer or "couldn't find any relevant" in answer or "does not have any specific meaning or relevance" in answer or "I apologize" in answer or "I'm sorry" in answer or "can't assist with your request" in answer:
-            # response = f"<p>{answer[34:]}</p>"  # This is a really quick and not good way of checking to see
+
+        if "related to your query." in answer or "couldn't find any relevant" in answer or "does not have any specific meaning or relevance" in answer or "I apologize" in answer:
+            response = f"<p>{answer[34:]}</p>"  # This is a really quick and not good way of checking to see
             # if the searchengine could not find a result
-            response = f"<p>{answer}</p>"
 
         else:
             sorted_lst = sorted(agent_result['sources'], key=lambda x: x['score'], reverse=True)
@@ -165,7 +165,7 @@ async def insert_message(
             ]
 
     else:
-        return ["Sorry, you are not a registered user.", "None"]
+        return ["Sorry, you are not a registered user. Please register at https://busearch.com", "None"]
 
 
 def user_exists(user_management: UserDatabaseManager, gmail: str) -> bool:
