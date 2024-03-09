@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "local_API",
+        "type": "python",
+        "request": "launch",
+        "program": "/usr/local/bin/python3.10",
+        "args": [
+          // "-m",
+          "uvicorn",
+          "main:app",
+          "--reload"
+        ],
+        "cwd": "/Users/georgeflint/Desktop/BU_Chatbot/src/services/chatbot",
+        "env": {
+          "PYTHONUNBUFFERED": "1"
+        }
+      }
+    ]
+  }

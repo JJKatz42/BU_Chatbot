@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="../styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+</head>
+
+
+<body class="landing cal a">
+    <div class="navbar">
+        <div class="navbar-container">
+            <div class="landing-container">
+                <div class="title">
+                    <!-- <div class="logo landing-logo"></div> -->
+                    <div class="landing-logo">Welcome to <span class="school-color">cal</span>search.ai</div>
+                    <div class="subtitle b">
+                        <p>An AI chatbot customized to your student life</p>
+                        <p>Login with your school email to get started</p>
+                        <a href="#" id="loginBtn">login</a>
+                        <p class="copyright">copyright © searchu 2023</p>
+                    </div>
+                </div>
+                <div class="subtitle">
+                    <p><span class="unimportant">an</span> AI chatbot</p>
+                    <p><span class="unimportant">trained on</span> university documentation</p>
+                    <p><span class="unimportant">that provides</span> relevant, personalized answers</p>
+                    <p><span class="unimportant">to</span> complex, unique questions</p>
+                    <p><span class="unimportant">about</span> your student life</p>
+                </div>
+
+                <div class="subtitle" id="suggestions"></div>
+            </div>
+            <div class="navbar-menu">
+                <p class="get-started">Get started</p>
+                <a href="#" id="loginBtn">login</a>
+                <a href="#" id="aboutBtn">about</a>
+                <p class="copyright">copyright © searchu 2023</p>
+            </div>
+            <div class="landing-about-container" id="landing-about-container ">
+                <div class="landing-about">
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../script.js "></script>
+    <script>
+        typeOutText('suggestions', suggestions, 100);
+        updateLogoDivs();
+    </script>
+
+</body>
+
+</html>
