@@ -165,7 +165,7 @@ async def insert_message(
             ]
 
     else:
-        return ["Sorry, you are not a registered user. Please register at https://busearch.com", "None"]
+        return ["Sorry, you are not a registered user.", "None"]
 
 
 def user_exists(user_management: UserDatabaseManager, gmail: str) -> bool:
