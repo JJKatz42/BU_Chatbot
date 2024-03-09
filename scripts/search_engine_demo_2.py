@@ -1,9 +1,3 @@
-import sys
-from pathlib import Path
-
-projectroot = Path(__file__).resolve().parent.parent
-sys.path.append(str(projectroot))
-
 import argparse
 import asyncio
 import os
@@ -49,23 +43,23 @@ async def main():
     build_indexes_parser.add_argument(
         "--directory",
         help="By default directory is the beta_info directory",
-        default="/Users/georgeflint/Desktop/berkeley_crawler_data_divided10/berkeley_crawler_data_batch_1"
+        default="/Users/jonahkatz/Dev/BU_Chatbot/beta_info"
     )
     build_indexes_parser.add_argument(
         "--university",
         help="By default university is set to BU",
-        default="CAL"
+        default="BU"
     )
     build_indexes_parser.add_argument(
         "--env-file",
         help="Local .env file containing config values",
-        default="/Users/georgeflint/Desktop/BU_Chatbot/src/services/chatbot/.env"
+        default="/Users/jonahkatz/Dev/BU_Chatbot/src/services/chatbot/.env"
     )
     build_indexes_parser.add_argument(
         "--full-refresh",
         help="By default indexing is incremental. Set this flag to build indexes from scratch. "
              "This includes re-creating Weaviate schema by deleting all existing objects.",
-        default=False
+        default=True
     )
     run_search_parser = subparsers.add_parser("search", help="Run a search query and get back search result")
     run_search_parser.add_argument("query", nargs="?", default="describe sm 132")

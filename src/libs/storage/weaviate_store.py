@@ -57,8 +57,8 @@ class WeaviateStore:
         self.client.batch.configure(
             batch_size=100,
             num_workers=4,
-            timeout_retries=30,
-            connection_error_retries=30
+            timeout_retries=5,
+            connection_error_retries=5
         )
         self.namespace = namespace
 
@@ -101,7 +101,7 @@ class WeaviateStore:
             self._embeddings_client.create_weaviate_object_embeddings(webpages)
 
             for webpage in tqdm.tqdm(webpages, total=len(webpages), desc="webpages"):
-                time.sleep(.44)
+                time.sleep(0.2)
                 # Add the webpage object
                 webpage_uuid = batch.add_data_object(
                     class_name=Webpage.weaviate_class_name(namespace=self.namespace),
