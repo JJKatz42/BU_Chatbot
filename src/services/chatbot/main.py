@@ -117,7 +117,8 @@ weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_sto
 reasoning_llm = langchain.chat_models.ChatOpenAI(
     model_name="gpt-3.5-turbo-0613",
     temperature=0.0,
-    openai_api_key=config.get("OPENAI_API_KEY")
+    openai_api_key=config.get("OPENAI_API_KEY"),
+    # streaming=True
 )
 
 features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QUERY_PLANNING]
@@ -125,7 +126,7 @@ features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QU
 
 search_agent = SearchAgent(
     weaviate_search_engine=weaviate_engine,
-    university="BU",
+    university="CAL",
     reasoning_llm=reasoning_llm,
     features=features
 )
@@ -232,7 +233,7 @@ async def auth_callback(code: str = Query(...)):
 
     email = user_info["email"]
 
-    if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:
+    if email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS:
         # Insert the user into the database
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
@@ -253,10 +254,10 @@ async def auth_callback(code: str = Query(...)):
             return response
         else:
             # User was not inserted successfully
-            response = RedirectResponse(url="/?message=you-must-be-a-BU-student-to-access-this-page")
+            response = RedirectResponse(url="/?invalid-email")
             return response
     # User did not use a BU email
-    response = RedirectResponse(url="/?message=you-must-use-a-BU-account-to-access-this-page")
+    response = RedirectResponse(url="/?invalid-email")
     return response
 
 
@@ -308,7 +309,7 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
                         user_management=weaviate_user_management,
                         gmail=email,
                         input_text=data.question,
-                        cap=50
+                        cap=100
                     )  # Insert the question and answer into the database
                 except Exception as e:
                     logger.error(f"error: {e}")
