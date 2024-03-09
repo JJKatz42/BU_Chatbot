@@ -43,12 +43,12 @@ async def main():
     build_indexes_parser.add_argument(
         "--directory",
         help="By default directory is the beta_info directory",
-        default="/Users/jonahkatz/Dev/BU_Chatbot/beta_info"
+        default="/Users/jonahkatz/Dev/BU_Chatbot/berkeley_crawler_data_flattened"
     )
     build_indexes_parser.add_argument(
         "--university",
         help="By default university is set to BU",
-        default="BU"
+        default="CAL"
     )
     build_indexes_parser.add_argument(
         "--env-file",
@@ -59,7 +59,7 @@ async def main():
         "--full-refresh",
         help="By default indexing is incremental. Set this flag to build indexes from scratch. "
              "This includes re-creating Weaviate schema by deleting all existing objects.",
-        default=True
+        default=False
     )
     run_search_parser = subparsers.add_parser("search", help="Run a search query and get back search result")
     run_search_parser.add_argument("query", nargs="?", default="describe sm 132")
@@ -147,6 +147,16 @@ async def main():
         cohere_api_key=config.get("COHERE_API_KEY")
     )
 
+    weaviate_store.print_webpage_count()
+    #
+    # weaviate_store.print_webpages_containing_mit()
+
+    # weaviate_store.delete_webpages_from_university_before_specific_time()
+
+    # weaviate_store.create_schema(delete_if_exists=False)
+
+    # weaviate_store.delete_webpages_containing_berkeley()
+
     # Route to sub command specific logic either build indexes for search or run a search
     if script_args.command == "build-indexes":
         # Create weaviate schema
@@ -155,7 +165,7 @@ async def main():
 
         # Load Webpages from directory
         logger.info("Loading webpages from directory")
-        loader = directory_reader.DirectoryReader(script_args.directory, university="BU")
+        loader = directory_reader.DirectoryReader(script_args.directory, university=script_args.university)
         webpages = await loader.load_data()
         logger.info(f"Loaded {len(webpages.webpages)} webpages")
         logger.info("Transforming webpages")
@@ -169,6 +179,8 @@ async def main():
         weaviate_store.insert_webpages(webpages.webpages)
 
         logger.info("Finished building search indexes")
+
+        weaviate_store.print_webpage_count()
 
     elif script_args.command == "search":
         query = script_args.query

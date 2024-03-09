@@ -75,6 +75,7 @@ query = query.with_autocut(1)
         Returns:
             List of SearchResult objects representing the top_k results returned by the search
         """
+        logger.info("Searching for query: " + query_str)
         query_str = query_str.replace('\n', ' ')
         # Build the core search query
         query = self._build_search_query(
@@ -89,10 +90,7 @@ query = query.with_autocut(1)
         )
 
         # Execute the query
-        logger.info("Executing search query")
         response = query.do()
-
-        logger.info(f"Search query executed: {response}")
 
         try:
             raw_results = response["data"]["Get"][
@@ -118,7 +116,6 @@ query = query.with_autocut(1)
             )
             search_results.append(search_result)
 
-        logger.info(f"Search results: {search_results}")
         return search_results
 
     def ask(

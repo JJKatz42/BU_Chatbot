@@ -85,13 +85,19 @@ REDIRECT_URI = config.get("REDIRECT_URI")
 
 IS_LOCAL_ENV = config.get("IS_LOCAL_ENV")
 
+
 if str(IS_LOCAL_ENV) == "True":
     BASE_URL = "http://localhost:8000"
     DOMAIN = "localhost:8000"
     SECURE = False
 else:
-    BASE_URL = "https://app.busearch.com"
-    DOMAIN = "app.busearch.com"
+    # if "BU" in get_university_from_domain(request):
+    #     BASE_URL = "https://app.busearch.com"
+    #     DOMAIN = "app.busearch.com"
+    #     SECURE = True
+    # else:
+    BASE_URL = "https://calsearch.ai"
+    DOMAIN = "calsearch.ai"
     SECURE = True
 
 # Initialize WeaviateStore and WeaviateSearchEngine
@@ -125,7 +131,6 @@ features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QU
 
 search_agent = SearchAgent(
     weaviate_search_engine=weaviate_engine,
-    university="BU",
     reasoning_llm=reasoning_llm,
     features=features
 )
@@ -170,6 +175,19 @@ def get_jwt_token(request: Request) -> str:
         return jwt_token
 
 
+def get_university_from_domain(request: Request) -> str:
+    # Get the host from request headers
+    host = request.headers.get('host')
+    # Map the host to the university
+    if 'calsearch.ai' in host:
+        return 'CAL'
+    elif 'busearch.com' in host:
+        return 'BU'
+    else:
+        return 'BU'  # Replace with your default or throw error
+
+
+
 app = FastAPI()
 
 file_dir = pathlib.Path(__file__).parent.resolve()
@@ -196,11 +214,30 @@ async def read_root():
 
 
 @app.get("/login")
-def login():
+async def login(request: Request):
     """
-    Redirects the user to the Google OAuth2 login page.
+    Redirects the user to the Google OAuth2 login page with a dynamic redirect URI based on the domain.
     """
-    google_auth_url = generate_google_auth_url(client_id=CLIENT_ID, redirect_uri=REDIRECT_URI)
+    # Determine the university based on the domain
+    try:
+        university = get_university_from_domain(request)
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        university = 'BU'
+
+    # Set the redirect URI based on the determined university
+    if str(IS_LOCAL_ENV) == "True":
+        redirect_uri = REDIRECT_URI
+    else:
+        if university == 'CAL':
+            redirect_uri = 'https://calsearch.ai/auth/callback'
+        elif university == 'BU':
+            redirect_uri = 'https://app.busearch.com/auth/callback'
+        else:
+            redirect_uri = REDIRECT_URI  # Fallback to a default
+
+    # Create the Google OAuth URL with the dynamic redirect URI
+    google_auth_url = generate_google_auth_url(client_id=CLIENT_ID, redirect_uri=redirect_uri)
     return RedirectResponse(url=google_auth_url)
 
 
@@ -232,7 +269,7 @@ async def auth_callback(code: str = Query(...)):
 
     email = user_info["email"]
 
-    if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:
+    if email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS :
         # Insert the user into the database
         user_inserted_successfully = backend.insert_user(user_management=weaviate_user_management, gmail=email)
         if user_inserted_successfully:
@@ -300,7 +337,7 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        if email.endswith("@bu.edu") or email in WHITE_LISTED_EMAILS:  # Check if the user is a BU student
+        if email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS:  # Check if the user is a BU or CAL student
             if backend.user_exists(user_management=weaviate_user_management, gmail=email):
                 try:
                     response_and_id = await backend.insert_message(
