@@ -538,7 +538,7 @@ class SearchAgentFeatures(enum.Enum):
     AUTO_SEARCH_FILTER_GEN = "AUTO_SEARCH_FILTER_GEN"
     ADAPTIVE_QUERY_PLANNING = "ADAPTIVE_QUERY_PLANNING"
 
-TODO: determine usability of this class for conversationality Context. If usable, add conversationality functionality
+
 @dataclasses.dataclass
 class Context:
     """Container for context used by Agent to run a query"""
