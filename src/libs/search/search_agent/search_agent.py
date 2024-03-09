@@ -17,9 +17,7 @@ import src.libs.search.search_agent.answer_formatting as answer_formatting
 import src.libs.storage.storage_data_classes as storage_data_classes
 import src.libs.logging as logging
 
-
 logger = logging.getLogger(__name__)
-
 
 SOURCE_TYPE = typing.Type[storage_data_classes.Webpage]
 SOURCE_TYPE_TO_NULL_CHECK_PROPERTY = {
@@ -44,17 +42,17 @@ class SearchAgent:
         include_source_types: Limit source types used as context for answering queries.
             Defaults to using all source types.
     """
+
     def __init__(
-        self,
-        weaviate_search_engine: weaviate_search_engine.WeaviateSearchEngine,
-        university: str,
-        reasoning_llm: langchain.chat_models.ChatOpenAI,
-        qa_llm: langchain.chat_models.ChatOpenAI | None = None,
-        features: list["SearchAgentFeatures"] | None = None,
-        include_source_types: list[SOURCE_TYPE] | None = None
+            self,
+            weaviate_search_engine: weaviate_search_engine.WeaviateSearchEngine,
+            reasoning_llm: langchain.chat_models.ChatOpenAI,
+            qa_llm: langchain.chat_models.ChatOpenAI | None = None,
+            features: list["SearchAgentFeatures"] | None = None,
+            include_source_types: list[SOURCE_TYPE] | None = None
     ):
         self._weaviate_search_engine = weaviate_search_engine
-        self._university_type_filter = university
+        # self._university_type_filter = university
         self._reasoning_llm = reasoning_llm
         self._qa_llm = qa_llm or reasoning_llm
         self._features = features or []
@@ -80,6 +78,7 @@ class SearchAgent:
     async def run(
             self,
             query: str,
+            university: str,
             current_profile_info: dict,
             profile_info_vector: list[float],
             context: "Context" = None
@@ -88,6 +87,7 @@ class SearchAgent:
 
         Args:
             query: The query posed as a question
+            university: The university to search for information in
             current_profile_info: The current profile information for the user.
             profile_info_vector: The current profile information for the user.
             context: Context related to the query used for disambiguation
@@ -110,9 +110,12 @@ class SearchAgent:
             if self.is_enabled(SearchAgentFeatures.QUERY_PLANNING):
                 query_plan = await self.build_query_plan(query=query)
 
+            logger.info(f"Query plan: {query_plan}")
+
             # Execute the query plan
             query_plan_results = await self.execute_query_plan(
                 query_plan=query_plan,
+                university=university,
                 current_profile_info=current_profile_info,
                 profile_info_vector=profile_info_vector,
                 context=context
@@ -154,16 +157,18 @@ class SearchAgent:
         )
 
     async def execute_query_plan(
-        self,
-        query_plan: query_planning.QueryPlan,
-        current_profile_info: dict,
-        profile_info_vector: list[float],
-        context: "Context"
+            self,
+            query_plan: query_planning.QueryPlan,
+            university: str,
+            current_profile_info: dict,
+            profile_info_vector: list[float],
+            context: "Context"
     ) -> dict[int, query_planning.QueryResult]:
         """Executes the queries in the query plan in the correct order.
 
         Args:
             query_plan: The query plan to execute
+            university: The university to search for information in
             current_profile_info: The current profile information for the user.
             profile_info_vector:
             context: Context in which to run queries
@@ -179,7 +184,7 @@ class SearchAgent:
                 queries[task_id]
                 for task_id in execution_order
                 if task_id not in query_results
-                and all(
+                   and all(
                     sub_query_id in query_results for sub_query_id in queries[task_id].sub_queries
                 )
             ]
@@ -189,6 +194,7 @@ class SearchAgent:
                 *[
                     self.execute_query(
                         query=query,
+                        university=university,
                         current_profile_info=current_profile_info,
                         profile_info_vector=profile_info_vector,
                         sub_query_results=query_planning.QueryResults(
@@ -207,20 +213,23 @@ class SearchAgent:
                 query_results[query_result.query.id] = query_result
             if len(query_results) == len(execution_order):
                 break
+
         return query_results
 
     async def execute_query(
-        self,
-        query: query_planning.Query,
-        sub_query_results: query_planning.QueryResults,
-        current_profile_info: dict,
-        profile_info_vector: list[float],
-        context: "Context"
+            self,
+            query: query_planning.Query,
+            university: str,
+            sub_query_results: query_planning.QueryResults,
+            current_profile_info: dict,
+            profile_info_vector: list[float],
+            context: "Context"
     ) -> query_planning.QueryResult:
         """Execute a query in the query plan.
 
         Args:
             query: The query to execute
+            university: The university to search for information in
             sub_query_results: The results of sub-queries for this query that will be used
                 to generate an answer for this query.
             current_profile_info: The current profile information for the user.
@@ -242,7 +251,7 @@ class SearchAgent:
 
         search_parameters["personalized_info_vector"] = profile_info_vector
 
-        search_parameters["filters"] = {"university": self._university_type_filter}
+        search_parameters["filters"] = {"university": university}
 
         # If the cross encoder re-ranking feature is enabled, increase number of search
         # results retrieved from search engine to cast a wider initial net.
@@ -296,7 +305,7 @@ class SearchAgent:
                     "accurate and concise answer based only on the information that can be "
                     "found in the university data. Before answering the student's question, "
                     "first search for supporting information from the university's data."
-            )
+        )
 
         # User message provides the query
         question_prompt_message = langchain.schema.HumanMessage(content=f"Question: {query.question}")
@@ -325,18 +334,29 @@ class SearchAgent:
                     "you were able to find and what information is missing to answer their question."
         )
 
-        user_personal_information = langchain.schema.SystemMessage(
-            content=f"If a user asks about themselves or uses 'I' in their question, use the following "
-                    f"information provided in the dictionary below to answer the question: \n"
-                    f"{current_profile_info}"
-        )
+        # qa_convo_hist_msg_prompt_tmpl = langchain.prompts.SystemMessagePromptTemplate.from_template(
+        #     template="""Related questions you previously answered:
+        #             {% for query_result in sub_query_results.results %}
+        #             Question: {{ query_result.query.question }}
+        #             AI assistant's answer: {{ query_result.result.answer }}
+        #             -------------
+        #             {% endfor %}""",
+        #     template_format="jinja2",
+        # )
+
+        # user_personal_information = langchain.schema.SystemMessage(
+        #     content=f"If the following query delimited by single quotes '{query.question}' could be "
+        #             f"assisted by knowing a student's major or interests, use the following "
+        #             f"information provided in the dictionary below to answer the question: \n"
+        #             f"{current_profile_info}"
+        # )
 
         # Create the artificial history of messages to prompt LLM
         llm_prompt_messages = [
             role_prompt_message,
             question_prompt_message,
             search_results_prompt_message,
-            user_personal_information
+            # user_personal_information
         ]
         if sub_query_results_prompt_message:
             llm_prompt_messages.append(sub_query_results_prompt_message)
@@ -405,9 +425,9 @@ class SearchAgent:
         return query_plan
 
     def _re_rank(
-        self,
-        sources: list[weaviate_search_engine.SearchResult],
-        top_k: int
+            self,
+            sources: list[weaviate_search_engine.SearchResult],
+            top_k: int
     ) -> list[weaviate_search_engine.SearchResult]:
         """Re-rank search results then filter to top k.
 
@@ -453,7 +473,8 @@ class SearchAgent:
             Normalized array of data values where each item is between 0 and 1
         """
         min_val = np.min(data)
-        max_val = np.where(np.max(data) - min_val == 0, min_val + 0.001, np.max(data))  # 0.001 to avoid division by zero
+        max_val = np.where(np.max(data) - min_val == 0, min_val + 0.001,
+                           np.max(data))  # 0.001 to avoid division by zero
         normalized_data = (data - min_val) / (max_val - min_val)
         return normalized_data
 
