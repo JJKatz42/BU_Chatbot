@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 async def search_agent_job(
         agent: SearchAgent,
+        university: str,
         query: str,
         current_profile_info: dict,
         profile_info_vector: list[float]
@@ -23,6 +24,7 @@ async def search_agent_job(
 
     Parameters:
         agent (SearchAgent): The search agent to use for the job.
+        university (str): The university to get an answer for.
         query (str): The search query to run.
         current_profile_info (dict): The current profile information for the user.
         profile_info_vector (list[float]): The profile information vector for the user.
@@ -36,7 +38,7 @@ async def search_agent_job(
     logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
 
-    result = await agent.run(query, current_profile_info, profile_info_vector)
+    result = await agent.run(query, university, current_profile_info, profile_info_vector)
 
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
@@ -47,6 +49,7 @@ async def search_agent_job(
 
 async def get_answer(
         search_agent: SearchAgent,
+        university: str,
         input_text: str,
         current_profile_info: dict,
         profile_info_vector: list[float]
@@ -56,6 +59,7 @@ async def get_answer(
 
     Parameters:
         search_agent (SearchAgent): The search agent to use.
+        university (str): The university to get an answer for.
         input_text (str): The input text to get an answer for.
         current_profile_info (dict): The current profile information for the user.
         profile_info_vector (list[float]): The profile information vector for the user.
@@ -64,7 +68,7 @@ async def get_answer(
         str: The generated answer text.
     """
     try:
-        agent_result = await search_agent_job(search_agent, input_text, current_profile_info, profile_info_vector)
+        agent_result = await search_agent_job(search_agent, university, input_text, current_profile_info, profile_info_vector)
 
         answer = markdown.markdown(agent_result['answer'])
 
@@ -92,7 +96,7 @@ async def get_answer(
         return response
 
     except Exception as e:
-        logger.error(f"Error getting answer from agent: {e}")
+        logger.error(f"Error getting answer from agent: {e}", exc_info=e)
 
         return ("<p>Sorry, there was an error finding your answer please wait a few moments "
                 "before trying again.</p>")
@@ -132,7 +136,12 @@ async def insert_message(
 
             profile_info_vector = user_management.get_profile_info_vector_for_user(gmail=gmail)
 
-            response = await get_answer(search_agent, input_text, current_profile_info, profile_info_vector)
+            if "@berkeley.edu" in gmail:
+                university = "CAL"
+            else:
+                university = "BU"
+
+            response = await get_answer(search_agent, university, input_text, current_profile_info, profile_info_vector)
             # Create messages
             logger.info("Creating user message")
             user_message = data_classes.UserMessage(
