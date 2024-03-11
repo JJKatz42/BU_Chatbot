@@ -79,8 +79,8 @@ class SearchAgent:
             self,
             query: str,
             university: str,
-            current_profile_info: dict,
-            profile_info_vector: list[float],
+            #  : dict,
+            # profile_info_vector: list[float],
             context: "Context" = None
     ) -> "AgentResult":
         """Get an answer to a query by searching for information then generating response
@@ -116,8 +116,8 @@ class SearchAgent:
             query_plan_results = await self.execute_query_plan(
                 query_plan=query_plan,
                 university=university,
-                current_profile_info=current_profile_info,
-                profile_info_vector=profile_info_vector,
+                # current_profile_info=current_profile_info,
+                # profile_info_vector=profile_info_vector,
                 context=context
             )
 
@@ -160,8 +160,8 @@ class SearchAgent:
             self,
             query_plan: query_planning.QueryPlan,
             university: str,
-            current_profile_info: dict,
-            profile_info_vector: list[float],
+            # current_profile_info: dict,
+            # profile_info_vector: list[float],
             context: "Context"
     ) -> dict[int, query_planning.QueryResult]:
         """Executes the queries in the query plan in the correct order.
@@ -195,8 +195,8 @@ class SearchAgent:
                     self.execute_query(
                         query=query,
                         university=university,
-                        current_profile_info=current_profile_info,
-                        profile_info_vector=profile_info_vector,
+                        # current_profile_info=current_profile_info,
+                        # profile_info_vector=profile_info_vector,
                         sub_query_results=query_planning.QueryResults(
                             results=[
                                 result
@@ -221,8 +221,8 @@ class SearchAgent:
             query: query_planning.Query,
             university: str,
             sub_query_results: query_planning.QueryResults,
-            current_profile_info: dict,
-            profile_info_vector: list[float],
+            # current_profile_info: dict,
+            # profile_info_vector: list[float],
             context: "Context"
     ) -> query_planning.QueryResult:
         """Execute a query in the query plan.
@@ -249,7 +249,7 @@ class SearchAgent:
         # Number of search results used to generate answer
         num_results_for_gen = search_parameters["top_k"]
 
-        search_parameters["personalized_info_vector"] = profile_info_vector
+        # search_parameters["personalized_info_vector"] = profile_info_vector
 
         search_parameters["filters"] = {"university": university}
 

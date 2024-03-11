@@ -12,17 +12,20 @@ let schoolName = ''; // Initialize the variable
 let logoText = '';
 let profilePlaceholderText = '';
 
+let running = false;
+
 const bodyElement = document.querySelector('body');
 
 function setBodyClassBasedOnDomain() {
     const domainToClassMap = {
         'calsearch.ai': 'cal',
-        'busearch.com': 'bu'
-            // Add more mappings here as needed
+        'busearch.com': 'bu',
+        '127.0.0.1': 'cal', // Add this line
     };
 
     const currentDomain = window.location.hostname;
     const bodyClass = domainToClassMap[currentDomain];
+    schoolName = bodyClass;
 
     if (bodyClass) {
         document.body.className = bodyClass;
@@ -30,6 +33,66 @@ function setBodyClassBasedOnDomain() {
 }
 
 document.addEventListener('DOMContentLoaded', setBodyClassBasedOnDomain);
+
+function removeBrTagsAroundAndWithinLists(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const lists = doc.querySelectorAll('ol, ul');
+
+    lists.forEach(list => {
+        // Check and remove <br> tag directly before the list
+        let prevElement = list.previousElementSibling;
+        while (prevElement && prevElement.nodeType === Node.TEXT_NODE) { // Skip text nodes
+            prevElement = prevElement.previousElementSibling;
+        }
+        if (prevElement && prevElement.tagName === 'BR') {
+            prevElement.remove();
+        }
+
+        // Check and remove <br> tag directly after the list
+        let nextElement = list.nextElementSibling;
+        while (nextElement && nextElement.nodeType === Node.TEXT_NODE) { // Skip text nodes
+            nextElement = nextElement.nextElementSibling;
+        }
+        if (nextElement && nextElement.tagName === 'BR') {
+            nextElement.remove();
+        }
+
+        // New Code: Remove <br> tags within list items
+        list.querySelectorAll('li').forEach(li => {
+            li.querySelectorAll('br').forEach(br => br.remove());
+        });
+    });
+
+    return doc.body.innerHTML;
+}
+
+function removeAnswerPrefix(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Get the body element or any container element that might directly contain the "Answer:" prefix
+    const bodyContent = doc.body;
+
+    // Check if the "Answer:" prefix is at the start of the body's innerHTML
+    if (bodyContent.innerHTML.startsWith('Answer:')) {
+        // Remove "Answer:" prefix
+        bodyContent.innerHTML = bodyContent.innerHTML.substring(7);
+    }
+
+    // Iterate through all child nodes of the body to handle cases where "Answer:" might be inside a child node
+    const childNodes = bodyContent.childNodes;
+    childNodes.forEach(node => {
+        // Check only text nodes
+        if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim().startsWith('Answer:')) {
+            // Replace "Answer:" with an empty string
+            node.nodeValue = node.nodeValue.replace('Answer:', '').trimStart();
+        }
+    });
+
+    return doc.body.innerHTML;
+}
 
 // Check for class on the body element and update schoolName
 if (bodyElement.classList.contains('cal')) {
@@ -44,14 +107,14 @@ if (bodyElement.classList.contains('cal')) {
     <h3>features</h3>
     <ul>
     <li><p><span style="font-family: var(--bold-sans);">Knowledge 🧠</span> Calsearch is trained on over 300,000 berkeley.edu webpages.</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Speed 🔍</span> Calsearch rapidly navigates its data while building its answer. It is designed to save you hours of Googling or days of waiting for a response from an advisor.</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch is continuously expanding its already extensive knowledge base and improving its answer building with the help of your feedback (like/dislike buttons).</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Speed ⚡️</span> Calsearch rapidly navigates its data while building its answer. It is designed to save you hours of Googling or days of waiting for a response from an advisor.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch is continuously expanding its already extensive knowledge base and improving its answer building with the help of your feedback.</p></li>
     <li><p><span style="font-family: var(--bold-sans);">Security and privacy 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> collects any of your personal data: only school documentation and your feedback.</p></li>
+    <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Student profiles 🙋</span> tell Calsearch anything relevant about yourself that it should keep in mind for all responses, like your major, college, year, etc.</p></li>
 </ul>
 
 <h3>what's coming</h3>
 <ul>
-<li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Student profiles 🙋</span> tell Calsearch anything relevant about yourself that it should keep in mind for all responses, like your major, college, year, etc.</p></li>
 <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Conversationality 💬</span> have an ongoing conversation with Calsearch instead of asking one question at a time.</p></li>
 <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Course selection tools 🧑‍🏫</span> get personalized suggestions for the right courses to take and get help navigating the course selection process.</p></li>
 </ul>
@@ -127,11 +190,15 @@ const originalWelcomeContent = `
 
 <div class="logo-text">Welcome to &nbsp;</div>
 <div class="logo large"><span class="school-color">${schoolName}</span>search</div>
+<p class="welcome-text">an AI chatbot trained on everything Berkeley</p>
+<p class="welcome-text">we are currently in <strong>BETA</strong></p>
 <p class="welcome-text">please login with your <strong>school email</strong> to start searching</p>
 `;
 
 const loggedInWelcomeContent = `<div class="logo-text">Welcome to&nbsp;</div>
 <div class="logo large"><span class="school-color">${schoolName}</span>search</div>
+<p class="welcome-text">an AI chatbot trained on everything Berkeley</p>
+<p class="welcome-text">we are currently in <strong>BETA</strong></p>
 <div class="suggestions-wrapper">
 <div class="suggestions">
 <div class="suggestion"></div>
@@ -142,42 +209,57 @@ const loggedInWelcomeContent = `<div class="logo-text">Welcome to&nbsp;</div>
 </div>`
 
 const suggestions = [
-    'How do I register for classes?',
-    "What's the academic calendar for this semester?",
-    'How do I get a parking pass?',
-    'Tell me more about student housing options.',
-    'Where is the financial aid office located?',
-    'How do I reset my student portal password?',
-    'What are the prerequisites for the course CS101?',
-    'Is the Student Health Center open on weekends?',
-    'How can I apply for a work-study job?',
-    'Tell me about the procedures for grade appeals.',
-    'Who should I contact for lost and found items?',
-    'What are the deadlines for scholarship applications?',
-    'Where can I find resources for international students?',
-    'How do I reserve a study room in the library?',
-    'What is the policy for late assignment submissions?',
-    "What's the academic calendar for this year?",
-    'How do I apply for on-campus housing?',
-    'Tell me about study abroad options.',
-    'What are the library hours?',
-    'How can I join a student organization?',
-    "What's the deadline for course registration?",
-    'Where is the career center located?',
-    'How do I get a parking pass?',
-    'Tell me about meal plan options.',
-    'What are some popular campus events?',
-    'How do I get mental health support?',
-    'What are the gym hours?',
-    'How can I contact financial aid?',
-    'Tell me about emergency services on campus.',
-    'How do I get my transcripts?',
-    "What's the process for academic advising?",
-    'Where can I find a campus map?',
-    'How can I report a maintenance issue?',
-    'Tell me about the shuttle services.',
-    'How do I set up university email on my phone?'
+    "How do I join the Undergraduate Research Apprentice Program (URAP)?",
+    "Can you provide the process for founding a new student organization related to environmental advocacy?",
+    "What documents are required to apply for a Blue Zone parking permit?",
+    "How can I report a lost Cal1Card and request a new one?",
+    "What criteria must be met to graduate with High Honors in the English department?",
+    "Where do I submit feedback on accessibility issues within campus facilities?",
+    "How do I request an official transcript for graduate school applications?",
+    "Where can I find free tutoring for upper division Mathematics courses?",
+    "How do I apply for ASUC sponsoring for my club?",
+    "How do I apply for a Minor in Data Science, and what are the prerequisites?",
+    "How can I get involved with the Berkeley Food Network?",
+    "What is the deadline for applying to the Global Internship Program?",
+    "How do I cancel my housing contract with the dorms?",
+    "What scholarships are available for out-of-state students?",
+    "What pottery classes are available for Spring 2024?",
+    "When is Cal Day?",
+    "How do I apply for emergency financial assistance due to unforeseen circumstances?",
+    "Where should I go for a quick lunch on campus?"
 ];
+
+
+
+
+
+
+
+function testWebSocket() {
+    const ws = new WebSocket('ws://127.0.0.1:8000/ws/chat');
+    ws.onopen = () => {
+        console.log('Connection opened');
+        ws.send('{"message": "When is Cal day?"}');
+    };
+    ws.onmessage = (event) => {
+        console.log('Received:', event.data);
+    };
+    ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+    ws.onclose = () => {
+        console.log('Connection closed');
+    };
+}
+
+// Run the function to test the WebSocket connection
+testWebSocket();
+
+
+
+
+
+
 
 function detectAndFormatLists(inputText) {
     let outputText = '';
@@ -208,7 +290,7 @@ function updateLogoDivs() {
     let logoDivs = document.querySelectorAll('.logo');
     logoDivs.forEach(function(div) {
         if (div.classList.contains('long')) {
-            div.innerHTML = `<span class="school-color">${schoolName}</span>${logoText}`;
+            div.innerHTML = `<span class="school-color">${schoolName}</span>${logoText}<span class="beta">BETA</span>`;
         } else if (div.classList.contains('landing-logo')) {
             div.innerHTML = `Welcome&nbsp;to&nbsp;<span class="school-color">${schoolName}</span>${logoText}`;
 
@@ -232,7 +314,6 @@ function updateLogoDivs() {
         elem.innerHTML = selectedSuggestions[index];
     });
 }
-
 
 function clearWelcomeMessage() {
     let welcomeChatResponse = document.querySelector('.chat-response.welcome');
@@ -389,6 +470,16 @@ function sendMessage() {
 
     const chatInput = document.getElementById('chatInput');
     const question = chatInput.value.trim();
+
+    // Check if the chat input is empty and exit the function if true
+    console.log(question)
+    if (!question || running) { // If question is an empty string
+        return; // Exit the function
+    }
+
+    // Indicator that a job is currently being run
+    running = true;
+
     // Create the request payload
     const requestData = {
         question: question
@@ -451,7 +542,7 @@ function sendMessage() {
 
             // console.log("Data: ", data)
             currentResponseID = data.responseID;
-            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${data.response}`;
+            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${removeAnswerPrefix(removeBrTagsAroundAndWithinLists(formatMarkdownToHTML(data.response)))}`;
 
             if (lastFeedbackDiv) {
                 lastFeedbackDiv.style.display = 'none';
@@ -486,6 +577,7 @@ function sendMessage() {
         })
         .finally(() => {
             sendButton.disabled = false;
+            running = false;
             // Clear the chat input
             chatInput.value = '';
             updateLogoDivs();
@@ -680,7 +772,6 @@ function checkAuthorization() {
         });
 }
 
-
 // Function to switch settings content
 function switchSettingsContent(selectedTab) {
     // Hide all content sections
@@ -802,8 +893,7 @@ function debug_function() {
     updateLogoDivs()
 
 }
-
-debug_function();
+debug_function()
 
 function updateBodyClassBasedOnDomain() {
     // Get the current URL of the page
@@ -814,10 +904,8 @@ function updateBodyClassBasedOnDomain() {
         document.body.className = 'cal';
     } else if (url.includes('busearch.com')) {
         document.body.className = 'bu';
-    } else {
-        document.body.className = 'bu';
     }
 }
 
 // Call the function when the page loads
-// window.onload = updateBodyClassBasedOnDomain;
+window.onload = updateBodyClassBasedOnDomain;

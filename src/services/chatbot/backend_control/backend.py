@@ -16,8 +16,8 @@ async def search_agent_job(
         agent: SearchAgent,
         university: str,
         query: str,
-        current_profile_info: dict,
-        profile_info_vector: list[float]
+        # current_profile_info: dict,
+        # profile_info_vector: list[float]
 ) -> dict:
     """
     Runs a search agent job.
@@ -38,7 +38,7 @@ async def search_agent_job(
     logger.info(f"Running job: {query}")
     search_job_start_time = time.time()
 
-    result = await agent.run(query, university, current_profile_info, profile_info_vector)
+    result = await agent.run(query, university)
 
     result_dict = asdict(result)
     result_dict['search_job_duration'] = round((time.time() - search_job_start_time), 2)
@@ -51,8 +51,8 @@ async def get_answer(
         search_agent: SearchAgent,
         university: str,
         input_text: str,
-        current_profile_info: dict,
-        profile_info_vector: list[float]
+        # current_profile_info: dict,
+        # profile_info_vector: list[float]
 ) -> str:
     """
     Gets an answer from a search agent.
@@ -68,7 +68,7 @@ async def get_answer(
         str: The generated answer text.
     """
     try:
-        agent_result = await search_agent_job(search_agent, university, input_text, current_profile_info, profile_info_vector)
+        agent_result = await search_agent_job(search_agent, university, input_text)
 
         answer = markdown.markdown(agent_result['answer'])
 
@@ -141,7 +141,7 @@ async def insert_message(
             else:
                 university = "BU"
 
-            response = await get_answer(search_agent, university, input_text, current_profile_info, profile_info_vector)
+            response = await get_answer(search_agent, university, input_text)
             # Create messages
             logger.info("Creating user message")
             user_message = data_classes.UserMessage(

@@ -84,19 +84,23 @@ query = query.with_autocut(1)
             top_k=top_k,
             alpha=alpha,
             beta=beta,
-            personalized_info_vector=personalized_info_vector,
+            # personalized_info_vector=personalized_info_vector,
             re_rank=re_rank,
             filters=filters
         )
 
         # Execute the query
+        logger.info(query)
         response = query.do()
+        # logger.info(response)
+        logger.info(response.keys())
 
         try:
             raw_results = response["data"]["Get"][
                 TextContent.weaviate_class_name(namespace=self.namespace)
             ]
         except KeyError:
+            print(response)
             logger.error(response["data"]["Get"])
             raise
         search_results = []

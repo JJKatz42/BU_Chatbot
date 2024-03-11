@@ -123,7 +123,8 @@ weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_sto
 reasoning_llm = langchain.chat_models.ChatOpenAI(
     model_name="gpt-3.5-turbo-0613",
     temperature=0.0,
-    openai_api_key=config.get("OPENAI_API_KEY")
+    openai_api_key=config.get("OPENAI_API_KEY"),
+    streaming=True
 )
 
 features = [SearchAgentFeatures.CROSS_ENCODER_RE_RANKING, SearchAgentFeatures.QUERY_PLANNING]
@@ -375,6 +376,69 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
         ]  # User is not authenticated
 
     return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])  # Return the response
+
+
+from fastapi import WebSocket, WebSocketDisconnect, HTTPException, Cookie, Depends
+from typing import List
+from starlette.websockets import WebSocket
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        await websocket.send_text(f"Message text was: {data}")
+
+from fastapi import WebSocket, HTTPException
+import jwt
+
+@app.websocket("/ws/chat")
+async def websocket_chat(websocket: WebSocket, auth_token: str = Cookie(None)):
+    await websocket.accept()  # Accept the WebSocket connection
+    if not auth_token:  # Check if the auth token is provided
+        await websocket.close(code=4001)
+        return
+
+    try:
+        email = get_current_email(auth_token)  # Attempt to get the email from the JWT token
+    except jwt.ExpiredSignatureError:
+        await websocket.send_text("Token expired.")
+        await websocket.close(code=4002)
+        return
+    except jwt.InvalidTokenError:
+        await websocket.send_text("Invalid token.")
+        await websocket.close(code=4003)
+        return
+
+    # Verify if the user's email is valid for chat
+    if not (email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS):
+        await websocket.send_text("Unauthorized email domain.")
+        await websocket.close(code=4004)
+        return
+
+    if not backend.user_exists(user_management=weaviate_user_management, gmail=email):
+        await websocket.send_text("User does not exist.")
+        await websocket.close(code=4005)
+        return
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            response, response_id = await backend.insert_message(
+                search_agent=search_agent,
+                user_management=weaviate_user_management,
+                gmail=email,
+                input_text=data, 
+                cap=50
+            )
+            await websocket.send_text(response)
+    except WebSocketDisconnect:
+        logger.info(f"WebSocket disconnected for user {email}")
+    except Exception as e:
+        logger.error(f"Error during chat for user {email}: {e}")
+        await websocket.close(code=1011)
+
+
 
 
 @app.api_route("/feedback", methods=["POST"])
