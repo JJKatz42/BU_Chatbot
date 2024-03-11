@@ -451,7 +451,7 @@ function sendMessage() {
 
             // console.log("Data: ", data)
             currentResponseID = data.responseID;
-            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${formatMarkdownToHTML(data.response)}`;
+            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${data.response}`;
 
             if (lastFeedbackDiv) {
                 lastFeedbackDiv.style.display = 'none';
@@ -803,7 +803,7 @@ function debug_function() {
 
 }
 
-debug_function()
+debug_function();
 
 function updateBodyClassBasedOnDomain() {
     // Get the current URL of the page
@@ -814,8 +814,10 @@ function updateBodyClassBasedOnDomain() {
         document.body.className = 'cal';
     } else if (url.includes('busearch.com')) {
         document.body.className = 'bu';
+    } else {
+        document.body.className = 'bu';
     }
 }
 
 // Call the function when the page loads
-window.onload = updateBodyClassBasedOnDomain;
+// window.onload = updateBodyClassBasedOnDomain;

@@ -43,7 +43,7 @@ class DirectoryReader:
             soup = BeautifulSoup(content, 'html.parser')
 
             # Check for presence of common HTML tags.
-            html_tags = ['html', 'head', 'body', 'p', 'a', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+            html_tags = ['html', 'head', 'body', 'p', 'a', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
 
             for tag in html_tags:
                 if soup.find(tag):
@@ -59,14 +59,17 @@ class DirectoryReader:
         for filename in [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]:
             fullpath = os.path.join(self.directory, filename)
 
-            async with aiofiles.open(fullpath, 'r') as file:
-                html_contents = await file.read()
+            try:
+                async with aiofiles.open(fullpath, 'r') as file:
+                    html_contents = await file.read()
 
-            if self.is_html_content(html_contents):
-                mime_type = "text/html"
-                files.append({'id': fullpath, 'name': filename, 'html_content': html_contents, 'mimeType': mime_type})
-            else:
-                logger.info(f"Skipping '{filename}' as it is not HTML.")
+                if self.is_html_content(html_contents):
+                    mime_type = "text/html"
+                    files.append({'id': fullpath, 'name': filename, 'html_content': html_contents, 'mimeType': mime_type})
+                else:
+                    logger.info(f"Skipping '{filename}' as it is not HTML.")
+            except Exception as e:
+                logger.warning(f"Failed to read file '{filename}'. Error: {str(e)}")
 
         logger.info(f"{len(files)} webpages available")
 

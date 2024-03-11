@@ -75,6 +75,7 @@ query = query.with_autocut(1)
         Returns:
             List of SearchResult objects representing the top_k results returned by the search
         """
+        logger.info("Searching for query: " + query_str)
         query_str = query_str.replace('\n', ' ')
         # Build the core search query
         query = self._build_search_query(

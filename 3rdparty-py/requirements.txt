@@ -15,6 +15,7 @@ httplib2==0.22.0
 httpx==0.24.1
 langchain==0.0.219
 llama-index==0.6.38.post1
+Markdown==3.5.2
 nltk==3.8.1
 openai==0.27.7
 openpyxl==3.1.2
