@@ -27,6 +27,13 @@ class SearchResult:
     score: float | None = None
     source_info: SourceInfo | None = None
 
+    def to_dict(self):
+        return {
+            "text": self.text,
+            "url": self.url,
+            "score": self.score
+        }
+
 
 @dataclasses.dataclass
 class Answer:

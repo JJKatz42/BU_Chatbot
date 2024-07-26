@@ -27,6 +27,7 @@ from src.services.chatbot.backend_control.models import ChatResponse, IsAuthoriz
 
 logger = logging.getLogger(__name__)
 
+university = "CAL"
 
 def init_config(local_env_file: Union[str, None]):
     """
@@ -121,7 +122,7 @@ weaviate_engine = search_engine.WeaviateSearchEngine(weaviate_store=weaviate_sto
 
 # Initialize a reasoning LLM
 reasoning_llm = langchain.chat_models.ChatOpenAI(
-    model_name="gpt-3.5-turbo-0613",
+    model_name="gpt-3.5-turbo",
     temperature=0.0,
     openai_api_key=config.get("OPENAI_API_KEY")
 )
@@ -323,60 +324,39 @@ async def is_authorized(request: Request):
             return IsAuthorizedResponse(is_authorized=False)  # Return the response
         raise  # Any other unexpected errors can be raised normally
 
+from fastapi import FastAPI, HTTPException, Query, Cookie
+from fastapi.responses import StreamingResponse
+import json
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat")
 async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
-    """
-    Chat with the bot.
-    """
     if auth_token:
-        # Decode and verify the JWT token
         email = get_current_email(jwt_token=auth_token)
-
-        # Ensure the email is present in the decoded token
-        if not email:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        if email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS:  # Check if the user is a BU or CAL student
+        
+        if email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS:
             if backend.user_exists(user_management=weaviate_user_management, gmail=email):
                 try:
-                    response_and_id = await backend.insert_message(
-                        search_agent=search_agent,
-                        user_management=weaviate_user_management,
-                        gmail=email,
-                        input_text=data.question,
-                        cap=50
-                    )  # Insert the question and answer into the database
+                    async def generate():
+                        async for token in search_agent.run(
+                            query=data.question,
+                            university=university,
+                            current_profile_info=weaviate_user_management.get_profile_info_for_user(gmail=email),
+                            profile_info_vector=weaviate_user_management.get_profile_info_vector_for_user(gmail=email)
+                        ):
+                            yield f"data: {json.dumps({'token': token})}\n\n"
+                        yield "data: [DONE]\n\n"
+                    
+                    return StreamingResponse(generate(), media_type="text/event-stream")
                 except Exception as e:
-                    logger.error(f"error: {e}")
-                    response_and_id = [
-                        "Oh no! There was an issue finding your answer, "
-                        "please try refreshing or waiting a few seconds.",
-                        str(uuid.uuid4())
-                    ]
-
+                    logger.error(f"error: {str(e)}")
+                    raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
             else:
-                response_and_id = [
-                    "I'm sorry, it seems like you have not been logged in. BUsearch is exclusive to BU students.",
-                    str(uuid.uuid4())
-                ]  # User does not exist in the database
+                raise HTTPException(status_code=401, detail="User not found in the database.")
         else:
-            response_and_id = [
-                "I'm sorry, it seems like there was an error when you signed in. "
-                "Please clear your cookies and log in again using your BU email.",
-                str(uuid.uuid4())
-            ]  # User is not a BU student
+            raise HTTPException(status_code=401, detail="Unauthorized email domain.")
     else:
-        logger.warning(f"User not authenticated")
-        response_and_id = [
-            "I'm sorry, it seems like there was an error when you signed in. "
-            "Please clear your cookies and log in again using your BU email",
-            str(uuid.uuid4())
-        ]  # User is not authenticated
-
-    return ChatResponse(response=response_and_id[0], responseID=response_and_id[1])  # Return the response
-
-
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    
 @app.api_route("/feedback", methods=["POST"])
 async def provide_feedback(data: FeedbackRequest, auth_token: str = Cookie(None)):
     """

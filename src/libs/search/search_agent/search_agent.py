@@ -8,7 +8,15 @@ import langchain.callbacks
 import langchain.chat_models
 import langchain.schema
 import llama_index.llms.openai_utils as openai_utils
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
+import asyncio
+import queue
+import threading
 import numpy as np
+
+import json
+
 
 import src.libs.search.search_agent.query_planning as query_planning
 import src.libs.search.search_agent.search_parameter_gen as search_parameter_gen
@@ -16,6 +24,8 @@ import src.libs.search.weaviate_search_engine as weaviate_search_engine
 import src.libs.search.search_agent.answer_formatting as answer_formatting
 import src.libs.storage.storage_data_classes as storage_data_classes
 import src.libs.logging as logging
+import tiktoken
+
 
 logger = logging.getLogger(__name__)
 
@@ -75,86 +85,62 @@ class SearchAgent:
             self._fallback_qa_llm_model_name
         )
 
-    async def run(
-            self,
-            query: str,
-            university: str,
-            current_profile_info: dict,
-            profile_info_vector: list[float],
-            context: "Context" = None
-    ) -> "AgentResult":
-        """Get an answer to a query by searching for information then generating response
-
-        Args:
-            query: The query posed as a question
-            university: The university to search for information in
-            current_profile_info: The current profile information for the user.
-            profile_info_vector: The current profile information for the user.
-            context: Context related to the query used for disambiguation
-
-        Returns:
-            An AgentResult object which contains the answer, sources used and various debug details
+    async def run(self, query: str, university: str, current_profile_info: dict, profile_info_vector: list[float], context: "Context" = None):
+        general_instructions = """
+            General Instructions:
+            
+            You are a helpful, nuanced, and capable university chatbot.
+            Your task is to understand a user's query, parse through information
+            obtained via semantic search of a database of university documentation
+            provided to you, and answer the question based only on the information
+            that can be found in the university information supplied to you,
+            formatted according to the formatting rules provided to you, answered
+            in a concise, clear, cohesive, and, above all, helpful manner.
         """
-        with langchain.callbacks.get_openai_callback() as cb:
-            # Default query plan consists of just the original query passed to run()
-            query_plan = query_planning.QueryPlan(
-                query_graph=[
-                    query_planning.Query(
-                        id=1,
-                        question=query,
-                        sub_queries=[]
-                    )
-                ]
-            )
-            # If query planning feature is enabled, auto generate a query plan
-            if self.is_enabled(SearchAgentFeatures.QUERY_PLANNING):
-                query_plan = await self.build_query_plan(query=query)
 
-            logger.info(f"Query plan: {query_plan}")
+        formatting_instructions = """
+            Formatting Instructions:
+            
+            You should provide your answer formatted in markdown, using any
+            features thereof when helpful. For example, bold important 
+            information, make use of heading structure, use quote blocks,
+            and use any other markdown features where appropriate.
+        """
 
-            # Execute the query plan
-            query_plan_results = await self.execute_query_plan(
-                query_plan=query_plan,
-                university=university,
-                current_profile_info=current_profile_info,
-                profile_info_vector=profile_info_vector,
-                context=context
-            )
+        current_profile_info_str = "Profile Information: " + json.dumps(current_profile_info)
 
-            # Capture the total number of LLM tokens used over the course of query plan execution
-            total_tokens_used = cb.total_tokens
-            total_tokens_cost = cb.total_cost
-
-        # Get the result for the root query in the query plan which will be the original query passed to this run()
-        root_query_id = query_plan.get_root_query_id()
-        root_query_result = query_plan_results[root_query_id]
-
-        # Get list of all sources used in the execution of query plan
-        all_sources = []
-        for _, query_result in query_plan_results.items():
-            for source in query_result.sources:
-                if source not in all_sources:
-                    all_sources.append(source)
-
-        formatted_answer = await answer_formatting.format_answer(
-            generated_answer=root_query_result.result,
-            sources=all_sources,
-            llm=self._qa_llm,
-            fallback_llm=self._reasoning_llm,
-            query=query,
+        search_results = self._weaviate_search_engine.search(
+            query_str=query,
+            personalized_info_vector=profile_info_vector,
+            filters={"university": university},
+            top_k=50,
         )
+        
+        search_results_str = "Search Results: " + json.dumps([result.to_dict() for result in search_results])
 
-        return AgentResult(
-            query=query,
-            answer=formatted_answer,
-            sources=all_sources,
-            query_plan=query_plan,
-            query_plan_results=query_plan_results,
-            features=self._features,
-            context=context,
-            total_tokens_used=total_tokens_used,
-            total_tokens_cost=total_tokens_cost
-        )
+        system_prompt = f"{general_instructions}\n\n{formatting_instructions}"
+        user_prompt = f"Query: {query}\n\n{current_profile_info_str}\n\n{search_results_str}"
+        
+        def get_token_length(prompt, model):
+            encoding = tiktoken.encoding_for_model(model)
+            tokens = encoding.encode(prompt)
+            return len(tokens)
+
+        model = "gpt-3.5-turbo-0125" if get_token_length(system_prompt + user_prompt, "gpt-3.5-turbo") < 4000 else "gpt-4o-"
+
+        async for token in self.get_streaming_response(model, system_prompt, user_prompt):
+            yield token
+
+    async def get_streaming_response(self, model_name, system_prompt, user_prompt):
+        model = ChatOpenAI(model_name=model_name, streaming=True)
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt)
+        ]
+        
+        response = await model.agenerate([messages])
+        for generation in response.generations[0]:
+            yield generation.text
 
     async def execute_query_plan(
             self,

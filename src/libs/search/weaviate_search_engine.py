@@ -77,6 +77,7 @@ query = query.with_autocut(1)
         """
         logger.info("Searching for query: " + query_str)
         query_str = query_str.replace('\n', ' ')
+        logger.info(query_str)
         # Build the core search query
         query = self._build_search_query(
             query_str=query_str,
@@ -88,6 +89,7 @@ query = query.with_autocut(1)
             re_rank=re_rank,
             filters=filters
         )
+        logger.info(query)
 
         # Execute the query
         response = query.do()
@@ -96,6 +98,7 @@ query = query.with_autocut(1)
             raw_results = response["data"]["Get"][
                 TextContent.weaviate_class_name(namespace=self.namespace)
             ]
+            logger.info("Got raw results.")
         except KeyError:
             logger.error(response["data"]["Get"])
             raise
