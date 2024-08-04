@@ -324,38 +324,36 @@ async def is_authorized(request: Request):
             return IsAuthorizedResponse(is_authorized=False)  # Return the response
         raise  # Any other unexpected errors can be raised normally
 
-from fastapi import FastAPI, HTTPException, Query, Cookie
+from fastapi import FastAPI, Cookie, HTTPException
 from fastapi.responses import StreamingResponse
-import json
 
 @app.post("/chat")
 async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
-    if auth_token:
-        email = get_current_email(jwt_token=auth_token)
-        
-        if email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS:
-            if backend.user_exists(user_management=weaviate_user_management, gmail=email):
-                try:
-                    async def generate():
-                        async for token in search_agent.run(
-                            query=data.question,
-                            university=university,
-                            current_profile_info=weaviate_user_management.get_profile_info_for_user(gmail=email),
-                            profile_info_vector=weaviate_user_management.get_profile_info_vector_for_user(gmail=email)
-                        ):
-                            yield f"data: {json.dumps({'token': token})}\n\n"
-                        yield "data: [DONE]\n\n"
-                    
-                    return StreamingResponse(generate(), media_type="text/event-stream")
-                except Exception as e:
-                    logger.error(f"error: {str(e)}")
-                    raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
-            else:
-                raise HTTPException(status_code=401, detail="User not found in the database.")
-        else:
-            raise HTTPException(status_code=401, detail="Unauthorized email domain.")
-    else:
+    if not auth_token:
         raise HTTPException(status_code=401, detail="Authentication required.")
+
+    email = get_current_email(jwt_token=auth_token)
+    if not (email.endswith("@bu.edu") or email.endswith("@berkeley.edu") or email in WHITE_LISTED_EMAILS):
+        raise HTTPException(status_code=401, detail="Unauthorized email domain.")
+
+    if not backend.user_exists(user_management=weaviate_user_management, gmail=email):
+        raise HTTPException(status_code=401, detail="User not found in the database.")
+
+    async def stream_chat():
+        try:
+            async for token in search_agent.run(
+                query=data.question,
+                university=university,
+                current_profile_info=weaviate_user_management.get_profile_info_for_user(gmail=email),
+                profile_info_vector=weaviate_user_management.get_profile_info_vector_for_user(gmail=email)
+            ):
+                # Yield each token as it is generated
+                yield token
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
+
+    return StreamingResponse(stream_chat(), media_type="text/plain")
+
     
 @app.api_route("/feedback", methods=["POST"])
 async def provide_feedback(data: FeedbackRequest, auth_token: str = Cookie(None)):

@@ -35,23 +35,22 @@ document.addEventListener('DOMContentLoaded', setBodyClassBasedOnDomain);
 if (bodyElement.classList.contains('cal')) {
     schoolName = 'cal';
     logoText = 'search.ai'
-    profilePlaceholderText = "I'm an in-state Regent's Scholarship student with no other financial aid. I am on pre Haas track and hope to major in coloring and shapes. Expected graduation 2027."
+    profilePlaceholderText = "Regent's scholar. Pre-Haas track and hope to major in coloring and shapes. Expected graduation 2030."
     aboutText = `
     <h3>about <div class="logo"></div></h3>
-    <p class="italic">version 0.8</p>
-    <p>Welcome to calsearch.ai, an AI chatbot trained on university documentation that provides relevant, personalized answers to complex, unique questions about your student life.</p>
+    <p class="italic">version 1.0</p>
+    <p>Welcome to calsearch.ai, an AI chatbot for university information.</p>
 
     <h3>features</h3>
     <ul>
     <li><p><span style="font-family: var(--bold-sans);">Knowledge 🧠</span> Calsearch is trained on over 300,000 berkeley.edu webpages.</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Speed 🔍</span> Calsearch rapidly navigates its data while building its answer. It is designed to save you hours of Googling or days of waiting for a response from an advisor.</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch is continuously expanding its already extensive knowledge base and improving its answer building with the help of your feedback (like/dislike buttons).</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Security and privacy 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> collects any of your personal data: only school documentation and your feedback.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Speed 🔍</span> Calsearch rapidly navigates wepages while building its answer, designed to save hours of Googling or days of waiting for a response from an advisor.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch gets regular knowledge updates and intelligence improvements.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Security and privacy 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> sends information beyond our servers. We only collect what you tell us in the profile section.</p></li>
 </ul>
 
 <h3>what's coming</h3>
 <ul>
-<li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Student profiles 🙋</span> tell Calsearch anything relevant about yourself that it should keep in mind for all responses, like your major, college, year, etc.</p></li>
 <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Conversationality 💬</span> have an ongoing conversation with Calsearch instead of asking one question at a time.</p></li>
 <li><p><span style="font-family: var(--bold-sans); font-weight: bold;">Course selection tools 🧑‍🏫</span> get personalized suggestions for the right courses to take and get help navigating the course selection process.</p></li>
 </ul>
@@ -62,7 +61,7 @@ if (bodyElement.classList.contains('cal')) {
     <p>Calsearch was trained and designed by <a href="https://www.georgeflint.com/" target="_blank" class="link">George Flint, '26</a>, at Cal; BUsearch was trained and designed by Jonah Katz, '26, at BU.</p>
 
     <h3>join us</h3>
-    <p>If you'd like to join our team, and/or help us port over to another university, contact us—we're interested in hearing from you.</p>
+    <p>If you'd like to join our team, or help us port over to another university, contact us.</p>
 `
 } else if (bodyElement.classList.contains('bu')) {
     schoolName = 'bu';
@@ -362,25 +361,7 @@ function toggleActiveState(currentBtn, otherBtn) {
     }
 }
 
-function formatMarkdownToHTML(text) {
-    return text
-        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-        .replace(/\*(.*)\*/gim, '<em>$1</em>')
-        .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img alt="$1" src="$2" />')
-        .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>')
-        .replace(/\n$/gim, '<br />')
-        .replace(/^\s*[\r\n]/gim, '<br />')
-        .replace(/<\/h[1-3]>(?![\r\n])/gim, '</h1><br />')
-        .replace(/<\/blockquote>(?![\r\n])/gim, '</blockquote><br />')
-        .split('\n').join('<br />');
-}
-
 function sendMessage() {
-
     let element = document.querySelector('.chat-response.welcome');
     if (element) {
         element.style.display = 'none';
@@ -406,7 +387,7 @@ function sendMessage() {
     // Create and show user's question in chat
     const userMsgDiv = document.createElement('div');
     userMsgDiv.className = 'chat-response input';
-    userMsgDiv.innerHTML = `<p><strong style="margin-right:10px">you:</strong>${question}</p>`;
+    userMsgDiv.innerHTML = `<p>${question}</p>`;
     chatSpace.insertBefore(userMsgDiv, chatSpace.firstChild);
 
     const botMsgDiv = document.createElement('div');
@@ -439,46 +420,41 @@ function sendMessage() {
             body: JSON.stringify(requestData)
         })
         .then(response => {
-            document.querySelector('.loader').remove();
             if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.error || 'network problem.');
+                return response.text().then(err => {
+                    throw new Error(err || 'network problem.');
                 });
             }
-            return response.json();
-        })
-        .then(data => {
+            // Process the response as a stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let result = '';
 
-            // console.log("Data: ", data)
-            currentResponseID = data.responseID;
-            botMsgDiv.innerHTML = `<div class="logo-container"><div class="logo"></div><strong>:</strong></div>${data.response}`;
+            return reader.read().then(function processText({ done, value }) {
+                if (done) {
+                    handleCompleteResponse(result);
+                    return;
+                }
 
-            if (lastFeedbackDiv) {
-                lastFeedbackDiv.style.display = 'none';
-            }
+                const chunk = decoder.decode(value, { stream: true });
+                result += chunk;
 
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = 'feedback-buttons';
-            feedbackDiv.innerHTML = `
-                <button class="likeBtn" id="likeBtn-${currentResponseID}"></button>
-                <button class="dislikeBtn" id="dislikeBtn-${currentResponseID}"></button>
-            `;
+                if (result.length > 0 && document.querySelector('.loader')) {
+                    // Remove loader when the first token is received
+                    document.querySelector('.loader').remove();
+                }
 
-            // Append feedback buttons to the BUsearch response div
-            botMsgDiv.appendChild(feedbackDiv);
+                // Process each line of the result
+                const lines = result.split('\n');
+                for (let i = 0; i < lines.length - 1; i++) {
+                    const htmlContent = formatMarkdownToHTML(lines[i]); // Convert each line to HTML
+                    botMsgDiv.innerHTML += htmlContent; // Append the HTML to the bot message div
+                }
 
-            // Update the last feedback button container
-            lastFeedbackDiv = feedbackDiv;
+                // Keep the last incomplete line in result for further processing
+                result = lines[lines.length - 1];
 
-            // Attach event listeners to the newly created buttons
-            document.getElementById(`likeBtn-${currentResponseID}`).addEventListener('click', function() {
-                toggleActiveState(this, document.getElementById(`dislikeBtn-${currentResponseID}`));
-                sendFeedback(currentResponseID, true);
-            });
-
-            document.getElementById(`dislikeBtn-${currentResponseID}`).addEventListener('click', function() {
-                toggleActiveState(this, document.getElementById(`likeBtn-${currentResponseID}`));
-                sendFeedback(currentResponseID, false);
+                return reader.read().then(processText);
             });
         })
         .catch(error => {
@@ -486,11 +462,134 @@ function sendMessage() {
         })
         .finally(() => {
             sendButton.disabled = false;
-            // Clear the chat input
             chatInput.value = '';
             updateLogoDivs();
         });
+
+    function handleCompleteResponse(result) {
+        if (result.trim()) {
+            const htmlContent = formatMarkdownToHTML(result); // Convert any remaining content to HTML
+            botMsgDiv.innerHTML += htmlContent;
+        }
+        currentResponseID = extractResponseID(result); // Assuming a function to extract ID from the result
+        attachFeedbackButtons(botMsgDiv, result);
+    }
 }
+
+
+function formatMarkdownToHTML(markdown) {
+    // Initialize the HTML result
+    let html = '';
+    // Track whether we're inside a list or a table
+    let inList = false;
+    let inTable = false;
+
+    // Split the markdown by newlines to process each line
+    const lines = markdown.split('\n');
+    lines.forEach((line) => {
+        // Trim the line to remove leading/trailing spaces
+        line = line.trim();
+
+        // Check if the line is a header
+        const headerMatch = line.match(/^(#{1,6})\s*(.*)$/);
+        if (headerMatch) {
+            const level = headerMatch[1].length; // Determine header level by number of hashes
+            const content = headerMatch[2];
+            html += `<h${level} class="response-header">${content}</h${level}>`;
+            return;
+        }
+
+        // Check if the line is a table header or separator
+        if (line.match(/^\|(.+)\|$/)) {
+            if (!inTable) {
+                html += '<table><thead><tr>';
+                inTable = true;
+            }
+            const cells = line.split('|').slice(1, -1); // Remove leading and trailing empty strings from split
+            if (line.match(/^\|[-:]+\|/)) {
+                html += '</tr></thead><tbody>';
+            } else {
+                cells.forEach(cell => {
+                    html += `<th>${cell.trim()}</th>`;
+                });
+                html += '</tr>';
+            }
+            return;
+        } else if (inTable && !line.match(/^\|/)) {
+            html += '</tbody></table>';
+            inTable = false;
+        }
+
+        // Check if the line is a list item
+        if (line.startsWith('- ')) {
+            if (!inList) {
+                // If not already in a list, start a new list
+                html += '<ul>';
+                inList = true;
+            }
+            // Add the list item
+            html += `<li>${line.substring(2).trim()}</li>`;
+        } else {
+            // If we encounter a non-list line and were in a list, close the list
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+
+            // Treat non-empty lines as paragraphs
+            if (line) {
+                html += `<p>${line}</p>`;
+            }
+        }
+    });
+
+    // Close any unclosed list or table
+    if (inList) {
+        html += '</ul>';
+    }
+    if (inTable) {
+        html += '</tbody></table>';
+    }
+
+    // Replace special markers and bold/italic conversions
+    html = html
+        .replace(/(\*\*\*|___)(.*?)\1/g, '<strong><em>$2</em></strong>') // Bold + Italic
+        .replace(/(\*\*|__)(.*?)\1/g, '<strong>$2</strong>') // Bold
+        .replace(/(\*|_)(.*?)\1/g, '<em>$2</em>') // Italic
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img alt="$1" src="$2" />') // Images
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="link">$1</a>'); // Links
+
+    return html;
+}
+
+function attachFeedbackButtons(container, result) {
+    currentResponseID = extractResponseID(result); // Assuming a function to extract ID from the result
+
+    if (lastFeedbackDiv) {
+        lastFeedbackDiv.style.display = 'none';
+    }
+
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = 'feedback-buttons';
+    feedbackDiv.innerHTML = `
+        <button class="likeBtn" id="likeBtn-${currentResponseID}"></button>
+        <button class="dislikeBtn" id="dislikeBtn-${currentResponseID}"></button>
+    `;
+
+    container.appendChild(feedbackDiv);
+    lastFeedbackDiv = feedbackDiv;
+
+    document.getElementById(`likeBtn-${currentResponseID}`).addEventListener('click', function() {
+        toggleActiveState(this, document.getElementById(`dislikeBtn-${currentResponseID}`));
+        sendFeedback(currentResponseID, true);
+    });
+
+    document.getElementById(`dislikeBtn-${currentResponseID}`).addEventListener('click', function() {
+        toggleActiveState(this, document.getElementById(`likeBtn-${currentResponseID}`));
+        sendFeedback(currentResponseID, false);
+    });
+}
+
 
 /**
  * Send feedback to the server.

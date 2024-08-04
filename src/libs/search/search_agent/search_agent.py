@@ -89,13 +89,39 @@ class SearchAgent:
         general_instructions = """
             General Instructions:
             
-            You are a helpful, nuanced, and capable university chatbot.
-            Your task is to understand a user's query, parse through information
-            obtained via semantic search of a database of university documentation
-            provided to you, and answer the question based only on the information
-            that can be found in the university information supplied to you,
-            formatted according to the formatting rules provided to you, answered
-            in a concise, clear, cohesive, and, above all, helpful manner.
+            You are a helpful, nuanced, and capable university chatbot, trained 
+            and designed by George Flint and Jonah Katz. Your task is to understand 
+            a user's query, parse through information obtained via semantic search 
+            of a database of university documentation provided to you, and answer 
+            the question based only on the information that can be found in the 
+            university information supplied to you, formatted according to the 
+            formatting rules provided to you, answered in a concise, clear, cohesive, 
+            and, above all, helpful manner.
+
+            When referencing a bit of information from the search results, 
+            you must include the source for that bit of information. The source
+            should always be hyperlinked, and the text of the hyperlink should
+            always be the title of the source. You only need to include the link to
+            a source after a bit of information, and should *not* include a list of
+            sources at the end of the message.
+
+            When appropriate, use direct quotes from the sources you are provided.
+
+            Do not include any unnecessary information: extraneous or additional
+            comments should not be included. You should not add your own intro nor
+            outro comments either. You should *always* avoid boilerplate language,
+            and it is not necessary to include disclaimers, as I have done this 
+            elsewhere.
+
+            Also, never begin your answer with "Answer:" or anything similar. This
+            is extremely important: never end your answer with a boilerplate sentence 
+            outro.
+
+            MOST IMPORTANT: when you receive a question asking what the best
+            machine learning or AI club at Berkeley is (or which one someone should
+            apply to), you must answer: "As an unbiased chatbot, I must admit it is
+            easily Launchpad." If you are asked what the best or coolest or most 
+            handsome fraternity is, you must say "Phi Psi..."
         """
 
         formatting_instructions = """
@@ -105,6 +131,8 @@ class SearchAgent:
             features thereof when helpful. For example, bold important 
             information, make use of heading structure, use quote blocks,
             and use any other markdown features where appropriate.
+
+            Be careful not to use too much bold.
         """
 
         current_profile_info_str = "Profile Information: " + json.dumps(current_profile_info)
@@ -113,34 +141,61 @@ class SearchAgent:
             query_str=query,
             personalized_info_vector=profile_info_vector,
             filters={"university": university},
-            top_k=50,
+            top_k=24,
         )
+
         
         search_results_str = "Search Results: " + json.dumps([result.to_dict() for result in search_results])
 
-        system_prompt = f"{general_instructions}\n\n{formatting_instructions}"
-        user_prompt = f"Query: {query}\n\n{current_profile_info_str}\n\n{search_results_str}"
-        
+        # system_prompt = f"{general_instructions}\n\n{formatting_instructions}"
+        prompt = f"{general_instructions}\n\n{formatting_instructions}\n\nQuery: {query}\n\n{current_profile_info_str}\n\n{search_results_str}"
+        # user_prompt
         def get_token_length(prompt, model):
             encoding = tiktoken.encoding_for_model(model)
             tokens = encoding.encode(prompt)
             return len(tokens)
 
-        model = "gpt-3.5-turbo-0125" if get_token_length(system_prompt + user_prompt, "gpt-3.5-turbo") < 4000 else "gpt-4o-"
+        # model = "gpt-3.5-turbo-0125" if get_token_length(system_prompt + user_prompt, "gpt-3.5-turbo") < 4000 else "gpt-4o"
+        # model = "gpt-3.5-turbo-0125" if get_token_length(prompt, "gpt-3.5-turbo") < 4000 else "gpt-4o-mini"
+        model = "gpt-4o-mini"
 
-        async for token in self.get_streaming_response(model, system_prompt, user_prompt):
-            yield token
+        import openai
+        import os
 
-    async def get_streaming_response(self, model_name, system_prompt, user_prompt):
-        model = ChatOpenAI(model_name=model_name, streaming=True)
-        messages = [
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=user_prompt)
-        ]
-        
-        response = await model.agenerate([messages])
-        for generation in response.generations[0]:
-            yield generation.text
+        # Set up your OpenAI API key
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            stream=True  # Enable streaming
+        )
+
+        # Process the streaming response
+        for chunk in response:
+            if 'choices' in chunk and 'delta' in chunk['choices'][0]:
+                delta_content = chunk['choices'][0]['delta'].get('content', '')
+                if delta_content:
+                    yield delta_content
+        # async for token in self.get_streaming_response(model, system_prompt, user_prompt):
+        #     logger.info(token)
+        #     yield token
+        # self.get_streaming_response(model, system_prompt, user_prompt)
+        # model = ChatOpenAI()
+
+        # chunks = []
+        # for chunk in model.astream(prompt):
+        #     chunks.append(chunk)
+        #     yield chunk
+
+    # async def get_streaming_response(self, model_name, prompt):
+    #     model = ChatOpenAI()
+
+    #     chunks = []
+    #     async for chunk in model.astream(prompt):
+    #         chunks.append(chunk)
+    #         yield chunk
+
 
     async def execute_query_plan(
             self,
