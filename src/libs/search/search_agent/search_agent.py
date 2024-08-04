@@ -144,7 +144,6 @@ class SearchAgent:
             top_k=24,
         )
 
-        
         search_results_str = "Search Results: " + json.dumps([result.to_dict() for result in search_results])
 
         # system_prompt = f"{general_instructions}\n\n{formatting_instructions}"
@@ -177,25 +176,6 @@ class SearchAgent:
                 delta_content = chunk['choices'][0]['delta'].get('content', '')
                 if delta_content:
                     yield delta_content
-        # async for token in self.get_streaming_response(model, system_prompt, user_prompt):
-        #     logger.info(token)
-        #     yield token
-        # self.get_streaming_response(model, system_prompt, user_prompt)
-        # model = ChatOpenAI()
-
-        # chunks = []
-        # for chunk in model.astream(prompt):
-        #     chunks.append(chunk)
-        #     yield chunk
-
-    # async def get_streaming_response(self, model_name, prompt):
-    #     model = ChatOpenAI()
-
-    #     chunks = []
-    #     async for chunk in model.astream(prompt):
-    #         chunks.append(chunk)
-    #         yield chunk
-
 
     async def execute_query_plan(
             self,
