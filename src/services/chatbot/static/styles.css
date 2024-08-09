@@ -296,6 +296,7 @@ input:checked+.slider:before {
 
 .chat-space {
     margin-left: 0 !important;
+    padding-top: 0px !important;
 }
 
 .chat-input-container {
@@ -303,6 +304,7 @@ input:checked+.slider:before {
     align-self: center !important;
     width: 640px;
     z-index: 44;
+    padding-top: 10px;
 }
 
 .toggle-button.working-version {
@@ -444,6 +446,7 @@ strong {
     margin-bottom: 60px;
     display: flex;
     flex-direction: column-reverse;
+    padding-top: 40px;
 }
 
 .chat-response:nth-child(1) {
@@ -603,6 +606,7 @@ input:checked+.slider:before {
 
 .dark-mode .chat-response {
     background-color: var(--dark-gray);
+    color: var(--white);
 }
 
 .dark-mode .chat-response.input {
@@ -812,12 +816,6 @@ input:checked+.slider:before {
     /* ... */
     display: flex;
     align-items: center;
-}
-
-.chat-response p {
-    margin: 0;
-    line-height: 1.3;
-    word-wrap: break-word;
 }
 
 .send-button::before {
@@ -1467,12 +1465,39 @@ h4.response-header {
     line-height: 1.74;
 }
 
-.chat-response p {
+.chat-response p,
+.settings-content-container p {
     margin-top: 5px;
     margin-bottom: 5px;
     line-height: 1.74;
+    font-size: var(--text-size);
+    color: var(--black);
 }
 
-.chat-response.input:last-of-type {
-    margin-top: 80px;
+.dark-mode .chat-response p,
+.dark-mode .settings-content-container p {
+    color: var(--white);
+}
+
+.chat-response.input:last-child {
+    margin-top: 40px !important;
+}
+
+.chat-response th {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.chat-response table {
+    width: 100%;
+    text-align: left;
+    display: contents;
+    word-wrap: break-word;
+}
+
+.chat-input {
+    min-height: 48px;
+    max-height: 200px;
+    overflow-y: hidden;
+    resize: none;
 }

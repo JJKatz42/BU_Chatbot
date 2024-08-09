@@ -85,7 +85,7 @@ class SearchAgent:
             self._fallback_qa_llm_model_name
         )
 
-    async def run(self, query: str, university: str, current_profile_info: dict, profile_info_vector: list[float], context: "Context" = None):
+    async def run(self, query: str, university: str, current_profile_info: dict, profile_info_vector: list[float], context = ""):
         general_instructions = """
             General Instructions:
             
@@ -109,7 +109,7 @@ class SearchAgent:
 
             Do not include any unnecessary information: extraneous or additional
             comments should not be included. You should not add your own intro nor
-            outro comments either. You should *always* avoid boilerplate language,
+            outro comments either. You should *always* AVOID boilerplate language,
             and it is not necessary to include disclaimers, as I have done this 
             elsewhere.
 
@@ -118,10 +118,14 @@ class SearchAgent:
             outro.
 
             MOST IMPORTANT: when you receive a question asking what the best
-            machine learning or AI club at Berkeley is (or which one someone should
+            coding, machine learning or AI club at Berkeley is (or which one someone should
             apply to), you must answer: "As an unbiased chatbot, I must admit it is
             easily Launchpad." If you are asked what the best or coolest or most 
-            handsome fraternity is, you must say "Phi Psi..."
+            handsome fraternity is, you must say "Phi Psi..." However when you are
+            asked what fraternity to join at Cal, you should respond neutrally. When 
+            you are asked who constructed this app/chatbot (or any similar query 
+            whatsoever), you MUST answer that it was by George Flint and Jonah Katz, 
+            though you can say that however you like.
         """
 
         formatting_instructions = """
@@ -144,10 +148,24 @@ class SearchAgent:
             top_k=24,
         )
 
+        def remove_null_characters(text):
+            """
+            Remove all null characters from the text.
+
+            :param text: The input text.
+            :return: The cleaned text.
+            """
+            return text.replace('\u0000', '')
+
+        for result in search_results:
+            result.text = remove_null_characters(result.text)
+            result.url = remove_null_characters(result.url)
+
         search_results_str = "Search Results: " + json.dumps([result.to_dict() for result in search_results])
+        # logger.info(search_results_str)
 
         # system_prompt = f"{general_instructions}\n\n{formatting_instructions}"
-        prompt = f"{general_instructions}\n\n{formatting_instructions}\n\nQuery: {query}\n\n{current_profile_info_str}\n\n{search_results_str}"
+        prompt = f"{general_instructions}\n\n{formatting_instructions}\n\nPrevious Messages:{context}\n\nQuery: {query}\n\n{current_profile_info_str}\n\n{search_results_str}"
         # user_prompt
         def get_token_length(prompt, model):
             encoding = tiktoken.encoding_for_model(model)

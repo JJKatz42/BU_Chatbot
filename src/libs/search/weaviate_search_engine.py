@@ -77,7 +77,7 @@ query = query.with_autocut(1)
         """
         logger.info("Searching for query: " + query_str)
         query_str = query_str.replace('\n', ' ')
-        logger.info(query_str)
+        # logger.info(query_str)
         # Build the core search query
         query = self._build_search_query(
             query_str=query_str,
@@ -89,7 +89,7 @@ query = query.with_autocut(1)
             re_rank=re_rank,
             filters=filters
         )
-        logger.info(query)
+        # logger.info(query)
 
         # Execute the query
         response = query.do()
@@ -297,10 +297,11 @@ query = query.with_autocut(1)
             Weaviate QueryBuilder object
         """
 
+        # try:
         query = (
             self._weaviate_store.client.query
             .get(TextContent.weaviate_class_name(namespace=self.namespace),
-                 ["index", "text", "contentOf { ... on Jonahs_weaviate_infodb_Webpage { url, webpage_id, mimeType, university } }"])
+                ["index", "text", "contentOf { ... on Jonahs_weaviate_infodb_Webpage { url, webpage_id, mimeType, university } }"])
         )
 
         query = query.with_additional(properties=["id"])
@@ -343,6 +344,11 @@ query = query.with_autocut(1)
             }
 
             query = query.with_where(university_filter)
+
+            # except weaviate.exceptions.WeaviateTimeoutException:
+            #     query = "Your request has timed out. Check your connection."
+            # except weaviate.exceptions.WeaviateException as e:
+            #     query = "There was an unknown error on our servers. Try restarting the page."
 
         return query
 

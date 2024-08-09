@@ -35,6 +35,7 @@ class JWTHeader(BaseModel):
 
 class ChatRequest(BaseModel):
     question: str
+    context: str
 
 
 class ChatResponse(BaseModel):

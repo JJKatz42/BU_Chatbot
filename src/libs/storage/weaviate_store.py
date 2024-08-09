@@ -53,13 +53,14 @@ class WeaviateStore:
             additional_headers={
                 "X-OpenAI-Api-Key": openai_api_key,
                 "X-Cohere-Api-Key": cohere_api_key
-            }
+            },
+            timeout_config=(30, 30)
         )
         self.client.batch.configure(
             batch_size=100,
             num_workers=4,
-            timeout_retries=5,
-            connection_error_retries=5
+            timeout_retries=1,
+            connection_error_retries=1
         )
         self.namespace = namespace
 

@@ -11,6 +11,67 @@ let lastFeedbackDiv = null; // Variable to keep track of the last feedback div
 let schoolName = ''; // Initialize the variable
 let logoText = '';
 let profilePlaceholderText = '';
+suggestions = [];
+
+const calSuggestions = [
+    "How do I join the Undergraduate Research Apprentice Program (URAP)?",
+    "Can you provide the process for founding a new student organization related to environmental advocacy?",
+    "What documents are required to apply for a Blue Zone parking permit?",
+    "How can I report a lost Cal1Card and request a new one?",
+    "What criteria must be met to graduate with High Honors in the English department?",
+    "Where do I submit feedback on accessibility issues within campus facilities?",
+    "How do I request an official transcript for graduate school applications?",
+    "Where can I find free tutoring for upper division Mathematics courses?",
+    "How do I apply for ASUC sponsoring for my club?",
+    "How do I apply for a Minor in Data Science, and what are the prerequisites?",
+    "How can I get involved with the Berkeley Food Network?",
+    "What is the deadline for applying to the Global Internship Program?",
+    "How do I cancel my housing contract with the dorms?",
+    "What scholarships are available for out-of-state students?",
+    "What pottery classes are available for Spring 2024?",
+    "When is Cal Day?",
+    "How do I apply for emergency financial assistance due to unforeseen circumstances?",
+    "Where should I go for a quick lunch on campus?",
+    "What is the Cal football schedule this year?"
+];
+
+const buSuggestions = [
+    'How do I register for classes?',
+    "What's the academic calendar for this semester?",
+    'How do I get a parking pass?',
+    'Tell me more about student housing options.',
+    'Where is the financial aid office located?',
+    'How do I reset my student portal password?',
+    'What are the prerequisites for the course CS101?',
+    'Is the Student Health Center open on weekends?',
+    'How can I apply for a work-study job?',
+    'Tell me about the procedures for grade appeals.',
+    'Who should I contact for lost and found items?',
+    'What are the deadlines for scholarship applications?',
+    'Where can I find resources for international students?',
+    'How do I reserve a study room in the library?',
+    'What is the policy for late assignment submissions?',
+    "What's the academic calendar for this year?",
+    'How do I apply for on-campus housing?',
+    'Tell me about study abroad options.',
+    'What are the library hours?',
+    'How can I join a student organization?',
+    "What's the deadline for course registration?",
+    'Where is the career center located?',
+    'How do I get a parking pass?',
+    'Tell me about meal plan options.',
+    'What are some popular campus events?',
+    'How do I get mental health support?',
+    'What are the gym hours?',
+    'How can I contact financial aid?',
+    'Tell me about emergency services on campus.',
+    'How do I get my transcripts?',
+    "What's the process for academic advising?",
+    'Where can I find a campus map?',
+    'How can I report a maintenance issue?',
+    'Tell me about the shuttle services.',
+    'How do I set up university email on my phone?'
+];
 
 const bodyElement = document.querySelector('body');
 
@@ -34,19 +95,20 @@ document.addEventListener('DOMContentLoaded', setBodyClassBasedOnDomain);
 // Check for class on the body element and update schoolName
 if (bodyElement.classList.contains('cal')) {
     schoolName = 'cal';
-    logoText = 'search.ai'
-    profilePlaceholderText = "Regent's scholar. Pre-Haas track and hope to major in coloring and shapes. Expected graduation 2030."
+    logoText = 'search.ai';
+    suggestions = calSuggestions;
     aboutText = `
     <h3>about <div class="logo"></div></h3>
     <p class="italic">version 1.0</p>
-    <p>Welcome to calsearch.ai, an AI chatbot for university information.</p>
+    <p>Welcome to calsearch.ai, an AI chatbot for university information at Berkeley.</p>
 
     <h3>features</h3>
     <ul>
     <li><p><span style="font-family: var(--bold-sans);">Knowledge 🧠</span> Calsearch is trained on over 300,000 berkeley.edu webpages.</p></li>
     <li><p><span style="font-family: var(--bold-sans);">Speed 🔍</span> Calsearch rapidly navigates wepages while building its answer, designed to save hours of Googling or days of waiting for a response from an advisor.</p></li>
     <li><p><span style="font-family: var(--bold-sans);">Improvement 📈</span> Calsearch gets regular knowledge updates and intelligence improvements.</p></li>
-    <li><p><span style="font-family: var(--bold-sans);">Security and privacy 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> sends information beyond our servers. We only collect what you tell us in the profile section.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Multilingual 💬</span> Calsearch works in any language.</p></li>
+    <li><p><span style="font-family: var(--bold-sans);">Security 🔒</span> Calsearch <span style="text-decoration: underline;">never</span> sends information beyond our servers. We only collect what you tell us in the profile section.</p></li>
 </ul>
 
 <h3>what's coming</h3>
@@ -67,6 +129,7 @@ if (bodyElement.classList.contains('cal')) {
     schoolName = 'bu';
     logoText = 'search.com'
     profilePlaceholderText = "I'm a CS major and Pell Grant student. I am expected to graduate with the class of 2027. "
+    suggestions = buSuggestions
     aboutText = `
     <h3>About BUsearch</h3>
     <p>Welcome to BUsearch, the informational chatbot designed to make relevant university information instantly accessible, ensuring swift and concise answers for every Boston University student.</p>
@@ -139,44 +202,6 @@ const loggedInWelcomeContent = `<div class="logo-text">Welcome to&nbsp;</div>
 <div class="suggestion"></div>
 </div>
 </div>`
-
-const suggestions = [
-    'How do I register for classes?',
-    "What's the academic calendar for this semester?",
-    'How do I get a parking pass?',
-    'Tell me more about student housing options.',
-    'Where is the financial aid office located?',
-    'How do I reset my student portal password?',
-    'What are the prerequisites for the course CS101?',
-    'Is the Student Health Center open on weekends?',
-    'How can I apply for a work-study job?',
-    'Tell me about the procedures for grade appeals.',
-    'Who should I contact for lost and found items?',
-    'What are the deadlines for scholarship applications?',
-    'Where can I find resources for international students?',
-    'How do I reserve a study room in the library?',
-    'What is the policy for late assignment submissions?',
-    "What's the academic calendar for this year?",
-    'How do I apply for on-campus housing?',
-    'Tell me about study abroad options.',
-    'What are the library hours?',
-    'How can I join a student organization?',
-    "What's the deadline for course registration?",
-    'Where is the career center located?',
-    'How do I get a parking pass?',
-    'Tell me about meal plan options.',
-    'What are some popular campus events?',
-    'How do I get mental health support?',
-    'What are the gym hours?',
-    'How can I contact financial aid?',
-    'Tell me about emergency services on campus.',
-    'How do I get my transcripts?',
-    "What's the process for academic advising?",
-    'Where can I find a campus map?',
-    'How can I report a maintenance issue?',
-    'Tell me about the shuttle services.',
-    'How do I set up university email on my phone?'
-];
 
 function detectAndFormatLists(inputText) {
     let outputText = '';
@@ -346,11 +371,31 @@ function toggleDarkMode() {
 }
 
 function handleEnter(event) {
+    const textarea = event.target;
+
     if (event.key === 'Enter') {
-        sendMessage();
-        event.preventDefault();
+        if (event.shiftKey) {
+            // If Shift+Enter is pressed, add a newline in the textarea
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+
+            // Insert a newline at the current cursor position
+            textarea.value = text.substring(0, start) + "\n" + text.substring(end);
+
+            // Move the cursor to the new line
+            textarea.selectionStart = textarea.selectionEnd = start + 1;
+
+            event.preventDefault(); // Prevent default behavior only for Shift+Enter
+        } else {
+            // If only Enter is pressed, send the message
+            sendMessage();
+            event.preventDefault(); // Prevent default behavior for Enter to avoid newlines
+            document.getElementById('chatInput').value = '';
+        }
     }
 }
+
 
 function toggleActiveState(currentBtn, otherBtn) {
     if (currentBtn.classList.contains('active')) {
@@ -361,7 +406,7 @@ function toggleActiveState(currentBtn, otherBtn) {
     }
 }
 
-function sendMessage() {
+function sendMessage(numMessages = 1) {
     let element = document.querySelector('.chat-response.welcome');
     if (element) {
         element.style.display = 'none';
@@ -370,16 +415,50 @@ function sendMessage() {
 
     const chatInput = document.getElementById('chatInput');
     const question = chatInput.value.trim();
-    // Create the request payload
+    chatInput.value = '';
+
+    // Debug: Log the current question
+    console.log("Current question:", question);
+
+    // Find the previous chat messages to include in the request
+    const chatSpace = document.querySelector('.chat-space-container');
+    const previousMessages = Array.from(chatSpace.children)
+        .filter(child => child.classList.contains('chat-response') || child.classList.contains('chat-response.input'))
+        .slice(0, numMessages) // Get the top `numMessages` children
+        .map(child => child.textContent.trim()) // Extract text content
+        .reverse(); // Reverse to maintain order of oldest to newest
+
+    // Debug: Log the previous messages
+    console.log("Previous messages:", previousMessages);
+
+    // Join previous messages into a single string
+    const context = previousMessages.join(' ');
+
+    // Get the current date
+    const currentDate = new Date();
+
+    // Format the date as a string
+    const dateString = currentDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    // Concatenate the date to the context string
+    const contextWithDate = `${context}\n\n Current date: ${dateString}`;
+
+    // Create the request payload including previous messages and current date
     const requestData = {
-        question: question
+        question: question,
+        context: contextWithDate
     };
 
+    // Debug: Log the request data
+    console.log("Request data:", requestData);
+
     const sendButton = document.querySelector('button[onclick="sendMessage()"]');
-    const chatSpace = document.querySelector('.chat-space-container');
 
     // Clear the chat input
-    chatInput.value = '';
 
     // Disable the send button
     sendButton.disabled = true;
@@ -410,6 +489,7 @@ function sendMessage() {
     chatSpace.insertBefore(botMsgDiv, chatSpace.firstChild);
     // Update logo divs
     updateLogoDivs();
+    resetTextareaHeight(chatInput)
 
     fetch(`/chat`, {
             method: 'POST',
@@ -462,7 +542,7 @@ function sendMessage() {
         })
         .finally(() => {
             sendButton.disabled = false;
-            chatInput.value = '';
+            // chatInput.value = '';
             updateLogoDivs();
         });
 
@@ -471,7 +551,6 @@ function sendMessage() {
             const htmlContent = formatMarkdownToHTML(result); // Convert any remaining content to HTML
             botMsgDiv.innerHTML += htmlContent;
         }
-        currentResponseID = extractResponseID(result); // Assuming a function to extract ID from the result
         attachFeedbackButtons(botMsgDiv, result);
     }
 }
@@ -920,3 +999,31 @@ function updateBodyClassBasedOnDomain() {
 
 // Call the function when the page loads
 // window.onload = updateBodyClassBasedOnDomain;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Select the textarea
+    const textarea = document.getElementById('chatInput');
+
+    // Set focus on the textarea
+    textarea.focus();
+});
+
+function adjustTextareaHeight(textarea) {
+    textarea.style.height = 'auto'; // Reset the height
+    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px'; // Adjust the height up to 200px
+}
+
+function resetTextareaHeight(textarea) {
+    textarea.style.height = '48px'; // Reset to initial height
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('chatInput');
+
+    textarea.addEventListener('input', function() {
+        adjustTextareaHeight(textarea);
+    });
+
+    // Initialize height
+    adjustTextareaHeight(textarea);
+});

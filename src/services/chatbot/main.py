@@ -345,7 +345,8 @@ async def chat(data: ChatRequest, auth_token: str = Cookie(None)):
                 query=data.question,
                 university=university,
                 current_profile_info=weaviate_user_management.get_profile_info_for_user(gmail=email),
-                profile_info_vector=weaviate_user_management.get_profile_info_vector_for_user(gmail=email)
+                profile_info_vector=weaviate_user_management.get_profile_info_vector_for_user(gmail=email),
+                context=data.context
             ):
                 # Yield each token as it is generated
                 yield token
